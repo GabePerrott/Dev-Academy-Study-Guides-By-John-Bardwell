@@ -1,0 +1,1244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Data Types, Functions &amp; Modules — an interactive guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;450;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F1F1F4;
+    --card:#FBFBFD;
+    --ink:#1B1E26;
+    --muted:#5A5F6B;
+    --line:#E1E1E8;
+    --violet:#6C4CE0;
+    --violet-soft:#EDE8FC;
+    --violet-line:#D8CEF7;
+    --emerald:#12905F;
+    --amber:#B67A08;
+    --rose:#D6455D;
+    --term-bg:#15171E;
+    --term-panel:#1D2029;
+    --term-fg:#E6E8EC;
+    --term-dim:#8A90A0;
+    --t-num:#E7B45A;
+    --t-str:#93D6A0;
+    --t-bool:#E7B45A;
+    --t-null:#8A90A0;
+    --t-err:#F0808F;
+    --radius:14px;
+    --mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+    --disp:'Space Grotesk',system-ui,sans-serif;
+    --body:'Inter',system-ui,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0;background:var(--paper);color:var(--ink);
+    font-family:var(--body);font-size:16.5px;line-height:1.62;
+    -webkit-font-smoothing:antialiased;
+  }
+  a{color:var(--violet);text-decoration:none}
+  a:hover{text-decoration:underline}
+  code{font-family:var(--mono);font-size:.88em;background:#E7E7EE;
+    padding:.08em .38em;border-radius:5px;color:#2C2140}
+
+  /* ---------- layout ---------- */
+  .wrap{display:grid;grid-template-columns:270px minmax(0,1fr);max-width:1200px;margin:0 auto}
+  nav.side{
+    position:sticky;top:0;align-self:start;height:100vh;overflow-y:auto;
+    padding:30px 22px 40px;border-right:1px solid var(--line);
+  }
+  main{padding:0 clamp(20px,5vw,64px) 120px;min-width:0}
+
+  .brand{font-family:var(--mono);font-weight:700;font-size:14px;letter-spacing:.04em;
+    color:var(--violet);margin-bottom:4px}
+  .brand small{color:var(--muted);font-weight:400;display:block;letter-spacing:0;margin-top:3px;font-family:var(--body);font-size:12.5px}
+  .navsec{margin-top:26px}
+  .navsec > span{font-family:var(--mono);font-size:11px;letter-spacing:.12em;
+    text-transform:uppercase;color:var(--muted);display:block;margin-bottom:9px;padding-left:12px}
+  nav.side a.link{
+    display:flex;gap:10px;align-items:baseline;padding:7px 12px;border-radius:9px;
+    color:var(--ink);font-size:14.5px;line-height:1.35;
+  }
+  nav.side a.link:hover{background:#E9E9F0;text-decoration:none}
+  nav.side a.link.active{background:var(--violet-soft);color:#3B2A73;font-weight:500}
+  nav.side a.link b{font-family:var(--mono);font-size:11.5px;color:var(--violet);min-width:20px}
+  .progwrap{margin-top:28px;padding:12px 14px;background:var(--card);border:1px solid var(--line);border-radius:12px}
+  .progwrap .lbl{font-size:11.5px;color:var(--muted);font-family:var(--mono);letter-spacing:.06em;text-transform:uppercase}
+  .progbar{height:7px;background:#E4E4EC;border-radius:99px;margin-top:8px;overflow:hidden}
+  .progbar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--violet),#9B7BF0);transition:width .4s}
+  .progwrap .cnt{font-size:12.5px;color:var(--muted);margin-top:7px}
+
+  /* ---------- hero ---------- */
+  header.hero{padding:64px 0 30px}
+  .eyebrow{font-family:var(--mono);font-size:12.5px;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--violet);margin-bottom:18px}
+  h1{font-family:var(--disp);font-weight:700;font-size:clamp(34px,5.4vw,54px);line-height:1.04;
+    letter-spacing:-.02em;margin:0 0 20px}
+  h1 .brace{color:var(--violet)}
+  .lede{font-size:19px;color:#3A3E48;max-width:60ch;margin:0}
+  .lede + .lede{margin-top:14px}
+  .runline{font-family:var(--mono);font-size:13.5px;color:var(--muted);margin-top:26px;
+    display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .runline .kbd{background:var(--term-bg);color:var(--t-str);padding:5px 11px;border-radius:7px;font-size:12.5px}
+
+  /* ---------- sections ---------- */
+  section.chapter{padding-top:56px;scroll-margin-top:20px}
+  .chaphead{display:flex;align-items:baseline;gap:16px;border-bottom:2px solid var(--ink);
+    padding-bottom:12px;margin-bottom:8px}
+  .chaphead .num{font-family:var(--mono);font-weight:700;font-size:15px;color:var(--violet)}
+  h2{font-family:var(--disp);font-weight:600;font-size:clamp(26px,3.6vw,36px);letter-spacing:-.015em;margin:0}
+  .chapsub{color:var(--muted);font-size:15px;margin:14px 0 0}
+  h3{font-family:var(--disp);font-weight:600;font-size:22px;letter-spacing:-.01em;margin:44px 0 10px}
+  h4{font-family:var(--disp);font-weight:600;font-size:17px;margin:28px 0 6px}
+  p{margin:14px 0}
+  main p, main li{color:#24272F}
+
+  /* ---------- primitive grid ---------- */
+  .typegrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;margin:22px 0}
+  .typecard{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 15px;position:relative;overflow:hidden}
+  .typecard .kw{font-family:var(--mono);font-weight:700;font-size:15px;color:var(--violet)}
+  .typecard .ex{font-family:var(--mono);font-size:12.5px;color:var(--muted);margin-top:6px;word-break:break-word}
+  .typecard .tag{position:absolute;top:0;right:0;font-family:var(--mono);font-size:9.5px;
+    letter-spacing:.08em;text-transform:uppercase;background:var(--violet-soft);color:#5A44A8;
+    padding:3px 8px;border-bottom-left-radius:8px}
+  .typecard.ref .tag{background:#E3F3EC;color:#0E7A4F}
+
+  /* ---------- code cell ---------- */
+  .cell{margin:22px 0;border-radius:var(--radius);overflow:hidden;border:1px solid #2A2E3A;
+    box-shadow:0 10px 30px -18px rgba(20,20,40,.4)}
+  .cell .bar{background:var(--term-panel);display:flex;align-items:center;gap:8px;
+    padding:9px 14px;border-bottom:1px solid #2A2E3A}
+  .cell .bar .dots{display:flex;gap:6px}
+  .cell .bar .dots i{width:11px;height:11px;border-radius:50%;display:block}
+  .dots i:nth-child(1){background:#E06C75}.dots i:nth-child(2){background:#E5C07B}.dots i:nth-child(3){background:#98C379}
+  .cell .bar .fname{font-family:var(--mono);font-size:12px;color:var(--term-dim);margin-left:4px}
+  .cell .bar .spacer{flex:1}
+  .cell .bar button{font-family:var(--mono);font-size:12px;font-weight:500;cursor:pointer;
+    border:1px solid #3A4152;background:#2A3040;color:#CBD3E1;border-radius:7px;padding:5px 13px;transition:.15s}
+  .cell .bar button:hover{background:#343C4E;border-color:#4A5264}
+  .cell .bar button.run{background:var(--violet);border-color:var(--violet);color:#fff}
+  .cell .bar button.run:hover{background:#5B3ED1}
+  .cell pre.code{margin:0;background:var(--term-bg);color:var(--term-fg);
+    font-family:var(--mono);font-size:13.5px;line-height:1.65;padding:16px 18px;
+    white-space:pre;overflow-x:auto;outline:none;tab-size:2}
+  .cell pre.code:focus{box-shadow:inset 3px 0 0 var(--violet)}
+  .console{background:#0F1116;border-top:1px solid #2A2E3A;padding:0 18px;
+    max-height:0;overflow:hidden;transition:max-height .35s ease,padding .35s ease}
+  .console.show{max-height:400px;overflow-y:auto;padding:13px 18px}
+  .console .cline{font-family:var(--mono);font-size:13px;line-height:1.7;white-space:pre-wrap;word-break:break-word}
+  .console .prompt{color:#4A5060}
+  .console .empty{color:var(--term-dim);font-style:italic}
+  .tok-num{color:var(--t-num)}.tok-str{color:var(--t-str)}.tok-bool{color:var(--t-bool)}
+  .tok-null{color:var(--t-null)}.tok-err{color:var(--t-err)}.tok-fn{color:#C39BF5}
+
+  /* ---------- code anatomy (hover/tap any token) ---------- */
+  .anatomy{margin:22px 0;border:1px solid #2A2E3A;border-radius:var(--radius);overflow:hidden;
+    box-shadow:0 10px 30px -18px rgba(20,20,40,.4)}
+  .anatomy .ahead{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;
+    color:var(--term-dim);padding:10px 16px;border-bottom:1px solid #2A2E3A;background:var(--term-panel);
+    display:flex;align-items:center;gap:8px}
+  .anatomy .ahead::before{content:'⌖';color:#C39BF5;font-size:14px}
+  .anacode{padding:18px;background:var(--term-bg);font-family:var(--mono);font-size:14.5px;line-height:2.15;
+    color:var(--term-fg);overflow-x:auto;white-space:pre-wrap;word-break:break-word}
+  .tok{cursor:pointer;border-radius:5px;padding:2px 3px;transition:.12s;outline:1.5px solid transparent}
+  .tok:hover{outline-color:rgba(255,255,255,.28)}
+  .tok.kw{background:rgba(195,155,245,.16);color:#C9A6F6}
+  .tok.fn{background:rgba(124,183,240,.15);color:#8CC0F5}
+  .tok.pm{background:rgba(231,180,90,.15);color:#E7B45A}
+  .tok.rt{background:rgba(147,214,160,.15);color:#93D6A0}
+  .tok.op{background:rgba(240,128,143,.14);color:#F0909F}
+  .tok.pn{background:rgba(150,156,172,.16);color:#B4BAC8}
+  .tok.st{background:rgba(147,214,160,.13);color:#93D6A0}
+  .tok.nm{background:rgba(231,180,90,.14);color:#E7B45A}
+  .tok.active{outline-color:var(--violet)!important;background:rgba(108,76,224,.32)!important;color:#fff}
+  .anapanel{padding:15px 18px;min-height:78px;background:var(--card)}
+  .anahint{font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:.05em}
+  .anahint .legend{color:var(--muted);opacity:.8}
+  .anatitle{font-family:var(--mono);font-weight:700;font-size:14px;color:var(--violet);margin:6px 0 3px}
+  .anatext{font-size:13.5px;color:#2A2D36;line-height:1.55}
+  @media(max-width:640px){.anacode{font-size:13px;line-height:2}}
+
+  /* predict */
+  .predict{margin:22px 0;border:1px solid var(--violet-line);border-radius:var(--radius);
+    background:linear-gradient(180deg,#FAF8FF,#F4F0FE);overflow:hidden}
+  .predict .phead{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--violet-line)}
+  .predict .phead .icon{width:22px;height:22px;border-radius:6px;background:var(--violet);color:#fff;
+    display:grid;place-items:center;font-size:13px;font-weight:700;font-family:var(--mono)}
+  .predict .phead b{font-family:var(--disp);font-size:15px}
+  .predict .pbody{padding:16px}
+  .predict pre.psrc{margin:0 0 14px;background:var(--term-bg);color:var(--term-fg);border-radius:10px;
+    font-family:var(--mono);font-size:13px;line-height:1.6;padding:14px 16px;overflow-x:auto;white-space:pre}
+  .predict .reveal-btn{font-family:var(--mono);font-size:12.5px;font-weight:600;cursor:pointer;
+    background:var(--violet);color:#fff;border:none;border-radius:8px;padding:8px 16px}
+  .predict .reveal-btn:hover{background:#5B3ED1}
+  .predict .answer{display:none;margin-top:14px;background:#0F1116;border-radius:10px;padding:13px 16px}
+  .predict .answer.show{display:block}
+  .predict .answer .cline{font-family:var(--mono);font-size:13px;line-height:1.7}
+  .predict .answer .why{color:var(--term-dim);font-size:12.5px;margin-top:9px;font-family:var(--body);line-height:1.55}
+
+  /* insight callout */
+  .insight{margin:24px 0;background:var(--card);border:1px solid var(--line);border-left:3px solid var(--violet);
+    border-radius:12px;padding:16px 20px}
+  .insight .htag{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;
+    color:var(--violet);font-weight:700;display:flex;align-items:center;gap:8px;margin-bottom:6px}
+  .insight.warn{border-left-color:var(--amber)}
+  .insight.warn .htag{color:var(--amber)}
+  .insight.gotcha{border-left-color:var(--rose)}
+  .insight.gotcha .htag{color:var(--rose)}
+  .insight p{margin:6px 0}
+  .insight p:first-of-type{margin-top:0}
+
+  /* typeof playground */
+  .pg{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:20px;margin:22px 0}
+  .pg h4{margin:0 0 12px}
+  .pg .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .pg input[type=text]{font-family:var(--mono);font-size:14px;padding:10px 13px;border:1px solid var(--line);
+    border-radius:9px;flex:1;min-width:180px;background:#fff;color:var(--ink)}
+  .pg input:focus{outline:2px solid var(--violet-line);border-color:var(--violet)}
+  .pg .chips{display:flex;gap:7px;flex-wrap:wrap;margin-top:12px}
+  .pg .chip{font-family:var(--mono);font-size:12px;cursor:pointer;background:#EEEDF4;border:1px solid var(--line);
+    border-radius:99px;padding:5px 12px;color:#414550}
+  .pg .chip:hover{background:var(--violet-soft);border-color:var(--violet-line)}
+  .pg .out{margin-top:16px;font-family:var(--mono);font-size:15px;background:var(--term-bg);color:var(--term-fg);
+    border-radius:10px;padding:14px 16px;min-height:20px}
+  .pg .out .arrow{color:var(--term-dim)}
+
+  /* equality matrix */
+  .eqtable{width:100%;border-collapse:collapse;margin:22px 0;font-size:14px;background:var(--card);
+    border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  .eqtable th,.eqtable td{padding:11px 14px;text-align:left;border-bottom:1px solid var(--line)}
+  .eqtable th{background:#EEEDF4;font-family:var(--mono);font-size:12px;letter-spacing:.03em;color:#3B3F4A}
+  .eqtable td code{background:transparent;padding:0}
+  .eqtable tr:last-child td{border-bottom:none}
+  .yes{color:var(--emerald);font-weight:600;font-family:var(--mono)}
+  .no{color:var(--rose);font-weight:600;font-family:var(--mono)}
+
+  /* ref/value visual */
+  .memviz{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:22px 0}
+  @media(max-width:640px){.memviz{grid-template-columns:1fr}}
+  .memcol{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px}
+  .memcol h4{margin:0 0 4px}
+  .memcol .sub{font-size:13px;color:var(--muted);margin-bottom:14px}
+  .box{border:2px solid var(--line);border-radius:10px;padding:12px 14px;margin:10px 0;font-family:var(--mono);
+    font-size:13px;position:relative;background:#fff}
+  .box .name{position:absolute;top:-9px;left:12px;background:var(--card);padding:0 6px;font-size:11px;color:var(--violet);font-weight:700}
+  .box.val{border-color:var(--violet-line)}
+  .box.ref{border-color:#9FDCC0}
+  .arrowlink{text-align:center;color:var(--muted);font-family:var(--mono);font-size:20px;margin:2px 0}
+
+  /* array methods visual */
+  .amgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin:24px 0}
+  .amcard{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;text-align:center}
+  .amcard .glyph{font-size:30px;line-height:1;margin-bottom:6px}
+  .amcard .nm{font-family:var(--mono);font-weight:700;color:var(--violet);font-size:14px}
+  .amcard .desc{font-size:12.5px;color:var(--muted);margin-top:6px;line-height:1.45}
+  .amcard .ret{margin-top:9px;font-family:var(--mono);font-size:10.5px;letter-spacing:.04em;
+    background:var(--violet-soft);color:#5A44A8;border-radius:99px;padding:3px 9px;display:inline-block}
+
+  /* module file view */
+  .filesview{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:22px 0}
+  @media(max-width:640px){.filesview{grid-template-columns:1fr}}
+  .fileblock{border:1px solid #2A2E3A;border-radius:12px;overflow:hidden}
+  .fileblock .fh{background:var(--term-panel);font-family:var(--mono);font-size:12px;color:var(--t-str);
+    padding:9px 14px;border-bottom:1px solid #2A2E3A;display:flex;align-items:center;gap:7px}
+  .fileblock .fh .dot{width:8px;height:8px;border-radius:50%;background:var(--emerald)}
+  .fileblock pre{margin:0;background:var(--term-bg);color:var(--term-fg);font-family:var(--mono);
+    font-size:12.8px;line-height:1.65;padding:14px 16px;overflow-x:auto;white-space:pre}
+  .kwd{color:#C39BF5}.strn{color:var(--t-str)}.fnn{color:#7CB7F0}.cmt{color:#5A6070;font-style:italic}
+
+  /* checkpoint */
+  .check{margin:26px 0;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px}
+  .check .q{font-family:var(--disp);font-weight:600;font-size:16px;margin-bottom:14px}
+  .check .opts{display:flex;flex-direction:column;gap:9px}
+  .check .opt{font-family:var(--mono);font-size:13.5px;text-align:left;cursor:pointer;background:#fff;
+    border:1px solid var(--line);border-radius:9px;padding:11px 14px;transition:.15s}
+  .check .opt:hover{border-color:var(--violet-line);background:#FAF8FF}
+  .check .opt.correct{border-color:var(--emerald);background:#EAF7F0;color:#0C6B45}
+  .check .opt.wrong{border-color:var(--rose);background:#FBECEE;color:#9E2B3B}
+  .check .fb{margin-top:12px;font-size:13.5px;color:var(--muted);display:none}
+  .check .fb.show{display:block}
+
+  /* recap */
+  .recap{background:var(--term-bg);border-radius:16px;padding:26px 28px;margin:26px 0;color:var(--term-fg)}
+  .recap h3{color:#fff;margin-top:0}
+  .recap ul{list-style:none;padding:0;margin:0;display:grid;gap:10px}
+  .recap li{font-family:var(--mono);font-size:13px;line-height:1.55;padding-left:22px;position:relative;color:#D3D7E0}
+  .recap li::before{content:'›';position:absolute;left:0;color:var(--violet);font-weight:700}
+  .recap li b{color:var(--t-num);font-weight:500}
+
+  footer{border-top:1px solid var(--line);margin-top:70px;padding-top:24px;color:var(--muted);font-size:13.5px}
+  footer .mono{font-family:var(--mono);font-size:12px}
+
+  /* mobile nav */
+  .mobtop{display:none}
+  @media(max-width:860px){
+    .wrap{grid-template-columns:1fr}
+    nav.side{display:none}
+    .mobtop{display:flex;position:sticky;top:0;z-index:20;background:rgba(241,241,244,.92);
+      backdrop-filter:blur(8px);border-bottom:1px solid var(--line);padding:12px 18px;gap:10px;
+      align-items:center;overflow-x:auto}
+    .mobtop .brand{margin:0;white-space:nowrap}
+    .mobtop a{font-family:var(--mono);font-size:12px;white-space:nowrap;color:var(--muted);padding:5px 10px;border-radius:7px}
+    .mobtop a.active{background:var(--violet-soft);color:#3B2A73}
+    main{padding-left:20px;padding-right:20px}
+  }
+  @media(prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto}}
+</style>
+</head>
+<body>
+
+<div class="mobtop">
+  <span class="brand">js.foundations</span>
+  <a href="#c1" class="mlink active">Types</a>
+  <a href="#c2" class="mlink">Functions</a>
+  <a href="#c3" class="mlink">Arrays</a>
+  <a href="#c4" class="mlink">Modules</a>
+  <a href="#recap" class="mlink">Recap</a>
+</div>
+
+<div class="wrap">
+  <!-- SIDEBAR -->
+  <nav class="side">
+    <div class="brand">js.foundations<small>Unit 1 · T3 — interactive guide</small></div>
+
+    <div class="navsec">
+      <span>Chapters</span>
+      <a href="#c1" class="link" data-sec><b>01</b> Data types</a>
+      <a href="#c2" class="link" data-sec><b>02</b> Functions</a>
+      <a href="#c3" class="link" data-sec><b>03</b> Array methods</a>
+      <a href="#c4" class="link" data-sec><b>04</b> Modules</a>
+      <a href="#recap" class="link" data-sec><b>★</b> Recap &amp; cheat sheet</a>
+    </div>
+
+    <div class="progwrap">
+      <div class="lbl">Progress</div>
+      <div class="progbar"><i id="progFill"></i></div>
+      <div class="cnt"><span id="progCnt">0</span> of <span id="progTot">0</span> checkpoints done</div>
+    </div>
+
+    <div class="navsec">
+      <span>How to use</span>
+      <p style="font-size:13px;color:var(--muted);line-height:1.5;margin:0 12px">
+        Code panels are <b>editable</b> — change them and hit <b>Run</b>. Hover any highlighted token in a
+        <b>code anatomy</b> to see its role. And try the <b>Predict</b> boxes first: guess the output
+        <em>before</em> revealing it.
+      </p>
+    </div>
+    <div class="backlink">
+      Related guides:
+      <a href="./index.html">⌂ All guides</a>
+      <a href="./js-mutability.html">→ Mutability</a>
+      <a href="./js-arrays.html">→ Arrays</a>
+    </div>
+  </nav>
+
+  <!-- MAIN -->
+  <main>
+    <header class="hero">
+      <div class="eyebrow">Data Types · Functions · Array Methods · Modules</div>
+      <h1>The chunky one, <span class="brace">{</span> made&nbsp;runnable <span class="brace">}</span></h1>
+      <p class="lede">Your Unit&nbsp;1 T3 lecture, rebuilt as something you can poke at. Every code panel runs
+      in your browser, the console colours values the way <code>node</code> does — <span style="color:var(--amber);font-weight:600">numbers amber</span>,
+      <span style="color:var(--emerald);font-weight:600">strings green</span> — and the tricky quirks get a diagram instead of a shrug.</p>
+      <p class="lede">Work top to bottom or jump around. The insights in the coloured boxes are the stuff worth
+      remembering when you hit the challenges — and where the syntax gets dense, there's a <b>code anatomy</b>:
+      hover or tap any highlighted token to see exactly what that piece does.</p>
+      <div class="runline">
+        <span class="kbd">$ node</span> the lecturer ran everything through node — so can you, right here.
+      </div>
+    </header>
+
+    <!-- ==================== CHAPTER 1 ==================== -->
+    <section class="chapter" id="c1">
+      <div class="chaphead"><span class="num">01</span><h2>Data types</h2></div>
+      <p class="chapsub">What kind of thing is this value? JavaScript answers with <code>typeof</code> — and occasionally lies to you.</p>
+
+      <h3>Primitive types</h3>
+      <p>Primitives are the simple, indivisible values. There are seven of them. A handy shortcut for
+      strings: it's basically <em>anything between quotes</em> — single <code>'…'</code>, double <code>"…"</code>,
+      or backticks <code>`…`</code> (backticks let you drop variables into the middle with <code>${ }</code>).</p>
+
+      <div class="typegrid">
+        <div class="typecard"><span class="tag">primitive</span><div class="kw">string</div><div class="ex">"hello" · `hi ${name}`</div></div>
+        <div class="typecard"><span class="tag">primitive</span><div class="kw">number</div><div class="ex">42 · 3.14 · -7 · Infinity · NaN</div></div>
+        <div class="typecard"><span class="tag">primitive</span><div class="kw">boolean</div><div class="ex">true · false</div></div>
+        <div class="typecard"><span class="tag">primitive</span><div class="kw">undefined</div><div class="ex">declared, never assigned</div></div>
+        <div class="typecard"><span class="tag">primitive</span><div class="kw">null</div><div class="ex">deliberately "nothing"</div></div>
+        <div class="typecard"><span class="tag">primitive</span><div class="kw">symbol</div><div class="ex">unique, unduplicatable keys</div></div>
+        <div class="typecard"><span class="tag">primitive</span><div class="kw">bigint</div><div class="ex">9007199254740993n</div></div>
+      </div>
+
+      <div class="insight">
+        <div class="htag">◆ Insight — undefined vs null</div>
+        <p>They look similar but carry different <em>intent</em>. <code>undefined</code> is JavaScript saying
+        "nobody gave this a value yet." <code>null</code> is <em>you</em> saying "this is intentionally empty."
+        Same emptiness, opposite authors — one is an accident waiting to be filled, the other is a decision.</p>
+      </div>
+
+      <h3>The <code>typeof</code> operator</h3>
+      <p>Put <code>typeof</code> in front of any value and it hands back a string naming the type. But first —
+      hover (or tap) each highlighted piece below to see exactly what every part of this one line is doing.</p>
+
+      <div class="anatomy">
+        <div class="ahead">Code anatomy — hover any part</div>
+        <div class="anacode"><span class="tok fn" data-exp="console|A built-in object that represents the terminal/output. Everything you print goes through it.">console</span><span class="tok pn" data-exp=". (dot access)|Reaches inside the console object to grab one of its functions.">.</span><span class="tok fn" data-exp="log|The function that prints whatever you pass it to the console.">log</span><span class="tok pn" data-exp="( ) call|The parentheses call the function and wrap the argument being passed in. This pair is what actually RUNS log.">(</span><span class="tok kw" data-exp="typeof|An operator (not a function) that returns a string naming the type of the value to its right — like &quot;string&quot; or &quot;number&quot;.">typeof</span> <span class="tok st" data-exp='"everyone"|A string literal. The quotes are what make it a string — remove them and JavaScript would look for a variable called everyone instead.'>"everyone"</span><span class="tok pn" data-exp=") call|Closes the call. Everything between ( and ) was the argument handed to log.">)</span></div>
+        <div class="anapanel"><div class="anahint">Hover or tap a highlighted token above <span class="legend">· colours group similar roles</span></div><div class="anatitle">—</div><div class="anatext">Every coloured part explains its own job.</div></div>
+      </div>
+
+      <p>Now try your own values — and notice which cards from above tell the truth about their type:</p>
+
+      <div class="pg">
+        <h4>typeof playground</h4>
+        <div class="row">
+          <input type="text" id="pgInput" placeholder='try:  "hello"   or   42   or   null' value='null'>
+        </div>
+        <div class="chips">
+          <span class="chip" data-v='"everyone"'>"everyone"</span>
+          <span class="chip" data-v='42'>42</span>
+          <span class="chip" data-v='3.14'>3.14</span>
+          <span class="chip" data-v='true'>true</span>
+          <span class="chip" data-v='undefined'>undefined</span>
+          <span class="chip" data-v='null'>null</span>
+          <span class="chip" data-v='NaN'>NaN</span>
+          <span class="chip" data-v='[1,2,3]'>[1,2,3]</span>
+          <span class="chip" data-v='{a:1}'>{a:1}</span>
+          <span class="chip" data-v='function(){}'>function(){}</span>
+        </div>
+        <div class="out" id="pgOut"></div>
+      </div>
+
+      <div class="insight gotcha">
+        <div class="htag">✖ Gotcha — the famous <code>typeof null</code> bug</div>
+        <p><code>typeof null</code> returns <code>"object"</code>, not <code>"null"</code>. This is a genuine
+        20-year-old bug in the language: in the very first JavaScript, values were tagged by a few bits, and
+        <code>null</code> happened to share the tag used for objects. Fixing it would break too much old code,
+        so it's frozen forever. Not logic you can reason your way to — just memorise it. It <em>will</em> catch
+        you when you check a value's type and forget this one exception.</p>
+      </div>
+
+      <h3>Number has a few surprises</h3>
+      <p>Everything numeric is just <code>number</code> — integers, decimals, negatives, <code>Infinity</code>,
+      and even <code>NaN</code> ("not a number"). Yes: the value literally called "not a number" reports its
+      type as <code>number</code>. JavaScript is committed to the bit.</p>
+
+      <div class="cell" data-cell>
+        <div class="bar"><span class="dots"><i></i><i></i><i></i></span><span class="fname">numbers.js</span><span class="spacer"></span><button class="run" data-run>▶ Run</button></div>
+        <pre class="code" contenteditable="true" spellcheck="false">console.log(typeof 42)         // integer
+console.log(typeof 3.14)       // decimal, still a number
+console.log(typeof -7)         // negatives too
+console.log(typeof Infinity)   // yep
+console.log(typeof NaN)        // "not a number" is... a number
+console.log(NaN === NaN)       // and this one is wild</pre>
+        <div class="console" data-console></div>
+      </div>
+
+      <div class="insight warn">
+        <div class="htag">▲ Worth knowing — NaN never equals itself</div>
+        <p><code>NaN === NaN</code> is <code>false</code>. It's the only value in the language that isn't equal
+        to itself. So you can't check for it with <code>===</code>; use <code>Number.isNaN(x)</code> instead.
+        You'll usually meet <code>NaN</code> when a conversion fails — like turning the letter "A" into a number.</p>
+      </div>
+
+      <h3>Casting: changing a value's type on purpose</h3>
+      <p>Values in JS aren't married to their type — you can convert between them with the capital-letter
+      "casting functions": <code>Number()</code>, <code>String()</code>, <code>Boolean()</code>. Whether it
+      <em>works</em> depends on whether the value has a sensible equivalent.</p>
+
+      <div class="cell" data-cell>
+        <div class="bar"><span class="dots"><i></i><i></i><i></i></span><span class="fname">casting.js</span><span class="spacer"></span><button class="run" data-run>▶ Run</button></div>
+        <pre class="code" contenteditable="true" spellcheck="false">const strNum = "342"
+const num = 342
+
+console.log(Number(strNum))        // "342" -> 342 (amber = number)
+console.log(String(num))           // 342 -> "342" (green = string)
+console.log(typeof Number(strNum)) // proof it really changed
+console.log(Number("A"))           // no numeric equivalent... NaN</pre>
+        <div class="console" data-console></div>
+      </div>
+
+      <p style="color:var(--muted);font-size:14px">In the lecturer's terminal the only visual clue was colour —
+      <span style="color:var(--amber);font-weight:600">342 in amber</span> meant number,
+      <span style="color:var(--emerald);font-weight:600">342 in green/white</span> meant string. This guide keeps
+      that convention, so the console above is doing the same tell.</p>
+
+      <h3><code>==</code> vs <code>===</code> — the equality trap</h3>
+      <p>Two equals checks <em>value</em> only, coercing types to match first. Three equals ("strict equals")
+      checks <em>value <strong>and</strong> type</em> — no coercion. This table is worth internalising:</p>
+
+      <table class="eqtable">
+        <thead><tr><th>Comparison</th><th><code>==</code> (loose)</th><th><code>===</code> (strict)</th><th>Why</th></tr></thead>
+        <tbody>
+          <tr><td><code>5 == "5"</code></td><td class="yes">true</td><td class="no">false</td><td>same value; different type</td></tr>
+          <tr><td><code>1 == true</code></td><td class="yes">true</td><td class="no">false</td><td>1 coerces to true, but number ≠ boolean</td></tr>
+          <tr><td><code>0 == false</code></td><td class="yes">true</td><td class="no">false</td><td>0 coerces to false</td></tr>
+          <tr><td><code>5 === 5</code></td><td class="yes">true</td><td class="yes">true</td><td>identical value and type</td></tr>
+          <tr><td><code>NaN === NaN</code></td><td class="no">false</td><td class="no">false</td><td>NaN is never equal to anything</td></tr>
+        </tbody>
+      </table>
+
+      <div class="insight">
+        <div class="htag">◆ Insight — just use <code>===</code></div>
+        <p>The loose <code>==</code> rules are so surprising that basically every professional codebase bans it.
+        Default to <code>===</code> everywhere. If you ever <em>need</em> a type change, do it explicitly with a
+        casting function so the intent is visible, rather than letting <code>==</code> guess for you.</p>
+      </div>
+
+      <div class="predict" data-predict>
+        <div class="phead"><span class="icon">?</span><b>Predict the output</b></div>
+        <div class="pbody">
+          <pre class="psrc">console.log(1 === true)
+console.log(1 == true)
+console.log("" == false)
+console.log(typeof (typeof 42))</pre>
+          <button class="reveal-btn" data-reveal>Reveal answer</button>
+          <div class="answer" data-answer>
+            <div class="cline"><span class="tok-bool">false</span></div>
+            <div class="cline"><span class="tok-bool">true</span></div>
+            <div class="cline"><span class="tok-bool">true</span></div>
+            <div class="cline"><span class="tok-str">"string"</span></div>
+            <div class="why">The last one is sneaky: <code>typeof 42</code> is the string <code>"number"</code>,
+            and <code>typeof</code> of any string is <code>"string"</code>. <code>typeof</code> always returns a
+            string, so <code>typeof typeof anything</code> is always <code>"string"</code>.</div>
+          </div>
+        </div>
+      </div>
+
+      <h3>Non-primitive (reference) types</h3>
+      <p>On top of primitives sit the "reference" types: <b>object</b>, <b>array</b>, and <b>function</b>.
+      Here's the catch the lecturer flagged — <code>typeof</code> an array returns <code>"object"</code>. Under
+      the hood, arrays <em>are</em> a kind of object. We treat them as separate ideas when we code, but
+      <code>typeof</code> can't tell them apart.</p>
+
+      <div class="typegrid">
+        <div class="typecard ref"><span class="tag">reference</span><div class="kw">object</div><div class="ex">{ color: "blue", size: 500 }</div></div>
+        <div class="typecard ref"><span class="tag">reference</span><div class="kw">array</div><div class="ex">["a", "b", "c"]  → typeof "object"</div></div>
+        <div class="typecard ref"><span class="tag">reference</span><div class="kw">function</div><div class="ex">(a, b) => a + b  → typeof "function"</div></div>
+      </div>
+
+      <h3>Pass by value vs pass by reference</h3>
+      <p>This is the deepest idea in the chapter, and the source of a lot of "why did my object change?!"
+      confusion later. Primitives are copied <b>by value</b>; references are shared <b>by reference</b>.</p>
+
+      <div class="memviz">
+        <div class="memcol">
+          <h4 style="color:var(--violet)">By value</h4>
+          <div class="sub">primitives — the value <em>is</em> the thing</div>
+          <div class="box val"><span class="name">num</span>342</div>
+          <div class="arrowlink">↓ copy into b</div>
+          <div class="box val"><span class="name">b</span>342 <span style="color:var(--muted)">(its own copy)</span></div>
+          <p style="font-size:13px;color:var(--muted);margin:12px 0 0">Change <code>b</code> and <code>num</code>
+          is untouched. You handed over a <em>photocopy</em>. And 342 itself can never change — you can only
+          point the variable at a different number.</p>
+        </div>
+        <div class="memcol">
+          <h4 style="color:var(--emerald)">By reference</h4>
+          <div class="sub">objects/arrays — the variable holds an <em>address</em></div>
+          <div class="box ref"><span class="name">bottle</span>→ 📦 { color: "blue" }</div>
+          <div class="arrowlink">↓ both point at the SAME box</div>
+          <div class="box ref"><span class="name">copy</span>→ 📦 { color: "blue" }</div>
+          <p style="font-size:13px;color:var(--muted);margin:12px 0 0">Change <code>copy.color</code> and
+          <code>bottle.color</code> changes too — same box, two labels. You handed over the <em>address</em>,
+          not a photocopy.</p>
+        </div>
+      </div>
+
+      <div class="insight warn">
+        <div class="htag">▲ Worth knowing — <code>const</code> doesn't freeze objects</div>
+        <p>You can do <code>const bottle = { color: "blue" }</code> and then <code>bottle.color = "red"</code>
+        — and it works. <code>const</code> only stops you <em>reassigning the variable</em> (pointing it at a new
+        box). It does nothing about editing the contents of the box it already points to. That's why the lecture
+        could mutate a <code>const</code> object and array without error.</p>
+      </div>
+
+      <div class="cell" data-cell>
+        <div class="bar"><span class="dots"><i></i><i></i><i></i></span><span class="fname">reference.js</span><span class="spacer"></span><button class="run" data-run>▶ Run</button></div>
+        <pre class="code" contenteditable="true" spellcheck="false">const bottle = { color: "blue" }
+const copy = bottle          // NOT a photocopy — same address
+copy.color = "red"           // edits the shared box
+console.log(bottle.color)    // did the "original" change?
+
+let a = 10
+let b = a                    // this IS a photocopy (primitive)
+b = 99
+console.log(a)               // unaffected</pre>
+        <div class="console" data-console></div>
+      </div>
+
+      <div class="check" data-check
+        data-correct="1"
+        data-fb="Right — arrays report as &quot;object&quot; because under the hood an array is a specialised object. Only functions get their own typeof result.">
+        <div class="q">Checkpoint: what does <code>typeof [1, 2, 3]</code> return?</div>
+        <div class="opts">
+          <button class="opt" data-opt="0">"array"</button>
+          <button class="opt" data-opt="1">"object"</button>
+          <button class="opt" data-opt="2">"list"</button>
+          <button class="opt" data-opt="3">a TypeError</button>
+        </div>
+        <div class="fb" data-fbbox></div>
+      </div>
+    </section>
+
+    <!-- ==================== CHAPTER 2 ==================== -->
+    <section class="chapter" id="c2">
+      <div class="chaphead"><span class="num">02</span><h2>Functions</h2></div>
+      <p class="chapsub">In JavaScript, functions are values you can pass around like any other. That single fact unlocks most of the "advanced" stuff.</p>
+
+      <h3>Functions are "first-class citizens"</h3>
+      <p>That intimidating phrase means exactly three things. A function can be:</p>
+      <ul>
+        <li><b>assigned to a variable</b> — <code>const greeting = helloWorld</code></li>
+        <li><b>passed as an argument</b> to another function — <code>doThing(helloWorld)</code></li>
+        <li><b>returned from</b> a function — <code>return helloWorld</code></li>
+      </ul>
+      <p>In other words: functions behave like numbers or strings. Anywhere you can put a value, you can put a
+      function. Everything clever with functions is just a combination of these three moves.</p>
+
+      <div class="insight">
+        <div class="htag">◆ Insight — the parentheses are the whole ballgame</div>
+        <p>The single most useful rule of thumb: <code>greeting</code> is the function itself (you're
+        <em>referring</em> to it). <code>greeting()</code> — with parentheses — <em>calls</em> it and gives you
+        back its result. Passing a function to another function? Leave the parens off, or you'll pass the
+        <em>result</em> instead of the function. This one distinction causes an enormous share of early bugs.</p>
+      </div>
+
+      <div class="cell" data-cell>
+        <div class="bar"><span class="dots"><i></i><i></i><i></i></span><span class="fname">first-class.js</span><span class="spacer"></span><button class="run" data-run>▶ Run</button></div>
+        <pre class="code" contenteditable="true" spellcheck="false">function helloWorld() {
+  return "hello world"
+}
+
+// 1. assign to a variable
+const greeting = helloWorld
+console.log(greeting())            // call it via its new name
+
+// 2. pass as an argument
+function sayHello(fn) {
+  const result = fn()              // call whatever function we were handed
+  console.log("passed in:", result)
+}
+sayHello(helloWorld)               // note: no parens on helloWorld here
+
+// 3. return from a function
+function getGreeting() {
+  return helloWorld                // hand the function back
+}
+console.log(getGreeting()())       // call getGreeting, then call its result</pre>
+        <div class="console" data-console></div>
+      </div>
+
+      <h3>Three ways to write a function</h3>
+      <p>Same idea, different syntax. You'll read all three constantly, so recognise them on sight.</p>
+
+      <h4>Named function</h4>
+      <p>The classic. Has a name in the declaration, uses <code>return</code>, callable anywhere by name.</p>
+      <div class="fileblock" style="margin:12px 0">
+        <div class="fh"><span class="dot"></span>named</div>
+        <pre><span class="kwd">function</span> <span class="fnn">add</span>(a, b) {
+  <span class="kwd">return</span> a + b
+}
+<span class="fnn">add</span>(1, 2) <span class="cmt">// 3</span></pre>
+      </div>
+
+      <h4>Anonymous function</h4>
+      <p>Identical, but with <em>no name</em>. On its own it's unusable — there's nothing to call it by. So you
+      assign it to a variable, and that variable becomes its name.</p>
+      <div class="fileblock" style="margin:12px 0">
+        <div class="fh"><span class="dot"></span>anonymous</div>
+        <pre><span class="kwd">const</span> add = <span class="kwd">function</span>(a, b) {
+  <span class="kwd">return</span> a + b
+}
+<span class="fnn">add</span>(1, 2) <span class="cmt">// 3 — same as the named one</span></pre>
+      </div>
+
+      <h4>Arrow function</h4>
+      <p>The concise modern form. With curly braces you write an <b>explicit</b> <code>return</code>. Drop the
+      braces and the return becomes <b>implicit</b> — the expression after the arrow is returned automatically.</p>
+      <div class="fileblock" style="margin:12px 0">
+        <div class="fh"><span class="dot"></span>arrow</div>
+        <pre><span class="cmt">// explicit return (braces + return keyword)</span>
+<span class="kwd">const</span> add = (a, b) => {
+  <span class="kwd">return</span> a + b
+}
+
+<span class="cmt">// implicit return — no braces, no return keyword</span>
+<span class="kwd">const</span> add = (a, b) => a + b   <span class="cmt">// same result, one line</span></pre>
+      </div>
+
+      <div class="anatomy">
+        <div class="ahead">Code anatomy — the arrow function, part by part</div>
+        <div class="anacode"><span class="tok kw" data-exp="const|Declares a constant. The name `add` is locked to this function — you can't later point `add` at something else.">const</span> <span class="tok fn" data-exp="add|The name we give the function so we can call it as add(1, 2) later. Nothing about the arrow syntax names itself — the variable does.">add</span> <span class="tok op" data-exp="= (assignment)|Puts the value on the right — the whole function — into the name on the left. A function is just a value here.">=</span> <span class="tok pn" data-exp="( ) parameter list|Wraps the inputs the function expects. Empty () means it takes none. This is NOT calling anything yet — it's declaring the inputs.">(</span><span class="tok pm" data-exp="a|First parameter — a placeholder name. Whatever value is passed first becomes `a` inside the function.">a</span>, <span class="tok pm" data-exp="b|Second parameter — the second value passed in becomes `b`.">b</span><span class="tok pn" data-exp=") parameter list|Closes the parameter list.">)</span> <span class="tok op" data-exp="=> (the arrow)|This is what makes it an arrow function. Read it as “goes to”: inputs on the LEFT, what it does on the RIGHT.">=></span> <span class="tok rt" data-exp="a + b (implicit return)|The body. Because there are NO curly braces, this is an implicit return — the result of a + b is handed back automatically. Add braces and you’d need to write `return` yourself.">a + b</span></div>
+        <div class="anapanel"><div class="anahint">Hover or tap a highlighted token above <span class="legend">· the arrow and the missing braces are the two things people miss</span></div><div class="anatitle">—</div><div class="anatext">Every coloured part explains its own job.</div></div>
+      </div>
+
+      <div class="insight warn">
+        <div class="htag">▲ Beyond conciseness — the hidden difference</div>
+        <p>The lecture frames arrows as "shorter functions," which is true and enough for now. But file this away
+        for later: arrow functions also handle <code>this</code> differently from regular functions. It won't bite
+        you in foundations, but when you reach React event handlers and someone says "use an arrow function so
+        <code>this</code> works," <em>this</em> is what they mean. Not just style — a real behavioural difference.</p>
+      </div>
+
+      <h3>Higher-order functions</h3>
+      <p>A "higher-order function" is just a function that takes and/or returns other functions — you already met
+      them above under "first-class." Here's the pattern doing real work. One <code>planEvent</code> function
+      produces different messages depending on which function you feed it.</p>
+
+      <div class="cell" data-cell>
+        <div class="bar"><span class="dots"><i></i><i></i><i></i></span><span class="fname">higher-order.js</span><span class="spacer"></span><button class="run" data-run>▶ Run</button></div>
+        <pre class="code" contenteditable="true" spellcheck="false">const birthday   = (a, b) => `${a}: it's your birthday, ${b} is invited to the pizza party!`
+const graduation = (a, b) => `${a}: come celebrate ${b}'s graduation!`
+const matariki   = (a, b) => `Everyone: ${a} and ${b} are organising for Matariki.`
+
+// planEvent takes a FUNCTION and plugs the names in
+function planEvent(messageFn, friend) {
+  const myName = "John"
+  return messageFn(myName, friend)
+}
+
+console.log(planEvent(birthday, "Yugi"))
+console.log(planEvent(graduation, "Kiana"))
+console.log(planEvent(matariki, "Leo"))</pre>
+        <div class="console" data-console></div>
+      </div>
+
+      <h3>Functions that build functions (closures)</h3>
+      <p>The trickiest example in the lecture: a function returns a <em>customised</em> function. Below,
+      <code>makeGreeter</code> bakes in a greeting word and hands back a fresh function that remembers it. That
+      "remembering" is called a <b>closure</b> — the inner function keeps hold of the variables it was created with.</p>
+
+      <div class="cell" data-cell>
+        <div class="bar"><span class="dots"><i></i><i></i><i></i></span><span class="fname">closures.js</span><span class="spacer"></span><button class="run" data-run>▶ Run</button></div>
+        <pre class="code" contenteditable="true" spellcheck="false">function makeGreeter(word) {
+  // returns a NEW function that remembers `word`
+  return (name) => `${word}, ${name}!`
+}
+
+const heya = makeGreeter("Heya")
+const hi   = makeGreeter("Hi")
+
+console.log(heya("Pri"))   // uses "Heya"
+console.log(hi("Pri"))     // same input, different baked-in word</pre>
+        <div class="console" data-console></div>
+      </div>
+
+      <div class="insight">
+        <div class="htag">◆ Insight — you don't need to master closures today</div>
+        <p>Closures are famous for melting beginners' brains, and you'll circle back to them many times. The
+        one-line version to hold onto: <em>a function remembers the variables that were around when it was
+        created, even after that outer function has finished.</em> That's it. The mechanics will click with
+        repetition — don't force it now.</p>
+      </div>
+
+      <div class="predict" data-predict>
+        <div class="phead"><span class="icon">?</span><b>Predict the output</b></div>
+        <div class="pbody">
+          <pre class="psrc">const double = n => n * 2
+const apply  = (fn, x) => fn(x)
+
+console.log(apply(double, 5))
+console.log(apply(n => n + 1, 5))
+console.log(typeof double)</pre>
+          <button class="reveal-btn" data-reveal>Reveal answer</button>
+          <div class="answer" data-answer>
+            <div class="cline"><span class="tok-num">10</span></div>
+            <div class="cline"><span class="tok-num">6</span></div>
+            <div class="cline"><span class="tok-str">"function"</span></div>
+            <div class="why"><code>apply</code> just calls whatever function it's handed on <code>x</code>.
+            The second call passes an inline arrow straight in as the argument — completely normal, since
+            functions are values. And <code>typeof</code> a function is its own thing: <code>"function"</code>.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="check" data-check
+        data-correct="2"
+        data-fb="Correct — no braces means implicit return, so `n * n` comes back automatically. Adding `return` inside braces would also work; mixing them (braces without return) is the classic mistake that returns undefined.">
+        <div class="q">Checkpoint: which arrow function correctly returns a number squared?</div>
+        <div class="opts">
+          <button class="opt" data-opt="0">const sq = n => { n * n }</button>
+          <button class="opt" data-opt="1">const sq = n => return n * n</button>
+          <button class="opt" data-opt="2">const sq = n => n * n</button>
+          <button class="opt" data-opt="3">const sq = n { return n * n }</button>
+        </div>
+        <div class="fb" data-fbbox></div>
+      </div>
+    </section>
+
+    <!-- ==================== CHAPTER 3 ==================== -->
+    <section class="chapter" id="c3">
+      <div class="chaphead"><span class="num">03</span><h2>Array methods</h2></div>
+      <p class="chapsub">Built-in loops that take a function. They replace most manual <code>for</code> loops — and once they click, you won't go back.</p>
+
+      <p>Each of these methods walks an array for you and runs a function you supply on every item. The lecture's
+      food metaphor is the fastest way to remember what each one <em>gives back</em>:</p>
+
+      <div class="amgrid">
+        <div class="amcard"><div class="glyph">🍳</div><div class="nm">forEach</div><div class="desc">Do something with each item. Just side-effects.</div><div class="ret">returns undefined</div></div>
+        <div class="amcard"><div class="glyph">🔍</div><div class="nm">find</div><div class="desc">The <em>first</em> item that passes the test.</div><div class="ret">returns one item</div></div>
+        <div class="amcard"><div class="glyph">🗑️</div><div class="nm">filter</div><div class="desc"><em>Every</em> item that passes the test.</div><div class="ret">returns a smaller array</div></div>
+        <div class="amcard"><div class="glyph">🔄</div><div class="nm">map</div><div class="desc">Transform each item into a new one.</div><div class="ret">returns same-size array</div></div>
+        <div class="amcard"><div class="glyph">🥣</div><div class="nm">reduce</div><div class="desc">Boil the whole array down to one value.</div><div class="ret">returns one value</div></div>
+      </div>
+
+      <div class="insight">
+        <div class="htag">◆ Insight — the mental picture that makes these stick</div>
+        <p><b>map</b> changes each thing (5 apples → 5 apple slices). <b>filter</b> keeps some things and throws
+        the rest out (5 apples → the 3 red ones). <b>reduce</b> combines everything into one (5 apples → 1
+        smoothie). If you can answer "how many things come out?" you already know which method you want:
+        <em>same amount</em> → map, <em>fewer</em> → filter, <em>exactly one</em> → reduce/find.</p>
+      </div>
+
+      <h3>The inline arrow pattern</h3>
+      <p>You <em>can</em> define a named test function and pass it in — but 90% of real code writes the function
+      inline, right inside the method, using an implicit-return arrow. Both do the same thing:</p>
+      <div class="fileblock" style="margin:12px 0">
+        <div class="fh"><span class="dot"></span>two ways, same result</div>
+        <pre><span class="cmt">// verbose: named helper passed in</span>
+<span class="kwd">const</span> <span class="fnn">isOdd</span> = n => n % 2 !== 0
+[1, 2, 3].<span class="fnn">find</span>(isOdd)
+
+<span class="cmt">// idiomatic: inline arrow, one line</span>
+[1, 2, 3].<span class="fnn">find</span>(n => n % 2 !== 0)</pre>
+      </div>
+
+      <div class="anatomy">
+        <div class="ahead">Code anatomy — how an array method reads</div>
+        <div class="anacode"><span class="tok fn" data-exp="nums|The array you're operating on. Every array method starts from an existing array like this.">nums</span><span class="tok pn" data-exp=". (dot access)|Reaches into the array to call one of its built-in methods.">.</span><span class="tok fn" data-exp="filter|An array method. It walks the whole array and keeps every item for which your test returns true, handing back a NEW smaller array.">filter</span><span class="tok pn" data-exp="( ) call|Calls filter. Inside these parentheses goes ONE thing: the function filter should run on each item.">(</span><span class="tok pm" data-exp="n|The parameter of the function you're handing to filter. filter calls this function once per item and passes each item in as `n`. You never write the loop — filter does.">n</span> <span class="tok op" data-exp="=> (arrow)|Arrow function: input `n` on the left, the test on the right.">=></span> <span class="tok rt" data-exp="n !== 2 (the test)|The test filter runs on every item. Returns true for items that aren't 2 — so every item except 2 is kept. This value being true/false is what filter looks at.">n !== 2</span><span class="tok pn" data-exp=") call|Closes the filter call. The whole arrow function was the single argument.">)</span></div>
+        <div class="anapanel"><div class="anahint">Hover or tap a highlighted token above <span class="legend">· the big idea: you supply the test, the method supplies the loop</span></div><div class="anatitle">—</div><div class="anatext">Every coloured part explains its own job.</div></div>
+      </div>
+
+      <h3>See them run</h3>
+      <p>One array, five methods. Edit anything and re-run to experiment.</p>
+
+      <div class="cell" data-cell>
+        <div class="bar"><span class="dots"><i></i><i></i><i></i></span><span class="fname">array-methods.js</span><span class="spacer"></span><button class="run" data-run>▶ Run</button></div>
+        <pre class="code" contenteditable="true" spellcheck="false">const nums = [4, 2, 3, 2, 7, 6]
+
+// forEach — do something per item, returns nothing
+nums.forEach(n => console.log("saw:", n))
+
+// find — first item passing the test
+console.log("first odd:", nums.find(n => n % 2 !== 0))
+
+// filter — every item passing the test
+console.log("no twos:", nums.filter(n => n !== 2))
+
+// map — transform each item, same length out
+console.log("plus one:", nums.map(n => n + 1))
+
+// reduce — collapse to a single value (start at 1, multiply through)
+console.log("product:", nums.reduce((total, n) => total * n, 1))</pre>
+        <div class="console" data-console></div>
+      </div>
+
+      <div class="insight warn">
+        <div class="htag">▲ Worth knowing — forEach returns undefined</div>
+        <p>Don't try to capture the result of <code>forEach</code> — there isn't one. <code>const x =
+        arr.forEach(...)</code> makes <code>x</code> equal <code>undefined</code>, every time. Use
+        <code>forEach</code> only for side-effects (logging, updating something external). If you want a new array
+        back, you wanted <code>map</code> or <code>filter</code>.</p>
+      </div>
+
+      <div class="insight">
+        <div class="htag">◆ Insight — reduce is the secret power tool</div>
+        <p>The lecture calls <code>reduce</code> a "secret power," and it's right: reduce can technically do what
+        map, filter and find do, because it can build up <em>any</em> shape of result — a number, a string, an
+        array, an object. It's the hardest to read, so don't reach for it first. But when a problem is "combine
+        this whole array into one thing" and nothing else fits, reduce is the answer. The two parameters are always
+        in this order: <code>(accumulator, currentItem)</code> — the running total, then the item you're on.</p>
+      </div>
+
+      <div class="predict" data-predict>
+        <div class="phead"><span class="icon">?</span><b>Predict the output</b></div>
+        <div class="pbody">
+          <pre class="psrc">const arr = [1, 2, 3, 4]
+
+console.log(arr.map(n => n * 10))
+console.log(arr.filter(n => n > 2))
+console.log(arr.find(n => n > 2))
+console.log(arr.reduce((sum, n) => sum + n, 0))</pre>
+          <button class="reveal-btn" data-reveal>Reveal answer</button>
+          <div class="answer" data-answer>
+            <div class="cline"><span class="tok-null">[</span> <span class="tok-num">10</span>, <span class="tok-num">20</span>, <span class="tok-num">30</span>, <span class="tok-num">40</span> <span class="tok-null">]</span></div>
+            <div class="cline"><span class="tok-null">[</span> <span class="tok-num">3</span>, <span class="tok-num">4</span> <span class="tok-null">]</span></div>
+            <div class="cline"><span class="tok-num">3</span></div>
+            <div class="cline"><span class="tok-num">10</span></div>
+            <div class="why">Watch the <em>shapes</em>: map gives back 4 items (same size), filter gives back
+            2 (fewer), find gives back a single value (3 — the first one over 2, not an array), and reduce sums
+            everything to one number. Same array in, four different shapes out.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="check" data-check
+        data-correct="1"
+        data-fb="Yes — map always returns a new array of the SAME length, with each element transformed. filter can return fewer; find returns one item; reduce returns a single value.">
+        <div class="q">Checkpoint: you have 6 numbers and want 6 <em>doubled</em> numbers back. Which method?</div>
+        <div class="opts">
+          <button class="opt" data-opt="0">filter</button>
+          <button class="opt" data-opt="1">map</button>
+          <button class="opt" data-opt="2">find</button>
+          <button class="opt" data-opt="3">forEach</button>
+        </div>
+        <div class="fb" data-fbbox></div>
+      </div>
+    </section>
+
+    <!-- ==================== CHAPTER 4 ==================== -->
+    <section class="chapter" id="c4">
+      <div class="chaphead"><span class="num">04</span><h2>Modules</h2></div>
+      <p class="chapsub">Splitting code across files. This is what lets a project grow past one giant file without losing your mind.</p>
+
+      <p>A module is just a file that keeps related code together and shares some of it with other files. Two
+      systems exist in JavaScript:</p>
+      <ul>
+        <li><b>CommonJS</b> — the older style, uses <code>require()</code> and <code>module.exports</code>. You
+        may have seen it in foundations.</li>
+        <li><b>ES Modules (ESM)</b> — the modern style, uses <code>import</code> and <code>export</code>. This is
+        what you'll use going forward.</li>
+      </ul>
+
+      <h3>Export what you make, import what you need</h3>
+      <p>The idea: a "library" file <em>exports</em> functions, and other files <em>import</em> them. Here's the
+      simplest working pair — a <code>lib.mjs</code> that offers up an <code>add</code> function, and an
+      <code>index.mjs</code> that pulls it in and uses it.</p>
+
+      <div class="filesview">
+        <div class="fileblock">
+          <div class="fh"><span class="dot"></span>lib.mjs</div>
+          <pre><span class="cmt">// define, then export</span>
+<span class="kwd">export</span> <span class="kwd">const</span> <span class="fnn">add</span> = (a, b) => a + b
+<span class="kwd">export</span> <span class="kwd">const</span> <span class="fnn">sub</span> = (a, b) => a - b</pre>
+        </div>
+        <div class="fileblock">
+          <div class="fh"><span class="dot"></span>index.mjs</div>
+          <pre><span class="cmt">// import by exact name, in braces</span>
+<span class="kwd">import</span> { add, sub } <span class="kwd">from</span> <span class="strn">"./lib.mjs"</span>
+
+<span class="fnn">console</span>.log(<span class="fnn">add</span>(1, 2)) <span class="cmt">// 3</span>
+<span class="fnn">console</span>.log(<span class="fnn">sub</span>(7, 3)) <span class="cmt">// 4</span></pre>
+        </div>
+      </div>
+
+      <div class="anatomy">
+        <div class="ahead">Code anatomy — an import line</div>
+        <div class="anacode"><span class="tok kw" data-exp="import|Pulls values that another file has exported into this file, so you can use them here.">import</span> <span class="tok pn" data-exp="{ } named import|The braces mean “grab these SPECIFIC named exports.” No braces would mean a default import instead — a different thing.">{</span> <span class="tok fn" data-exp="add|Must match EXACTLY the name the other file exported. Named imports aren't renamed for free — the spelling has to line up.">add</span>, <span class="tok fn" data-exp="sub|Another named export being pulled in. List as many as you need inside the braces.">sub</span> <span class="tok pn" data-exp="} named import|Closes the list of names being imported.">}</span> <span class="tok kw" data-exp="from|Introduces WHERE these names are coming from.">from</span> <span class="tok st" data-exp='"./lib.mjs"|The path to the source file, relative to this one. The ./ means “in the same folder.” The quotes make it a string path.'>"./lib.mjs"</span></div>
+        <div class="anapanel"><div class="anahint">Hover or tap a highlighted token above <span class="legend">· braces vs no-braces is the whole named-vs-default distinction below</span></div><div class="anatitle">—</div><div class="anatext">Every coloured part explains its own job.</div></div>
+      </div>
+
+      <h3>Named vs default exports</h3>
+      <p>There are two flavours of export, and they change how you import:</p>
+
+      <h4>Named exports — as many as you like</h4>
+      <p>Put <code>export</code> in front of each thing. On the import side you list them <em>in braces</em>, and
+      the names must match <em>exactly</em>.</p>
+      <div class="fileblock" style="margin:12px 0">
+        <div class="fh"><span class="dot"></span>named export → named import</div>
+        <pre><span class="cmt">// lib.mjs</span>
+<span class="kwd">export</span> <span class="kwd">const</span> <span class="fnn">add</span> = (a, b) => a + b
+<span class="kwd">export</span> <span class="kwd">const</span> <span class="fnn">sub</span> = (a, b) => a - b
+
+<span class="cmt">// index.mjs  —  names must match, wrapped in { }</span>
+<span class="kwd">import</span> { add, sub } <span class="kwd">from</span> <span class="strn">"./lib.mjs"</span></pre>
+      </div>
+
+      <h4>Default export — exactly one per file</h4>
+      <p>A file can have a single <code>export default</code>. On import there are <em>no braces</em>, and you can
+      call it <em>whatever you want</em> — the name is yours to choose.</p>
+      <div class="fileblock" style="margin:12px 0">
+        <div class="fh"><span class="dot"></span>default export → free-choice import</div>
+        <pre><span class="cmt">// lib.mjs  —  only ONE default allowed per file</span>
+<span class="kwd">const</span> <span class="fnn">add</span> = (a, b) => a + b
+<span class="kwd">export</span> <span class="kwd">default</span> add
+
+<span class="cmt">// index.mjs  —  no braces; name is up to you</span>
+<span class="kwd">import</span> anythingYouLike <span class="kwd">from</span> <span class="strn">"./lib.mjs"</span></pre>
+      </div>
+
+      <div class="insight gotcha">
+        <div class="htag">✖ Gotcha — one default per file, no more</div>
+        <p>Try to <code>export default add</code> <em>and</em> <code>export default sub</code> in the same file and
+        JavaScript throws: <em>"a module cannot have multiple default exports."</em> If you need to share several
+        things, use named exports (or one default plus named ones). A common convention: default-export the "main"
+        thing a file is about, and name-export the extras.</p>
+      </div>
+
+      <h4>Import everything as one object</h4>
+      <p>One more handy form: grab all the named exports at once as a single object with <code>import * as lib</code>.
+      Then reach in with dots — <code>lib.add</code>, <code>lib.sub</code>. Nice because it's obvious where each
+      function came from.</p>
+      <div class="fileblock" style="margin:12px 0">
+        <div class="fh"><span class="dot"></span>namespace import</div>
+        <pre><span class="kwd">import</span> * <span class="kwd">as</span> lib <span class="kwd">from</span> <span class="strn">"./lib.mjs"</span>
+
+<span class="fnn">console</span>.log(lib.<span class="fnn">add</span>(1, 2)) <span class="cmt">// 3</span>
+<span class="fnn">console</span>.log(lib.<span class="fnn">sub</span>(7, 3)) <span class="cmt">// 4</span></pre>
+      </div>
+
+      <div class="insight warn">
+        <div class="htag">▲ Real-world note — you won't type <code>.mjs</code> for long</div>
+        <p>The lecture uses the <code>.mjs</code> extension as a temporary trick to force ESM to work in a bare
+        node file. In actual projects you'll almost never see <code>.mjs</code>. Instead, a project's
+        <code>package.json</code> has one line — <code>"type": "module"</code> — and from then on every ordinary
+        <code>.js</code> file uses <code>import</code>/<code>export</code> automatically. So treat <code>.mjs</code>
+        as training wheels: the <em>import/export syntax</em> is the real skill, the extension is scaffolding.</p>
+      </div>
+
+      <div class="check" data-check
+        data-correct="0"
+        data-fb="Correct — default imports use NO braces and you pick the name freely. Braces are only for named imports, where the names must match the exports exactly.">
+        <div class="q">Checkpoint: a file does <code>export default myFunc</code>. How do you import it?</div>
+        <div class="opts">
+          <button class="opt" data-opt="0">import whatever from "./file.mjs"</button>
+          <button class="opt" data-opt="1">import { myFunc } from "./file.mjs"</button>
+          <button class="opt" data-opt="2">import * from "./file.mjs"</button>
+          <button class="opt" data-opt="3">require("./file.mjs")</button>
+        </div>
+        <div class="fb" data-fbbox></div>
+      </div>
+    </section>
+
+    <!-- ==================== RECAP ==================== -->
+    <section class="chapter" id="recap">
+      <div class="chaphead"><span class="num">★</span><h2>Recap &amp; cheat sheet</h2></div>
+      <p class="chapsub">The stuff to keep in your back pocket during the challenges.</p>
+
+      <div class="recap">
+        <h3>Data types</h3>
+        <ul>
+          <li>7 primitives: <b>string, number, boolean, undefined, null, symbol, bigint</b></li>
+          <li><b>typeof null === "object"</b> — the ancient bug. Just memorise it.</li>
+          <li><b>typeof [array] === "object"</b> too. Only functions get "function".</li>
+          <li><b>NaN === NaN → false.</b> Use Number.isNaN() to check for it.</li>
+          <li>Cast on purpose with <b>Number() / String() / Boolean()</b>.</li>
+          <li>Default to <b>===</b> (value + type). Avoid == and its coercion surprises.</li>
+          <li>Primitives copy <b>by value</b>; objects/arrays share <b>by reference</b>.</li>
+          <li><b>const</b> stops reassignment, not mutation — you can still edit an object's contents.</li>
+        </ul>
+      </div>
+
+      <div class="recap">
+        <h3>Functions</h3>
+        <ul>
+          <li>First-class: <b>assign, pass, return</b> — functions are values.</li>
+          <li><b>greeting</b> refers to it; <b>greeting()</b> calls it. The parens matter.</li>
+          <li>Named / anonymous / arrow — same idea, three syntaxes.</li>
+          <li>Arrow: braces → <b>explicit return</b>; no braces → <b>implicit return</b>.</li>
+          <li>Braces <b>without</b> a return keyword = returns undefined (classic bug).</li>
+          <li>Higher-order = takes/returns functions. Closures = a function remembers its birthplace variables.</li>
+        </ul>
+      </div>
+
+      <div class="recap">
+        <h3>Array methods</h3>
+        <ul>
+          <li><b>forEach</b> → undefined (side-effects only)</li>
+          <li><b>find</b> → first matching item</li>
+          <li><b>filter</b> → all matching items (smaller array)</li>
+          <li><b>map</b> → same-size array, each item transformed</li>
+          <li><b>reduce</b> → one value; args are <b>(accumulator, current)</b></li>
+          <li>Ask "how many come out?" → same = map, fewer = filter, one = reduce/find</li>
+        </ul>
+      </div>
+
+      <div class="recap">
+        <h3>Modules</h3>
+        <ul>
+          <li>ESM uses <b>import / export</b> (CommonJS used require).</li>
+          <li><b>Named</b> export → import <b>{ inBraces }</b>, names must match exactly.</li>
+          <li><b>Default</b> export → import with <b>no braces</b>, pick any name. One per file.</li>
+          <li><b>import * as lib</b> grabs everything as one object → lib.add().</li>
+          <li>.mjs is a teaching crutch; real projects set <b>"type": "module"</b> in package.json.</li>
+        </ul>
+      </div>
+
+      <footer>
+        <p>Built from your Unit 1 · T3 lecture transcript — Dev Academy Aotearoa. Every panel runs locally in your
+        browser; nothing's saved, so refresh for a clean slate.</p>
+        <p class="mono">tip: the MDN docs on <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures" target="_blank" rel="noopener">Data structures</a>,
+        <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/reduce" target="_blank" rel="noopener">reduce</a>,
+        and <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Modules" target="_blank" rel="noopener">modules</a> go deeper when you're ready.</p>
+      </footer>
+    </section>
+  </main>
+</div>
+
+<script>
+/* ---------- node-ish value formatting ---------- */
+function fmt(v){
+  if(v === null) return '<span class="tok-null">null</span>';
+  if(v === undefined) return '<span class="tok-null">undefined</span>';
+  const t = typeof v;
+  if(t === 'number') return '<span class="tok-num">'+ (Object.is(v,-0)?'-0':String(v)) +'</span>';
+  if(t === 'boolean') return '<span class="tok-bool">'+v+'</span>';
+  if(t === 'string') return '<span class="tok-str">\''+esc(v)+'\'</span>';
+  if(t === 'function') return '<span class="tok-fn">[Function: '+esc(v.name||'anonymous')+']</span>';
+  if(t === 'symbol') return '<span class="tok-fn">'+esc(v.toString())+'</span>';
+  if(t === 'bigint') return '<span class="tok-num">'+v+'n</span>';
+  if(Array.isArray(v)) return '<span class="tok-null">[</span> '+ v.map(fmt).join('<span class="tok-null">, </span>') +' <span class="tok-null">]</span>';
+  if(t === 'object'){
+    const parts = Object.keys(v).map(k => esc(k)+': '+fmt(v[k]));
+    return '<span class="tok-null">{</span> '+parts.join('<span class="tok-null">, </span>')+' <span class="tok-null">}</span>';
+  }
+  return esc(String(v));
+}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+/* a console.log arg is rendered raw if string (node prints bare strings uncoloured),
+   but for teaching we colour strings green everywhere. Multiple args join with space. */
+function fmtArgs(args){
+  return args.map(a => (typeof a === 'string')
+    ? '<span class="tok-str">'+esc(a)+'</span>'   // bare top-level string, no quotes but green
+    : fmt(a)
+  ).join(' ');
+}
+
+function runCell(cellEl){
+  const code = cellEl.querySelector('pre.code').textContent;
+  const consoleEl = cellEl.querySelector('[data-console]');
+  const logs = [];
+  const fakeConsole = {
+    log: (...a) => logs.push({type:'log', args:a}),
+    error: (...a) => logs.push({type:'log', args:a}),
+    warn: (...a) => logs.push({type:'log', args:a}),
+    info: (...a) => logs.push({type:'log', args:a}),
+  };
+  try{
+    const fn = new Function('console', '"use strict";\n' + code);
+    fn(fakeConsole);
+  }catch(err){
+    logs.push({type:'err', msg: (err && err.message) ? err.message : String(err)});
+  }
+  render(consoleEl, logs);
+}
+
+function render(consoleEl, logs){
+  consoleEl.classList.add('show');
+  if(!logs.length){
+    consoleEl.innerHTML = '<div class="cline empty">// no output — nothing was logged</div>';
+    return;
+  }
+  consoleEl.innerHTML = logs.map(l => {
+    if(l.type === 'err')
+      return '<div class="cline"><span class="tok-err">✖ '+esc(l.msg)+'</span></div>';
+    return '<div class="cline"><span class="prompt">› </span>'+ fmtArgs(l.args) +'</div>';
+  }).join('');
+}
+
+/* wire run buttons */
+document.querySelectorAll('[data-cell]').forEach(cell => {
+  cell.querySelector('[data-run]').addEventListener('click', () => runCell(cell));
+  // Ctrl/Cmd+Enter to run while editing
+  cell.querySelector('pre.code').addEventListener('keydown', e => {
+    if((e.metaKey||e.ctrlKey) && e.key === 'Enter'){ e.preventDefault(); runCell(cell); }
+  });
+});
+
+/* predict reveals */
+document.querySelectorAll('[data-predict]').forEach(p => {
+  p.querySelector('[data-reveal]').addEventListener('click', function(){
+    p.querySelector('[data-answer]').classList.add('show');
+    this.textContent = 'Answer shown ↓';
+    this.disabled = true;
+    this.style.opacity = .55;
+  });
+});
+
+/* typeof playground */
+(function(){
+  const input = document.getElementById('pgInput');
+  const out = document.getElementById('pgOut');
+  function evalType(){
+    const raw = input.value.trim();
+    if(!raw){ out.innerHTML = '<span class="arrow">// type a value above</span>'; return; }
+    try{
+      const val = new Function('return ('+raw+')')();
+      const t = typeof val;
+      out.innerHTML = '<span class="tok-fn">typeof</span> '+esc(raw)+' <span class="arrow">→</span> <span class="tok-str">"'+t+'"</span>'
+        + (t==='object' && raw!=='null' && !Array.isArray(val) ? '' : '')
+        + (raw==='null' ? '   <span class="arrow">// ← the famous lie</span>' : '')
+        + (Array.isArray(val) ? '   <span class="arrow">// arrays report as object!</span>' : '');
+    }catch(err){
+      out.innerHTML = '<span class="tok-err">✖ '+esc(err.message)+'</span>';
+    }
+  }
+  input.addEventListener('input', evalType);
+  document.querySelectorAll('.pg .chip').forEach(c => {
+    c.addEventListener('click', () => { input.value = c.dataset.v; evalType(); });
+  });
+  evalType();
+})();
+
+/* checkpoints + progress */
+const checks = document.querySelectorAll('[data-check]');
+let done = 0;
+document.getElementById('progTot').textContent = checks.length;
+checks.forEach(chk => {
+  const correct = parseInt(chk.dataset.correct,10);
+  const fbbox = chk.querySelector('[data-fbbox]');
+  let answered = false;
+  chk.querySelectorAll('.opt').forEach(opt => {
+    opt.addEventListener('click', () => {
+      const pick = parseInt(opt.dataset.opt,10);
+      if(pick === correct){
+        opt.classList.add('correct');
+        fbbox.textContent = chk.dataset.fb;
+        fbbox.classList.add('show');
+        chk.querySelectorAll('.opt').forEach(o=>o.style.pointerEvents='none');
+        if(!answered){ answered = true; done++; updateProg(); }
+      }else{
+        opt.classList.add('wrong');
+        opt.style.pointerEvents='none';
+      }
+    });
+  });
+});
+function updateProg(){
+  document.getElementById('progCnt').textContent = done;
+  document.getElementById('progFill').style.width = (done/checks.length*100)+'%';
+}
+
+/* ---------- code anatomy: hover / tap any token ---------- */
+document.querySelectorAll('.anatomy').forEach(an => {
+  const title = an.querySelector('.anatitle');
+  const text  = an.querySelector('.anatext');
+  const hint  = an.querySelector('.anahint');
+  const toks  = an.querySelectorAll('.tok');
+  function show(tok){
+    const raw = tok.getAttribute('data-exp') || '';
+    const i = raw.indexOf('|');
+    title.textContent = i >= 0 ? raw.slice(0,i) : tok.textContent.trim();
+    text.textContent  = i >= 0 ? raw.slice(i+1) : raw;
+    hint.textContent  = 'what this part does';
+    toks.forEach(x => x.classList.remove('active'));
+    tok.classList.add('active');
+  }
+  toks.forEach(tok => {
+    tok.setAttribute('tabindex','0');
+    tok.addEventListener('mouseenter', () => show(tok));
+    tok.addEventListener('click',      () => show(tok));
+    tok.addEventListener('focus',      () => show(tok));
+  });
+});
+
+/* scrollspy for nav */
+const sections = [...document.querySelectorAll('section.chapter')];
+const links = [...document.querySelectorAll('nav.side a[data-sec]')];
+const mlinks = [...document.querySelectorAll('.mobtop .mlink')];
+function spy(){
+  const y = window.scrollY + 120;
+  let cur = sections[0].id;
+  for(const s of sections){ if(s.offsetTop <= y) cur = s.id; }
+  links.forEach(l => l.classList.toggle('active', l.getAttribute('href') === '#'+cur));
+  mlinks.forEach(l => l.classList.toggle('active', l.getAttribute('href') === '#'+cur));
+}
+window.addEventListener('scroll', spy, {passive:true});
+spy();
+</script>
+</body>
+</html>

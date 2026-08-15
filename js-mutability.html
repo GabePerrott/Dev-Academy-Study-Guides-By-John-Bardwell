@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mutability — bonus deep dive</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;450;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F1F1F4;--card:#FBFBFD;--ink:#1B1E26;--muted:#5A5F6B;--line:#E1E1E8;
+    --violet:#6C4CE0;--violet-soft:#EDE8FC;--violet-line:#D8CEF7;
+    --emerald:#12905F;--amber:#B67A08;--rose:#D6455D;
+    --term-bg:#15171E;--term-panel:#1D2029;--term-fg:#E6E8EC;--term-dim:#8A90A0;
+    --t-num:#E7B45A;--t-str:#93D6A0;--t-bool:#E7B45A;--t-null:#8A90A0;--t-err:#F0808F;
+    --radius:14px;
+    --mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+    --disp:'Space Grotesk',system-ui,sans-serif;--body:'Inter',system-ui,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);
+    font-size:16.5px;line-height:1.62;-webkit-font-smoothing:antialiased}
+  a{color:var(--violet);text-decoration:none}a:hover{text-decoration:underline}
+  code{font-family:var(--mono);font-size:.88em;background:#E7E7EE;padding:.08em .38em;border-radius:5px;color:#2C2140}
+
+  .wrap{display:grid;grid-template-columns:270px minmax(0,1fr);max-width:1200px;margin:0 auto}
+  nav.side{position:sticky;top:0;align-self:start;height:100vh;overflow-y:auto;padding:30px 22px 40px;border-right:1px solid var(--line)}
+  main{padding:0 clamp(20px,5vw,64px) 120px;min-width:0}
+  .brand{font-family:var(--mono);font-weight:700;font-size:14px;letter-spacing:.04em;color:var(--violet);margin-bottom:4px}
+  .brand small{color:var(--muted);font-weight:400;display:block;letter-spacing:0;margin-top:3px;font-family:var(--body);font-size:12.5px}
+  .navsec{margin-top:26px}
+  .navsec > span{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:9px;padding-left:12px}
+  nav.side a.link{display:flex;gap:10px;align-items:baseline;padding:7px 12px;border-radius:9px;color:var(--ink);font-size:14.5px;line-height:1.35}
+  nav.side a.link:hover{background:#E9E9F0;text-decoration:none}
+  nav.side a.link.active{background:var(--violet-soft);color:#3B2A73;font-weight:500}
+  nav.side a.link b{font-family:var(--mono);font-size:11.5px;color:var(--violet);min-width:20px}
+  .backlink{margin-top:24px;font-size:13px;color:var(--muted)}
+  .backlink a{font-family:var(--mono);font-size:12.5px}
+
+  header.hero{padding:64px 0 30px}
+  .eyebrow{font-family:var(--mono);font-size:12.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--violet);margin-bottom:18px}
+  h1{font-family:var(--disp);font-weight:700;font-size:clamp(34px,5.4vw,54px);line-height:1.04;letter-spacing:-.02em;margin:0 0 20px}
+  h1 .brace{color:var(--violet)}
+  .lede{font-size:19px;color:#3A3E48;max-width:60ch;margin:0}
+  .lede + .lede{margin-top:14px}
+  .pill{display:inline-block;font-family:var(--mono);font-size:12px;letter-spacing:.06em;background:var(--violet-soft);
+    color:#5A44A8;border:1px solid var(--violet-line);border-radius:99px;padding:5px 13px;margin-top:26px}
+
+  section.chapter{padding-top:56px;scroll-margin-top:20px}
+  .chaphead{display:flex;align-items:baseline;gap:16px;border-bottom:2px solid var(--ink);padding-bottom:12px;margin-bottom:8px}
+  .chaphead .num{font-family:var(--mono);font-weight:700;font-size:15px;color:var(--violet)}
+  h2{font-family:var(--disp);font-weight:600;font-size:clamp(26px,3.6vw,36px);letter-spacing:-.015em;margin:0}
+  .chapsub{color:var(--muted);font-size:15px;margin:14px 0 0}
+  h3{font-family:var(--disp);font-weight:600;font-size:22px;letter-spacing:-.01em;margin:44px 0 10px}
+  h4{font-family:var(--disp);font-weight:600;font-size:17px;margin:28px 0 6px}
+  p{margin:14px 0}main p,main li{color:#24272F}
+
+  /* code cell */
+  .cell{margin:22px 0;border-radius:var(--radius);overflow:hidden;border:1px solid #2A2E3A;box-shadow:0 10px 30px -18px rgba(20,20,40,.4)}
+  .cell .bar{background:var(--term-panel);display:flex;align-items:center;gap:8px;padding:9px 14px;border-bottom:1px solid #2A2E3A}
+  .cell .bar .dots{display:flex;gap:6px}
+  .cell .bar .dots i{width:11px;height:11px;border-radius:50%;display:block}
+  .dots i:nth-child(1){background:#E06C75}.dots i:nth-child(2){background:#E5C07B}.dots i:nth-child(3){background:#98C379}
+  .cell .bar .fname{font-family:var(--mono);font-size:12px;color:var(--term-dim);margin-left:4px}
+  .cell .bar .spacer{flex:1}
+  .cell .bar button{font-family:var(--mono);font-size:12px;font-weight:500;cursor:pointer;border:1px solid #3A4152;background:#2A3040;color:#CBD3E1;border-radius:7px;padding:5px 13px;transition:.15s}
+  .cell .bar button:hover{background:#343C4E;border-color:#4A5264}
+  .cell .bar button.run{background:var(--violet);border-color:var(--violet);color:#fff}
+  .cell .bar button.run:hover{background:#5B3ED1}
+  .cell pre.code{margin:0;background:var(--term-bg);color:var(--term-fg);font-family:var(--mono);font-size:13.5px;line-height:1.65;padding:16px 18px;white-space:pre;overflow-x:auto;outline:none;tab-size:2}
+  .cell pre.code:focus{box-shadow:inset 3px 0 0 var(--violet)}
+  .console{background:#0F1116;border-top:1px solid #2A2E3A;padding:0 18px;max-height:0;overflow:hidden;transition:max-height .35s ease,padding .35s ease}
+  .console.show{max-height:400px;overflow-y:auto;padding:13px 18px}
+  .console .cline{font-family:var(--mono);font-size:13px;line-height:1.7;white-space:pre-wrap;word-break:break-word}
+  .console .prompt{color:#4A5060}.console .empty{color:var(--term-dim);font-style:italic}
+  .tok-num{color:var(--t-num)}.tok-str{color:var(--t-str)}.tok-bool{color:var(--t-bool)}.tok-null{color:var(--t-null)}.tok-err{color:var(--t-err)}.tok-fn{color:#C39BF5}
+
+  /* ---------- code anatomy (hover/tap any token) ---------- */
+  .anatomy{margin:22px 0;border:1px solid #2A2E3A;border-radius:var(--radius);overflow:hidden;box-shadow:0 10px 30px -18px rgba(20,20,40,.4)}
+  .anatomy .ahead{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--term-dim);padding:10px 16px;border-bottom:1px solid #2A2E3A;background:var(--term-panel);display:flex;align-items:center;gap:8px}
+  .anatomy .ahead::before{content:'⌖';color:#C39BF5;font-size:14px}
+  .anacode{padding:18px;background:var(--term-bg);font-family:var(--mono);font-size:14.5px;line-height:2.15;color:var(--term-fg);overflow-x:auto;white-space:pre-wrap;word-break:break-word}
+  .tok{cursor:pointer;border-radius:5px;padding:2px 3px;transition:.12s;outline:1.5px solid transparent}
+  .tok:hover{outline-color:rgba(255,255,255,.28)}
+  .tok.kw{background:rgba(195,155,245,.16);color:#C9A6F6}
+  .tok.fn{background:rgba(124,183,240,.15);color:#8CC0F5}
+  .tok.pm{background:rgba(231,180,90,.15);color:#E7B45A}
+  .tok.rt{background:rgba(147,214,160,.15);color:#93D6A0}
+  .tok.op{background:rgba(240,128,143,.14);color:#F0909F}
+  .tok.pn{background:rgba(150,156,172,.16);color:#B4BAC8}
+  .tok.st{background:rgba(147,214,160,.13);color:#93D6A0}
+  .tok.nm{background:rgba(231,180,90,.14);color:#E7B45A}
+  .tok.active{outline-color:var(--violet)!important;background:rgba(108,76,224,.32)!important;color:#fff}
+  .anapanel{padding:15px 18px;min-height:78px;background:var(--card)}
+  .anahint{font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:.05em}
+  .anahint .legend{color:var(--muted);opacity:.8}
+  .anatitle{font-family:var(--mono);font-weight:700;font-size:14px;color:var(--violet);margin:6px 0 3px}
+  .anatext{font-size:13.5px;color:#2A2D36;line-height:1.55}
+  @media(max-width:640px){.anacode{font-size:13px;line-height:2}}
+
+  /* predict */
+  .predict{margin:22px 0;border:1px solid var(--violet-line);border-radius:var(--radius);background:linear-gradient(180deg,#FAF8FF,#F4F0FE);overflow:hidden}
+  .predict .phead{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--violet-line)}
+  .predict .phead .icon{width:22px;height:22px;border-radius:6px;background:var(--violet);color:#fff;display:grid;place-items:center;font-size:13px;font-weight:700;font-family:var(--mono)}
+  .predict .phead b{font-family:var(--disp);font-size:15px}
+  .predict .pbody{padding:16px}
+  .predict pre.psrc{margin:0 0 14px;background:var(--term-bg);color:var(--term-fg);border-radius:10px;font-family:var(--mono);font-size:13px;line-height:1.6;padding:14px 16px;overflow-x:auto;white-space:pre}
+  .predict .reveal-btn{font-family:var(--mono);font-size:12.5px;font-weight:600;cursor:pointer;background:var(--violet);color:#fff;border:none;border-radius:8px;padding:8px 16px}
+  .predict .reveal-btn:hover{background:#5B3ED1}
+  .predict .answer{display:none;margin-top:14px;background:#0F1116;border-radius:10px;padding:13px 16px}
+  .predict .answer.show{display:block}
+  .predict .answer .cline{font-family:var(--mono);font-size:13px;line-height:1.7}
+  .predict .answer .why{color:var(--term-dim);font-size:12.5px;margin-top:9px;font-family:var(--body);line-height:1.55}
+
+  .insight{margin:24px 0;background:var(--card);border:1px solid var(--line);border-left:3px solid var(--violet);border-radius:12px;padding:16px 20px}
+  .insight .htag{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--violet);font-weight:700;display:flex;align-items:center;gap:8px;margin-bottom:6px}
+  .insight.warn{border-left-color:var(--amber)}.insight.warn .htag{color:var(--amber)}
+  .insight.gotcha{border-left-color:var(--rose)}.insight.gotcha .htag{color:var(--rose)}
+  .insight p{margin:6px 0}.insight p:first-of-type{margin-top:0}
+
+  /* mutable vs immutable split */
+  .split{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:22px 0}
+  @media(max-width:640px){.split{grid-template-columns:1fr}}
+  .splitcard{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;position:relative;overflow:hidden}
+  .splitcard.immut{border-top:3px solid var(--violet)}
+  .splitcard.mut{border-top:3px solid var(--emerald)}
+  .splitcard .lab{font-family:var(--mono);font-size:11px;letter-spacing:.09em;text-transform:uppercase;font-weight:700;margin-bottom:4px}
+  .splitcard.immut .lab{color:var(--violet)}.splitcard.mut .lab{color:var(--emerald)}
+  .splitcard h4{margin:0 0 8px}
+  .splitcard .types{font-family:var(--mono);font-size:12px;color:var(--muted);margin-bottom:10px}
+  .splitcard p{font-size:14px;margin:8px 0 0}
+
+  /* ---------- MEMORY LAB ---------- */
+  .lab{margin:26px 0;border:1px solid var(--line);border-radius:16px;background:var(--card);overflow:hidden}
+  .lab .tabs{display:flex;border-bottom:1px solid var(--line);background:#F5F5F9}
+  .lab .tab{flex:1;font-family:var(--mono);font-size:13px;font-weight:500;cursor:pointer;background:none;border:none;
+    padding:13px 10px;color:var(--muted);border-bottom:2px solid transparent;transition:.15s}
+  .lab .tab:hover{background:#EEEDF4}
+  .lab .tab.active{color:var(--violet);border-bottom-color:var(--violet);background:var(--card)}
+  .lab .stage{display:grid;grid-template-columns:200px 1fr;gap:0;min-height:230px}
+  @media(max-width:620px){.lab .stage{grid-template-columns:1fr}}
+  .lab .vars{padding:20px 18px;border-right:1px solid var(--line);background:#FAFAFC}
+  @media(max-width:620px){.lab .vars{border-right:none;border-bottom:1px solid var(--line)}}
+  .lab .colh{font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:14px}
+  .varrow{display:flex;align-items:center;gap:8px;margin:0 0 12px;font-family:var(--mono);font-size:13.5px;opacity:0;transform:translateY(4px);transition:.3s}
+  .varrow.show{opacity:1;transform:none}
+  .varrow .vname{font-weight:700;color:var(--ink)}
+  .varrow .vkw{color:var(--violet);font-size:11.5px}
+  .varrow .conn{color:var(--muted)}
+  .varrow .addr{color:var(--emerald);font-weight:600}
+  .varrow .lit{color:var(--amber);font-weight:600}
+  .lab .mem{padding:20px 18px;position:relative}
+  .membox{border:2px solid var(--line);border-radius:10px;padding:12px 14px;margin:0 0 12px;font-family:var(--mono);
+    font-size:13.5px;background:#fff;position:relative;max-width:280px;opacity:0;transform:scale(.96);transition:.3s}
+  .membox.show{opacity:1;transform:none}
+  .membox.value{border-color:var(--violet-line);background:#FAF8FF}
+  .membox.ref{border-color:#9FDCC0;background:#F0FAF5}
+  .membox .baddr{position:absolute;top:-9px;left:12px;background:var(--card);padding:0 6px;font-size:10px;color:var(--emerald);font-weight:700;letter-spacing:.04em}
+  .membox .bval{color:var(--amber);font-weight:600}
+  .membox .prop{color:var(--muted)}
+  .membox .prop b{color:var(--emerald);font-weight:600}
+  .membox.flash{animation:flash .7s}
+  @keyframes flash{0%,100%{box-shadow:0 0 0 0 rgba(214,69,93,0)}35%{box-shadow:0 0 0 5px rgba(214,69,93,.28);border-color:var(--rose)}}
+  .lab .controls{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:14px 18px;border-top:1px solid var(--line);background:#F5F5F9}
+  .lab .controls .step{font-family:var(--mono);font-size:12.5px;color:var(--muted);flex:1;min-width:160px}
+  .lab .controls .step b{color:var(--ink)}
+  .lab .controls button{font-family:var(--mono);font-size:12.5px;font-weight:600;cursor:pointer;border-radius:8px;padding:8px 15px;border:1px solid var(--violet);background:var(--violet);color:#fff;transition:.15s}
+  .lab .controls button:hover{background:#5B3ED1}
+  .lab .controls button.ghost{background:transparent;color:var(--violet)}
+  .lab .controls button.ghost:hover{background:var(--violet-soft)}
+  .lab .controls button:disabled{opacity:.4;cursor:not-allowed;background:#B9B4CC;border-color:#B9B4CC}
+  .lab .verdict{font-family:var(--mono);font-size:12.5px;padding:0 18px;max-height:0;overflow:hidden;transition:max-height .3s,padding .3s}
+  .lab .verdict.show{max-height:120px;padding:13px 18px;border-top:1px solid var(--line)}
+  .lab .verdict.value{background:#FAF8FF;color:#4A3B85}
+  .lab .verdict.ref{background:#F0FAF5;color:#0C6B45}
+
+  /* checkpoint */
+  .check{margin:26px 0;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px}
+  .check .q{font-family:var(--disp);font-weight:600;font-size:16px;margin-bottom:14px}
+  .check .opts{display:flex;flex-direction:column;gap:9px}
+  .check .opt{font-family:var(--mono);font-size:13.5px;text-align:left;cursor:pointer;background:#fff;border:1px solid var(--line);border-radius:9px;padding:11px 14px;transition:.15s}
+  .check .opt:hover{border-color:var(--violet-line);background:#FAF8FF}
+  .check .opt.correct{border-color:var(--emerald);background:#EAF7F0;color:#0C6B45}
+  .check .opt.wrong{border-color:var(--rose);background:#FBECEE;color:#9E2B3B}
+  .check .fb{margin-top:12px;font-size:13.5px;color:var(--muted);display:none}
+  .check .fb.show{display:block}
+
+  .recap{background:var(--term-bg);border-radius:16px;padding:26px 28px;margin:26px 0;color:var(--term-fg)}
+  .recap h3{color:#fff;margin-top:0}
+  .recap ul{list-style:none;padding:0;margin:0;display:grid;gap:10px}
+  .recap li{font-family:var(--mono);font-size:13px;line-height:1.55;padding-left:22px;position:relative;color:#D3D7E0}
+  .recap li::before{content:'›';position:absolute;left:0;color:var(--violet);font-weight:700}
+  .recap li b{color:var(--t-num);font-weight:500}
+
+  footer{border-top:1px solid var(--line);margin-top:70px;padding-top:24px;color:var(--muted);font-size:13.5px}
+  footer .mono{font-family:var(--mono);font-size:12px}
+
+  .mobtop{display:none}
+  @media(max-width:860px){
+    .wrap{grid-template-columns:1fr}
+    nav.side{display:none}
+    .mobtop{display:flex;position:sticky;top:0;z-index:20;background:rgba(241,241,244,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);padding:12px 18px;gap:10px;align-items:center;overflow-x:auto}
+    .mobtop .brand{margin:0;white-space:nowrap}
+    .mobtop a{font-family:var(--mono);font-size:12px;white-space:nowrap;color:var(--muted);padding:5px 10px;border-radius:7px}
+    .mobtop a.active{background:var(--violet-soft);color:#3B2A73}
+    main{padding-left:20px;padding-right:20px}
+  }
+  @media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important;scroll-behavior:auto}}
+</style>
+</head>
+<body>
+
+<div class="mobtop">
+  <span class="brand">mutability</span>
+  <a href="#c1" class="mlink active">Mutable?</a>
+  <a href="#c2" class="mlink">By value</a>
+  <a href="#c3" class="mlink">By reference</a>
+  <a href="#c4" class="mlink">Copy safely</a>
+  <a href="#recap" class="mlink">Recap</a>
+</div>
+
+<div class="wrap">
+  <nav class="side">
+    <div class="brand">mutability<small>Unit 1 · T3 — bonus deep dive</small></div>
+    <div class="navsec">
+      <span>Sections</span>
+      <a href="#c1" class="link" data-sec><b>01</b> Mutable vs immutable</a>
+      <a href="#c2" class="link" data-sec><b>02</b> Pass by value</a>
+      <a href="#c3" class="link" data-sec><b>03</b> Pass by reference</a>
+      <a href="#c4" class="link" data-sec><b>04</b> Copying safely</a>
+      <a href="#recap" class="link" data-sec><b>★</b> Recap</a>
+    </div>
+    <div class="navsec">
+      <span>The one idea</span>
+      <p style="font-size:13px;color:var(--muted);line-height:1.5;margin:0 12px">
+        Primitives can't be changed and travel as <b>copies</b>. Objects &amp; arrays can be changed and travel as
+        <b>shared addresses</b>. Everything here follows from that.</p>
+    </div>
+    <div class="backlink">
+      <a href="./index.html">⌂ All guides</a>
+      <a href="./js-foundations.html">← back to the main T3 guide</a>
+    </div>
+  </nav>
+
+  <main>
+    <header class="hero">
+      <div class="eyebrow">Bonus · Datatypes, Functions &amp; Modules</div>
+      <h1>Mutability, and the case of the <span class="brace">object that changed itself</span></h1>
+      <p class="lede">A deeper look at the trickiest idea from T3: why editing one variable can silently change
+      another. It's the source of a whole category of "wait, <em>why</em> did that happen?" bugs — and once you
+      can picture what's in memory, it stops being spooky.</p>
+      <p class="lede">Same setup as the main guide: code panels run live, the <b>memory lab</b> lets you step
+      through what's happening box by box, and where the syntax matters there's a <b>code anatomy</b> — hover or
+      tap any highlighted token to see what it does.</p>
+      <span class="pill">builds on the pass-by-value / pass-by-reference bit from Chapter 1</span>
+    </header>
+
+    <!-- ===== 1 ===== -->
+    <section class="chapter" id="c1">
+      <div class="chaphead"><span class="num">01</span><h2>Mutable vs immutable</h2></div>
+      <p class="chapsub">"Mutable" just means <em>changeable after it's created.</em> The whole lesson hinges on which values are which.</p>
+
+      <p>Two buckets, same as before — primitives and reference types. The bucket a value lands in decides whether
+      you can change it in place:</p>
+
+      <div class="split">
+        <div class="splitcard immut">
+          <div class="lab">Immutable</div>
+          <h4>Primitives</h4>
+          <div class="types">string · number · boolean · undefined · null · symbol · bigint</div>
+          <p>Can't be changed once created. There's no way to turn the value <code>5</code> into something else —
+          five is five forever. You can only point a variable at a <em>different</em> value.</p>
+        </div>
+        <div class="splitcard mut">
+          <div class="lab">Mutable</div>
+          <h4>Reference types</h4>
+          <div class="types">object · array · function</div>
+          <p>Can be changed in place. You can edit an object's contents — swap the water bottle's water for coffee
+          — and it's still the same object, just mutated.</p>
+        </div>
+      </div>
+
+      <div class="insight gotcha">
+        <div class="htag">✖ The distinction people trip on — mutate vs reassign</div>
+        <p>"You can't change a primitive" and "you can change a number variable" both sound true, and they are —
+        because they're different actions. <b>Reassigning</b> means pointing a variable at a brand-new value
+        (<code>number = 500</code>). <b>Mutating</b> means editing the contents of the thing a variable already
+        points to (<code>bottle.contents = "coffee"</code>). Primitives only allow reassignment. Objects allow
+        both. Keep these two verbs separate and the rest of this page is easy.</p>
+      </div>
+
+      <div class="anatomy">
+        <div class="ahead">Code anatomy — spot the two different "="</div>
+        <div class="anacode"><span class="tok kw" data-exp="const|Locks the VARIABLE `bottle`. You can never point bottle at a different object — but you can still edit the object it points to.">const</span> <span class="tok fn" data-exp="bottle|The variable name. It holds a reference (an address) to the object on the right, not the object itself.">bottle</span> <span class="tok op" data-exp="= (declaration)|This first = is the DECLARATION — it points bottle at a brand-new object. This is the only = that const controls.">=</span> <span class="tok pn" data-exp="{ } object literal|The curly braces create a new object in memory.">{</span> <span class="tok pm" data-exp="contents|A property key inside the object.">contents</span><span class="tok pn" data-exp=": (key separator)|Separates a property's key from its value.">:</span> <span class="tok st" data-exp='"water"|The value stored under `contents`.'>"water"</span> <span class="tok pn" data-exp="} object literal|Closes the object.">}</span>
+<span class="tok fn" data-exp="bottle|Same variable, still pointing at the same object. We are NOT redeclaring it.">bottle</span><span class="tok pn" data-exp=".contents (property access)|Reaches INTO the object to one specific property. This is the key move — we're going inside the box.">.contents</span> <span class="tok op" data-exp="= (mutation)|This second = edits a property inside the existing object. It's a MUTATION, not a reassignment — which is why const is fine with it.">=</span> <span class="tok st" data-exp='"coffee"|The new value. The object changed; the variable `bottle` never did. That distinction is the whole lesson.'>"coffee"</span></div>
+        <div class="anapanel"><div class="anahint">Hover or tap a highlighted token above <span class="legend">· the two = signs do completely different jobs</span></div><div class="anatitle">—</div><div class="anatext">Every coloured part explains its own job.</div></div>
+      </div>
+
+      <div class="cell" data-cell>
+        <div class="bar"><span class="dots"><i></i><i></i><i></i></span><span class="fname">mutate-vs-reassign.js</span><span class="spacer"></span><button class="run" data-run>▶ Run</button></div>
+        <pre class="code" contenteditable="true" spellcheck="false">// primitive: can only REASSIGN (point at a new value)
+let n = 5
+n = 500
+console.log("reassigned:", n)
+
+// object: can MUTATE in place, even as a const
+const bottle = { contents: "water" }
+bottle.contents = "coffee"     // editing the box, not reassigning it
+console.log("mutated:", bottle)</pre>
+        <div class="console" data-console></div>
+      </div>
+
+      <div class="insight warn">
+        <div class="htag">▲ Reminder — <code>const</code> is not "immutable"</div>
+        <p>A <code>const</code> object can still be mutated, which surprises everyone at first. <code>const</code>
+        locks the <em>variable</em> (you can't reassign <code>bottle</code> to a new object), but it doesn't lock
+        the <em>contents</em>. If you truly want a frozen object, that's a separate tool — <code>Object.freeze()</code>
+        — not <code>const</code>.</p>
+      </div>
+    </section>
+
+    <!-- ===== 2 ===== -->
+    <section class="chapter" id="c2">
+      <div class="chaphead"><span class="num">02</span><h2>Pass by value</h2></div>
+      <p class="chapsub">Primitives travel as copies. Hand one to a function and the original is untouchable.</p>
+
+      <p>When you pass a primitive into a function, you don't pass the variable — you pass a <em>copy of its
+      value</em>. The lecture's metaphor: giving someone your phone <em>number</em>. They can save it, change how
+      it's labelled in their contacts, scribble on it — your actual number never changes. It was only ever a copy.</p>
+
+      <div class="cell" data-cell>
+        <div class="bar"><span class="dots"><i></i><i></i><i></i></span><span class="fname">pass-by-value.js</span><span class="spacer"></span><button class="run" data-run>▶ Run</button></div>
+        <pre class="code" contenteditable="true" spellcheck="false">let number = 7
+
+function changeNumber(n) {
+  n = 123              // only changes the local copy
+  return n
+}
+
+const newNumber = changeNumber(number)
+
+console.log("returned:", newNumber)   // 123
+console.log("original:", number)      // still 7 — untouched</pre>
+        <div class="console" data-console></div>
+      </div>
+
+      <p>Step through it in the lab below. Watch that <code>number</code> and the function's copy live in
+      <em>separate boxes</em> — changing one can't reach the other.</p>
+
+      <!-- MEMORY LAB -->
+      <div class="lab" id="memlab">
+        <div class="tabs">
+          <button class="tab active" data-tab="value">▸ Pass by value (primitive)</button>
+          <button class="tab" data-tab="ref">▸ Pass by reference (object)</button>
+        </div>
+        <div class="stage">
+          <div class="vars">
+            <div class="colh">Variables</div>
+            <div id="labVars"></div>
+          </div>
+          <div class="mem">
+            <div class="colh">Memory</div>
+            <div id="labMem"></div>
+          </div>
+        </div>
+        <div class="verdict" id="labVerdict"></div>
+        <div class="controls">
+          <div class="step" id="labStep"></div>
+          <button class="ghost" id="labReset">⟲ Reset</button>
+          <button id="labNext">Next step →</button>
+        </div>
+      </div>
+
+      <div class="insight">
+        <div class="htag">◆ Insight — why this is the "safe" one</div>
+        <p>Because primitives copy, you never have to worry about a function secretly altering a number or string
+        you passed in. There's no action-at-a-distance. This is exactly why the lecture says: with primitives,
+        "there's nothing to worry about." Save your caution for the next section.</p>
+      </div>
+    </section>
+
+    <!-- ===== 3 ===== -->
+    <section class="chapter" id="c3">
+      <div class="chaphead"><span class="num">03</span><h2>Pass by reference</h2></div>
+      <p class="chapsub">Objects travel as shared addresses. Hand one to a function and it can reach back and change your original.</p>
+
+      <p>Objects and arrays don't get copied when you pass them. What travels is a <b>reference</b> — the memory
+      address where that object lives. The function walks to that address and edits the real thing. Now the
+      metaphor flips: you're not handing over your phone <em>number</em>, you're handing over your actual
+      <em>phone</em>. If they smash it, it's genuinely smashed — there's only one, and you both hold its address.</p>
+
+      <div class="insight warn">
+        <div class="htag">▲ What "in memory" actually means</div>
+        <p>Every object your program creates is stored at some location in the computer's memory. A variable
+        holding an object doesn't contain the object itself — it contains a <em>pointer to that location</em>. Do
+        <code>const b = a</code> with an object and you copy the pointer, not the object. Two variables, one
+        underlying box. Edit through either name and the single shared box changes.</p>
+      </div>
+
+      <div class="cell" data-cell>
+        <div class="bar"><span class="dots"><i></i><i></i><i></i></span><span class="fname">pass-by-reference.js</span><span class="spacer"></span><button class="run" data-run>▶ Run</button></div>
+        <pre class="code" contenteditable="true" spellcheck="false">const myPhone = { model: "Pixel", condition: "pristine" }
+
+function destroyPhone(phone) {
+  phone.condition = "smashed"    // edits the shared object directly
+  return phone
+}
+
+const destroyed = destroyPhone(myPhone)
+
+console.log("returned:", destroyed.condition)   // "smashed"
+console.log("original:", myPhone.condition)     // also "smashed"  ← side effect!</pre>
+        <div class="console" data-console></div>
+      </div>
+
+      <p>Flip the memory lab above to its second tab — <b>Pass by reference</b> — and step through. This time both
+      variables point at <em>one</em> box, and the mutation flashes through to both.</p>
+
+      <div class="insight gotcha">
+        <div class="htag">✖ The bug this causes — "side effects"</div>
+        <p>A function that changes an object you passed in has a <b>side effect</b>: it reached outside itself and
+        altered your data. Sometimes that's intended; often it's a nasty surprise, because the function's name
+        gave no hint it would touch your original. Whole afternoons get lost to "but I never changed that array!"
+        — when a function you called quietly did.</p>
+      </div>
+
+      <div class="predict" data-predict>
+        <div class="phead"><span class="icon">?</span><b>Predict the output</b></div>
+        <div class="pbody">
+          <pre class="psrc">const list = [1, 2, 3]
+
+function addFour(arr) {
+  arr.push(4)
+  return arr
+}
+
+const result = addFour(list)
+console.log(result)
+console.log(list)         // did the original change?</pre>
+          <button class="reveal-btn" data-reveal>Reveal answer</button>
+          <div class="answer" data-answer>
+            <div class="cline"><span class="tok-null">[</span> <span class="tok-num">1</span>, <span class="tok-num">2</span>, <span class="tok-num">3</span>, <span class="tok-num">4</span> <span class="tok-null">]</span></div>
+            <div class="cline"><span class="tok-null">[</span> <span class="tok-num">1</span>, <span class="tok-num">2</span>, <span class="tok-num">3</span>, <span class="tok-num">4</span> <span class="tok-null">]</span></div>
+            <div class="why">Both. <code>list</code> and <code>arr</code> are two names for the same array in
+            memory, and <code>push</code> mutates it in place. The original changed even though you only "meant"
+            to change the copy inside the function — because there was no copy.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== 4 ===== -->
+    <section class="chapter" id="c4">
+      <div class="chaphead"><span class="num">04</span><h2>Copying safely</h2></div>
+      <p class="chapsub">The fix the lecture points at: when in doubt, work on a copy — not the original.</p>
+
+      <p>If passing an object around risks mutating the original, the safe move is to make a fresh copy first and
+      edit <em>that</em>. The everyday tool is the spread operator: <code>{...obj}</code> for objects,
+      <code>[...arr]</code> for arrays. It builds a new box with the same contents, at a new address.</p>
+
+      <div class="cell" data-cell>
+        <div class="bar"><span class="dots"><i></i><i></i><i></i></span><span class="fname">copy-safely.js</span><span class="spacer"></span><button class="run" data-run>▶ Run</button></div>
+        <pre class="code" contenteditable="true" spellcheck="false">const myPhone = { model: "Pixel", condition: "pristine" }
+
+function safeDestroy(phone) {
+  const copy = { ...phone }       // new object, new address
+  copy.condition = "smashed"
+  return copy
+}
+
+const destroyed = safeDestroy(myPhone)
+
+console.log("returned:", destroyed.condition)   // "smashed"
+console.log("original:", myPhone.condition)     // "pristine" — safe!</pre>
+        <div class="console" data-console></div>
+      </div>
+
+      <div class="anatomy">
+        <div class="ahead">Code anatomy — the copy that saves you</div>
+        <div class="anacode"><span class="tok kw" data-exp="const|A new constant to hold the copy — a completely separate object from the original.">const</span> <span class="tok fn" data-exp="copy|The name for our fresh, independent object. Because it lives at a NEW address, editing it can't touch the original.">copy</span> <span class="tok op" data-exp="= (assignment)|Points `copy` at the brand-new object being built on the right.">=</span> <span class="tok pn" data-exp="{ } object literal|Creates a NEW object at a NEW memory address. This newness is the entire point — it's what breaks the shared reference.">{</span> <span class="tok op" data-exp="... (spread operator)|The star of the show. Spread copies every top-level property of `phone` into this new object. Read it as “unpack everything from phone in here.”">...</span><span class="tok fn" data-exp="phone|The object being copied FROM. Its properties are read and copied out — phone itself is not changed.">phone</span> <span class="tok pn" data-exp="} object literal|Closes the new object. You now have a twin of phone at a different address — safe to edit.">}</span></div>
+        <div class="anapanel"><div class="anahint">Hover or tap a highlighted token above <span class="legend">· ... is a shallow copy — see the note below</span></div><div class="anatitle">—</div><div class="anatext">Every coloured part explains its own job.</div></div>
+      </div>
+
+      <div class="insight warn">
+        <div class="htag">▲ The catch — spread is a <em>shallow</em> copy</div>
+        <p><code>{...obj}</code> copies the top level only. If a property is itself an object or array, the copy
+        still shares <em>that</em> inner box with the original. For a fully independent deep copy, reach for
+        <code>structuredClone(obj)</code>. You won't need deep copies often yet, but remember the word "shallow"
+        exists so a future bug makes sense.</p>
+      </div>
+
+      <div class="insight">
+        <div class="htag">◆ Insight — this connects straight to the array methods</div>
+        <p>This is the quiet reason <code>map</code> and <code>filter</code> feel so safe: they <em>return new
+        arrays</em> and leave the original alone. Compare that to <code>push</code>, <code>sort</code>, and
+        <code>splice</code>, which <em>mutate</em> the array in place. When you want to avoid side effects, prefer
+        the methods that hand you a new array over the ones that edit the one you've got.</p>
+      </div>
+
+      <div class="check" data-check
+        data-correct="2"
+        data-fb="Right. arr and the parameter are the same array in memory, so sort() mutates the original too. To protect it you'd sort a copy: [...arr].sort().">
+        <div class="q">Checkpoint: a function does <code>arr.sort()</code> on the array you passed in. What happens to your original array?</div>
+        <div class="opts">
+          <button class="opt" data-opt="0">Nothing — it got a copy</button>
+          <button class="opt" data-opt="1">You get a TypeError</button>
+          <button class="opt" data-opt="2">It gets sorted too — same array in memory</button>
+          <button class="opt" data-opt="3">Only if it's declared with let</button>
+        </div>
+        <div class="fb" data-fbbox></div>
+      </div>
+
+      <div class="check" data-check
+        data-correct="0"
+        data-fb="Correct — const only prevents reassigning the variable. Mutating the object's contents is still allowed, so bottle.contents = 'coffee' works fine.">
+        <div class="q">Checkpoint: <code>const bottle = { contents: "water" }</code>. Which line runs without error?</div>
+        <div class="opts">
+          <button class="opt" data-opt="0">bottle.contents = "coffee"</button>
+          <button class="opt" data-opt="1">bottle = { contents: "coffee" }</button>
+          <button class="opt" data-opt="2">both of them</button>
+          <button class="opt" data-opt="3">neither of them</button>
+        </div>
+        <div class="fb" data-fbbox></div>
+      </div>
+    </section>
+
+    <!-- ===== RECAP ===== -->
+    <section class="chapter" id="recap">
+      <div class="chaphead"><span class="num">★</span><h2>Recap</h2></div>
+      <p class="chapsub">The whole deep dive in eight lines.</p>
+      <div class="recap">
+        <ul>
+          <li>Primitives are <b>immutable</b> and pass <b>by value</b> (a copy) — originals are always safe.</li>
+          <li>Objects &amp; arrays are <b>mutable</b> and pass <b>by reference</b> (a shared address).</li>
+          <li><b>Reassign</b> = point a variable at a new value. <b>Mutate</b> = edit the contents of the existing box.</li>
+          <li><b>const</b> blocks reassignment, not mutation. Use <b>Object.freeze()</b> for real immutability.</li>
+          <li>Passing an object to a function can change your original — that's a <b>side effect</b>.</li>
+          <li>Work on a <b>copy</b> to stay safe: <b>{...obj}</b> / <b>[...arr]</b> (shallow), <b>structuredClone()</b> (deep).</li>
+          <li><b>map / filter</b> return new arrays (safe); <b>push / sort / splice</b> mutate in place.</li>
+          <li>Metaphor: sharing a phone <b>number</b> (by value) vs handing over the <b>phone</b> itself (by reference).</li>
+        </ul>
+      </div>
+
+      <footer>
+        <p>Bonus deep dive built from your Unit 1 · T3 mutability breakout — Dev Academy Aotearoa. Runs entirely in
+        your browser; nothing's saved.</p>
+        <p class="mono">further reading:
+          <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures" target="_blank" rel="noopener">MDN — JS data structures</a> ·
+          <a href="https://developer.mozilla.org/en-US/docs/Glossary/Mutable" target="_blank" rel="noopener">MDN — Mutable</a></p>
+      </footer>
+    </section>
+  </main>
+</div>
+
+<script>
+/* ---------- shared console runner (same as main guide) ---------- */
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function fmt(v){
+  if(v===null) return '<span class="tok-null">null</span>';
+  if(v===undefined) return '<span class="tok-null">undefined</span>';
+  const t=typeof v;
+  if(t==='number') return '<span class="tok-num">'+(Object.is(v,-0)?'-0':String(v))+'</span>';
+  if(t==='boolean') return '<span class="tok-bool">'+v+'</span>';
+  if(t==='string') return '<span class="tok-str">\''+esc(v)+'\'</span>';
+  if(t==='function') return '<span class="tok-fn">[Function: '+esc(v.name||'anonymous')+']</span>';
+  if(t==='bigint') return '<span class="tok-num">'+v+'n</span>';
+  if(Array.isArray(v)) return '<span class="tok-null">[</span> '+v.map(fmt).join('<span class="tok-null">, </span>')+' <span class="tok-null">]</span>';
+  if(t==='object'){return '<span class="tok-null">{</span> '+Object.keys(v).map(k=>esc(k)+': '+fmt(v[k])).join('<span class="tok-null">, </span>')+' <span class="tok-null">}</span>';}
+  return esc(String(v));
+}
+function fmtArgs(a){return a.map(x=>typeof x==='string'?'<span class="tok-str">'+esc(x)+'</span>':fmt(x)).join(' ');}
+function runCell(cell){
+  const code=cell.querySelector('pre.code').textContent;
+  const box=cell.querySelector('[data-console]');const logs=[];
+  const fc={log:(...a)=>logs.push({t:'log',a}),error:(...a)=>logs.push({t:'log',a}),warn:(...a)=>logs.push({t:'log',a}),info:(...a)=>logs.push({t:'log',a})};
+  try{ new Function('console','"use strict";\n'+code)(fc); }
+  catch(e){ logs.push({t:'err',m:(e&&e.message)?e.message:String(e)}); }
+  box.classList.add('show');
+  box.innerHTML = logs.length
+    ? logs.map(l=>l.t==='err'?'<div class="cline"><span class="tok-err">✖ '+esc(l.m)+'</span></div>':'<div class="cline"><span class="prompt">› </span>'+fmtArgs(l.a)+'</div>').join('')
+    : '<div class="cline empty">// no output — nothing was logged</div>';
+}
+document.querySelectorAll('[data-cell]').forEach(cell=>{
+  cell.querySelector('[data-run]').addEventListener('click',()=>runCell(cell));
+  cell.querySelector('pre.code').addEventListener('keydown',e=>{if((e.metaKey||e.ctrlKey)&&e.key==='Enter'){e.preventDefault();runCell(cell);}});
+});
+
+/* predict reveals */
+document.querySelectorAll('[data-predict]').forEach(p=>{
+  p.querySelector('[data-reveal]').addEventListener('click',function(){
+    p.querySelector('[data-answer]').classList.add('show');
+    this.textContent='Answer shown ↓';this.disabled=true;this.style.opacity=.55;
+  });
+});
+
+/* ---------- MEMORY LAB ---------- */
+(function(){
+  const scenarios = {
+    value: [
+      { vars:[{kw:'let',name:'number',to:{lit:'7'}}],
+        mem:[{addr:null,kind:'value',val:'7'}],
+        step:'<b>let number = 7</b> — a primitive lives directly in its own box.', flash:null },
+      { vars:[{kw:'let',name:'number',to:{lit:'7'}},{kw:'',name:'n (param)',to:{lit:'7'}}],
+        mem:[{addr:null,kind:'value',val:'7'},{addr:null,kind:'value',val:'7'}],
+        step:'<b>changeNumber(number)</b> — the value is <b>copied</b> into the parameter <code>n</code>. Two separate boxes now.', flash:null },
+      { vars:[{kw:'let',name:'number',to:{lit:'7'}},{kw:'',name:'n (param)',to:{lit:'123'}}],
+        mem:[{addr:null,kind:'value',val:'7'},{addr:null,kind:'value',val:'123'}],
+        step:'<b>n = 123</b> — only the copy changes. <code>number</code> can\'t be reached from in here.', flash:1 },
+    ],
+    ref: [
+      { vars:[{kw:'const',name:'myPhone',to:{addr:'0x01'}}],
+        mem:[{addr:'0x01',kind:'ref',props:[['condition','pristine']]}],
+        step:'<b>const myPhone = {…}</b> — the object lives in a box; the variable holds its <b>address</b>.', flash:null },
+      { vars:[{kw:'const',name:'myPhone',to:{addr:'0x01'}},{kw:'',name:'phone (param)',to:{addr:'0x01'}}],
+        mem:[{addr:'0x01',kind:'ref',props:[['condition','pristine']]}],
+        step:'<b>destroyPhone(myPhone)</b> — no copy is made. The <b>address</b> is passed, so both names point at the <b>same box</b>.', flash:null },
+      { vars:[{kw:'const',name:'myPhone',to:{addr:'0x01'}},{kw:'',name:'phone (param)',to:{addr:'0x01'}}],
+        mem:[{addr:'0x01',kind:'ref',props:[['condition','smashed']]}],
+        step:'<b>phone.condition = "smashed"</b> — editing the shared box. <code>myPhone</code> sees it too. Side effect!', flash:0 },
+    ]
+  };
+  const verdicts = {
+    value:{cls:'value',html:'✔ Result: <b>number</b> is still <b>7</b>, the copy became <b>123</b>. The original was never at risk.'},
+    ref:{cls:'ref',html:'⚠ Result: <b>both</b> myPhone and phone read <b>"smashed"</b> — one box, two names. The original changed.'}
+  };
+
+  let current='value', idx=0;
+  const varsEl=document.getElementById('labVars');
+  const memEl=document.getElementById('labMem');
+  const stepEl=document.getElementById('labStep');
+  const verdictEl=document.getElementById('labVerdict');
+  const nextBtn=document.getElementById('labNext');
+  const resetBtn=document.getElementById('labReset');
+
+  function renderVar(v){
+    let target='';
+    if(v.to.lit!==undefined) target='<span class="conn">=</span> <span class="lit">'+v.to.lit+'</span>';
+    else if(v.to.addr!==undefined) target='<span class="conn">→</span> <span class="addr">'+v.to.addr+'</span>';
+    return '<div class="varrow show">'+(v.kw?'<span class="vkw">'+v.kw+'</span> ':'')+
+      '<span class="vname">'+v.name+'</span> '+target+'</div>';
+  }
+  function renderMem(m,flashIdx){
+    let inner='';
+    if(m.kind==='value'){ inner='<span class="bval">'+m.val+'</span>'; }
+    else { inner=m.props.map(p=>'<span class="prop">'+p[0]+': <b>"'+p[1]+'"</b></span>').join('<br>'); }
+    const addrTag=m.addr?'<span class="baddr">'+m.addr+'</span>':'';
+    return '<div class="membox show '+m.kind+(flashIdx?' flash':'')+'">'+addrTag+inner+'</div>';
+  }
+  function draw(){
+    const st=scenarios[current][idx];
+    varsEl.innerHTML=st.vars.map(renderVar).join('');
+    memEl.innerHTML=st.mem.map((m,i)=>renderMem(m, st.flash===i)).join('');
+    stepEl.innerHTML=st.step;
+    const last=idx===scenarios[current].length-1;
+    nextBtn.textContent=last?'✓ Done':'Next step →';
+    nextBtn.disabled=last;
+    if(last){ verdictEl.className='verdict show '+verdicts[current].cls; verdictEl.innerHTML=verdicts[current].html; }
+    else { verdictEl.className='verdict'; verdictEl.innerHTML=''; }
+  }
+  function reset(){ idx=0; draw(); }
+
+  nextBtn.addEventListener('click',()=>{ if(idx<scenarios[current].length-1){ idx++; draw(); }});
+  resetBtn.addEventListener('click',reset);
+  document.querySelectorAll('.lab .tab').forEach(tab=>{
+    tab.addEventListener('click',()=>{
+      document.querySelectorAll('.lab .tab').forEach(t=>t.classList.remove('active'));
+      tab.classList.add('active');
+      current=tab.dataset.tab; idx=0; draw();
+    });
+  });
+  draw();
+})();
+
+/* checkpoints */
+document.querySelectorAll('[data-check]').forEach(chk=>{
+  const correct=parseInt(chk.dataset.correct,10);
+  const fbbox=chk.querySelector('[data-fbbox]');
+  chk.querySelectorAll('.opt').forEach(opt=>{
+    opt.addEventListener('click',()=>{
+      const pick=parseInt(opt.dataset.opt,10);
+      if(pick===correct){opt.classList.add('correct');fbbox.textContent=chk.dataset.fb;fbbox.classList.add('show');chk.querySelectorAll('.opt').forEach(o=>o.style.pointerEvents='none');}
+      else{opt.classList.add('wrong');opt.style.pointerEvents='none';}
+    });
+  });
+});
+
+/* ---------- code anatomy: hover / tap any token ---------- */
+document.querySelectorAll('.anatomy').forEach(an => {
+  const title = an.querySelector('.anatitle');
+  const text  = an.querySelector('.anatext');
+  const hint  = an.querySelector('.anahint');
+  const toks  = an.querySelectorAll('.tok');
+  function show(tok){
+    const raw = tok.getAttribute('data-exp') || '';
+    const i = raw.indexOf('|');
+    title.textContent = i >= 0 ? raw.slice(0,i) : tok.textContent.trim();
+    text.textContent  = i >= 0 ? raw.slice(i+1) : raw;
+    hint.textContent  = 'what this part does';
+    toks.forEach(x => x.classList.remove('active'));
+    tok.classList.add('active');
+  }
+  toks.forEach(tok => {
+    tok.setAttribute('tabindex','0');
+    tok.addEventListener('mouseenter', () => show(tok));
+    tok.addEventListener('click',      () => show(tok));
+    tok.addEventListener('focus',      () => show(tok));
+  });
+});
+
+/* scrollspy */
+const sections=[...document.querySelectorAll('section.chapter')];
+const links=[...document.querySelectorAll('nav.side a[data-sec]')];
+const mlinks=[...document.querySelectorAll('.mobtop .mlink')];
+function spy(){
+  const y=window.scrollY+120;let cur=sections[0].id;
+  for(const s of sections){if(s.offsetTop<=y)cur=s.id;}
+  links.forEach(l=>l.classList.toggle('active',l.getAttribute('href')==='#'+cur));
+  mlinks.forEach(l=>l.classList.toggle('active',l.getAttribute('href')==='#'+cur));
+}
+window.addEventListener('scroll',spy,{passive:true});spy();
+</script>
+</body>
+</html>

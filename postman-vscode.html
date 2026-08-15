@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Postman in VS Code — interactive guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;450;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F1F1F4;--card:#FBFBFD;--ink:#1B1E26;--muted:#5A5F6B;--line:#E1E1E8;
+    --violet:#6C4CE0;--violet-soft:#EDE8FC;--violet-line:#D8CEF7;
+    --emerald:#12905F;--amber:#B67A08;--rose:#D6455D;--blue:#2C6FE0;
+    --orange:#E9612C;
+    --term-bg:#15171E;--term-panel:#1D2029;--term-fg:#E6E8EC;--term-dim:#8A90A0;
+    --t-num:#E7B45A;--t-str:#93D6A0;--t-null:#8A90A0;--t-err:#F0808F;
+    --get:#12905F;--post:#B67A08;--put:#2C6FE0;--del:#D6455D;
+    --radius:14px;
+    --mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+    --disp:'Space Grotesk',system-ui,sans-serif;--body:'Inter',system-ui,sans-serif;
+  }
+  *{box-sizing:border-box}html{scroll-behavior:smooth}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);font-size:16.5px;line-height:1.62;-webkit-font-smoothing:antialiased}
+  a{color:var(--violet);text-decoration:none}a:hover{text-decoration:underline}
+  code{font-family:var(--mono);font-size:.88em;background:#E7E7EE;padding:.08em .38em;border-radius:5px;color:#2C2140}
+
+  .wrap{display:grid;grid-template-columns:270px minmax(0,1fr);max-width:1200px;margin:0 auto}
+  nav.side{position:sticky;top:0;align-self:start;height:100vh;overflow-y:auto;padding:30px 22px 40px;border-right:1px solid var(--line)}
+  main{padding:0 clamp(20px,5vw,64px) 120px;min-width:0}
+  .brand{font-family:var(--mono);font-weight:700;font-size:14px;letter-spacing:.04em;color:var(--violet);margin-bottom:4px}
+  .brand small{color:var(--muted);font-weight:400;display:block;letter-spacing:0;margin-top:3px;font-family:var(--body);font-size:12.5px}
+  .navsec{margin-top:26px}
+  .navsec > span{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:9px;padding-left:12px}
+  nav.side a.link{display:flex;gap:10px;align-items:baseline;padding:7px 12px;border-radius:9px;color:var(--ink);font-size:14.5px;line-height:1.35}
+  nav.side a.link:hover{background:#E9E9F0;text-decoration:none}
+  nav.side a.link.active{background:var(--violet-soft);color:#3B2A73;font-weight:500}
+  nav.side a.link b{font-family:var(--mono);font-size:11.5px;color:var(--violet);min-width:20px}
+  .backlink{margin-top:24px;font-size:13px;color:var(--muted)}
+  .backlink a{font-family:var(--mono);font-size:12.5px;display:block;margin-top:6px}
+
+  header.hero{padding:64px 0 30px}
+  .eyebrow{font-family:var(--mono);font-size:12.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--violet);margin-bottom:18px}
+  h1{font-family:var(--disp);font-weight:700;font-size:clamp(34px,5.4vw,54px);line-height:1.04;letter-spacing:-.02em;margin:0 0 20px}
+  h1 .brace{color:var(--violet)}
+  .lede{font-size:19px;color:#3A3E48;max-width:62ch;margin:0}.lede + .lede{margin-top:14px}
+  .runline{font-family:var(--mono);font-size:13.5px;color:var(--muted);margin-top:26px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .runline .kbd{background:var(--term-bg);color:var(--t-str);padding:5px 11px;border-radius:7px;font-size:12.5px}
+
+  section.chapter{padding-top:56px;scroll-margin-top:20px}
+  .chaphead{display:flex;align-items:baseline;gap:16px;border-bottom:2px solid var(--ink);padding-bottom:12px;margin-bottom:8px}
+  .chaphead .num{font-family:var(--mono);font-weight:700;font-size:15px;color:var(--violet)}
+  h2{font-family:var(--disp);font-weight:600;font-size:clamp(25px,3.4vw,34px);letter-spacing:-.015em;margin:0}
+  .chapsub{color:var(--muted);font-size:15px;margin:14px 0 0}
+  h3{font-family:var(--disp);font-weight:600;font-size:21px;letter-spacing:-.01em;margin:40px 0 10px}
+  p{margin:14px 0}main p,main li{color:#24272F}
+
+  /* code cell */
+  .cell{margin:22px 0;border-radius:var(--radius);overflow:hidden;border:1px solid #2A2E3A;box-shadow:0 10px 30px -18px rgba(20,20,40,.4)}
+  .cell .bar{background:var(--term-panel);display:flex;align-items:center;gap:8px;padding:9px 14px;border-bottom:1px solid #2A2E3A}
+  .cell .bar .dots{display:flex;gap:6px}.cell .bar .dots i{width:11px;height:11px;border-radius:50%;display:block}
+  .dots i:nth-child(1){background:#E06C75}.dots i:nth-child(2){background:#E5C07B}.dots i:nth-child(3){background:#98C379}
+  .cell .bar .fname{font-family:var(--mono);font-size:12px;color:var(--term-dim);margin-left:4px}
+  .cell pre.code{margin:0;background:var(--term-bg);color:var(--term-fg);font-family:var(--mono);font-size:13px;line-height:1.7;padding:16px 18px;white-space:pre;overflow-x:auto;tab-size:2}
+  .cell pre.code .cm{color:#6B7180}.cell pre.code .kw{color:#C9A6F6}.cell pre.code .fn{color:#8CC0F5}
+  .cell pre.code .st{color:#93D6A0}.cell pre.code .nm{color:#E7B45A}.cell pre.code .tag{color:#F0909F}
+
+  /* anatomy */
+  .anatomy{margin:22px 0;border:1px solid #2A2E3A;border-radius:var(--radius);overflow:hidden;box-shadow:0 10px 30px -18px rgba(20,20,40,.4)}
+  .anatomy .ahead{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--term-dim);padding:10px 16px;border-bottom:1px solid #2A2E3A;background:var(--term-panel);display:flex;align-items:center;gap:8px}
+  .anatomy .ahead::before{content:'⌖';color:#C39BF5;font-size:14px}
+  .anacode{padding:18px;background:var(--term-bg);font-family:var(--mono);font-size:14px;line-height:2.1;color:var(--term-fg);overflow-x:auto;white-space:pre-wrap;word-break:break-word}
+  .tok{cursor:pointer;border-radius:5px;padding:2px 3px;transition:.12s;outline:1.5px solid transparent}
+  .tok:hover{outline-color:rgba(255,255,255,.28)}
+  .tok.kw{background:rgba(195,155,245,.16);color:#C9A6F6}
+  .tok.fn{background:rgba(124,183,240,.15);color:#8CC0F5}
+  .tok.pm{background:rgba(231,180,90,.15);color:#E7B45A}
+  .tok.rt{background:rgba(147,214,160,.15);color:#93D6A0}
+  .tok.op{background:rgba(240,128,143,.14);color:#F0909F}
+  .tok.pn{background:rgba(150,156,172,.16);color:#B4BAC8}
+  .tok.st{background:rgba(147,214,160,.13);color:#93D6A0}
+  .tok.active{outline-color:var(--violet)!important;background:rgba(108,76,224,.32)!important;color:#fff}
+  .anapanel{padding:15px 18px;min-height:78px;background:var(--card)}
+  .anahint{font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:.05em}
+  .anahint .legend{color:var(--muted);opacity:.8}
+  .anatitle{font-family:var(--mono);font-weight:700;font-size:14px;color:var(--violet);margin:6px 0 3px}
+  .anatext{font-size:13.5px;color:#2A2D36;line-height:1.55}
+  @media(max-width:640px){.anacode{font-size:13px;line-height:2}}
+
+  /* ---------- POSTMAN REQUEST BUILDER ---------- */
+  .pm{margin:26px 0;border:1px solid #2A2E3A;border-radius:14px;overflow:hidden;background:#1A1C23;box-shadow:0 14px 40px -20px rgba(20,20,40,.5)}
+  .pm .pmtop{background:#15171E;display:flex;align-items:center;gap:8px;padding:8px 14px;border-bottom:1px solid #2A2E3A}
+  .pm .pmtop .dots{display:flex;gap:6px}.pm .pmtop .dots i{width:11px;height:11px;border-radius:50%;display:block}
+  .pm .pmtop .dots i:nth-child(1){background:#E06C75}.pm .pmtop .dots i:nth-child(2){background:#E5C07B}.pm .pmtop .dots i:nth-child(3){background:#98C379}
+  .pm .pmtop .ttl{font-family:var(--mono);font-size:12px;color:var(--term-dim);margin-left:4px}
+  .pm .pmtop .badge{margin-left:auto;font-family:var(--mono);font-size:10px;color:#fff;background:var(--orange);padding:2px 8px;border-radius:10px}
+  .pm .urlbar{display:flex;gap:8px;padding:12px 14px;align-items:center;flex-wrap:wrap;border-bottom:1px solid #2A2E3A}
+  .pm .method{font-family:var(--mono);font-size:12.5px;font-weight:700;padding:9px 11px;border-radius:7px;border:1px solid #2A2E3A;background:#22252F;color:#fff;cursor:pointer}
+  .pm .url{flex:1;min-width:180px;font-family:var(--mono);font-size:12.5px;padding:9px 12px;border-radius:7px;border:1px solid #2A2E3A;background:#22252F;color:#E6E8EC}
+  .pm .send{font-family:var(--mono);font-size:12.5px;font-weight:700;border:none;background:var(--orange);color:#fff;border-radius:7px;padding:9px 20px;cursor:pointer}
+  .pm .send:hover{background:#D2531F}
+  .pm .send:disabled{opacity:.55;cursor:wait}
+  .pm .tabs{display:flex;gap:2px;padding:0 14px;border-bottom:1px solid #2A2E3A;background:#15171E}
+  .pm .tab{font-family:var(--mono);font-size:11.5px;color:var(--term-dim);background:none;border:none;padding:10px 12px;cursor:pointer;border-bottom:2px solid transparent}
+  .pm .tab:hover{color:#E6E8EC}
+  .pm .tab.active{color:#fff;border-bottom-color:var(--orange)}
+  .pm .tab .dotmark{color:var(--orange);font-size:14px}
+  .pm .tabbody{padding:14px;min-height:96px;font-family:var(--mono);font-size:12px;color:#C4C8D2;background:#1A1C23}
+  .pm .kvrow{display:flex;gap:8px;margin-bottom:6px;align-items:center}
+  .pm .kvrow .k{color:#E7B45A}.pm .kvrow .v{color:#93D6A0}.pm .kvrow .eq{color:#6B7180}
+  .pm .bodybox{background:#12141A;border:1px solid #2A2E3A;border-radius:8px;padding:11px 13px;color:#C4C8D2;white-space:pre;overflow-x:auto;line-height:1.6}
+  .pm .bodybox .k{color:#C9A6F6}.pm .bodybox .s{color:#93D6A0}.pm .bodybox .n{color:#E7B45A}
+  .pm .muted{color:#6B7180;font-style:italic}
+  .pm .respwrap{border-top:1px solid #2A2E3A;background:#12141A}
+  .pm .resphead{display:flex;align-items:center;gap:14px;padding:10px 14px;font-family:var(--mono);font-size:11.5px;color:var(--term-dim);flex-wrap:wrap}
+  .pm .resphead .stat{font-weight:700;padding:2px 9px;border-radius:10px}
+  .pm .resphead .stat.s2{background:#123021;color:#7DDB9A}
+  .pm .resphead .stat.s4{background:#3A1518;color:#F0909F}
+  .pm .resphead .stat.s5{background:#3A2E10;color:#E7B45A}
+  .pm .resphead .mt{color:#6B7180}.pm .resphead .mt b{color:#B4BAC8;font-weight:500}
+  .pm .respbody{padding:0 14px 14px;font-family:var(--mono);font-size:12px;line-height:1.65;color:#E6E8EC;white-space:pre-wrap;word-break:break-word;max-height:230px;overflow:auto}
+  .pm .respbody .k{color:#C9A6F6}.pm .respbody .s{color:#93D6A0}.pm .respbody .n{color:#E7B45A}.pm .respbody .p{color:#8A90A0}
+  .pm .respbody .waiting{color:#6B7180;font-style:italic}
+  .pm .pmnote{padding:11px 14px;font-size:13px;color:var(--muted);line-height:1.5;background:#FAFAFC;border-top:1px solid var(--line)}
+  .pm .pmnote b{color:var(--violet)}
+  .m-GET{color:#7DDB9A}.m-POST{color:#E7B45A}.m-PUT{color:#6FA8FF}.m-DELETE{color:#F0909F}
+
+  /* method reference */
+  .methods{margin:24px 0;border:1px solid var(--line);border-radius:14px;overflow:hidden}
+  .methods table{width:100%;border-collapse:collapse;font-size:14px}
+  .methods th{background:#F5F5F9;font-family:var(--mono);font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);text-align:left;padding:11px 14px;border-bottom:1px solid var(--line)}
+  .methods td{padding:11px 14px;border-bottom:1px solid var(--line);vertical-align:middle}
+  .methods tr:last-child td{border-bottom:none}
+  .methods .verb{font-family:var(--mono);font-weight:700;font-size:12px;padding:3px 9px;border-radius:6px;display:inline-block}
+  .methods .verb.get{background:#EAF7F0;color:var(--get)}
+  .methods .verb.post{background:#FBF3E4;color:var(--post)}
+  .methods .verb.put{background:#EAF1FD;color:var(--put)}
+  .methods .verb.del{background:#FBECEE;color:var(--del)}
+
+  /* steps flow */
+  .flow{margin:24px 0;border:1px solid var(--line);border-radius:14px;background:var(--card);overflow:hidden;counter-reset:step}
+  .flow .fh{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:11px 18px;border-bottom:1px solid var(--line);background:#F5F5F9}
+  .flow .frow{display:flex;gap:14px;padding:13px 18px;border-bottom:1px solid var(--line);align-items:baseline}
+  .flow .frow:last-child{border-bottom:none}
+  .flow .frow::before{counter-increment:step;content:counter(step);font-family:var(--mono);font-size:12px;font-weight:700;color:#fff;background:var(--violet);min-width:22px;height:22px;border-radius:50%;display:grid;place-items:center;flex:none}
+  .flow .frow .ftxt{font-size:14px}
+  .flow .frow .ftxt code{font-size:12.5px}
+  .flow .frow .ftxt b{font-family:var(--disp)}
+
+  .insight{margin:24px 0;background:var(--card);border:1px solid var(--line);border-left:3px solid var(--violet);border-radius:12px;padding:16px 20px}
+  .insight .htag{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--violet);font-weight:700;display:flex;align-items:center;gap:8px;margin-bottom:6px}
+  .insight.warn{border-left-color:var(--amber)}.insight.warn .htag{color:var(--amber)}
+  .insight.gotcha{border-left-color:var(--rose)}.insight.gotcha .htag{color:var(--rose)}
+  .insight p{margin:6px 0}.insight p:first-of-type{margin-top:0}
+
+  /* checkpoint */
+  .check{margin:26px 0;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px}
+  .check .q{font-family:var(--disp);font-weight:600;font-size:16px;margin-bottom:14px}
+  .check .opts{display:flex;flex-direction:column;gap:9px}
+  .check .opt{font-family:var(--mono);font-size:13.5px;text-align:left;cursor:pointer;background:#fff;border:1px solid var(--line);border-radius:9px;padding:11px 14px;transition:.15s}
+  .check .opt:hover{border-color:var(--violet-line);background:#FAF8FF}
+  .check .opt.correct{border-color:var(--emerald);background:#EAF7F0;color:#0C6B45}
+  .check .opt.wrong{border-color:var(--rose);background:#FBECEE;color:#9E2B3B}
+  .check .fb-msg{margin-top:12px;font-size:13.5px;color:var(--muted);display:none}
+  .check .fb-msg.show{display:block}
+
+  .recap{background:var(--term-bg);border-radius:16px;padding:26px 28px;margin:26px 0;color:var(--term-fg)}
+  .recap h3{color:#fff;margin-top:0}
+  .recap ul{list-style:none;padding:0;margin:0;display:grid;gap:10px}
+  .recap li{font-family:var(--mono);font-size:13px;line-height:1.55;padding-left:22px;position:relative;color:#D3D7E0}
+  .recap li::before{content:'›';position:absolute;left:0;color:var(--violet);font-weight:700}
+  .recap li b{color:var(--t-num);font-weight:500}
+
+  footer{border-top:1px solid var(--line);margin-top:70px;padding-top:24px;color:var(--muted);font-size:13.5px}
+  footer .mono{font-family:var(--mono);font-size:12px}
+
+  .mobtop{display:none}
+  @media(max-width:860px){
+    .wrap{grid-template-columns:1fr}nav.side{display:none}
+    .mobtop{display:flex;position:sticky;top:0;z-index:20;background:rgba(241,241,244,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);padding:12px 18px;gap:10px;align-items:center;overflow-x:auto}
+    .mobtop .brand{margin:0;white-space:nowrap}
+    .mobtop a{font-family:var(--mono);font-size:12px;white-space:nowrap;color:var(--muted);padding:5px 10px;border-radius:7px}
+    .mobtop a.active{background:var(--violet-soft);color:#3B2A73}
+    main{padding-left:20px;padding-right:20px}
+  }
+  @media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important;scroll-behavior:auto}}
+</style>
+</head>
+<body>
+
+<div class="mobtop">
+  <span class="brand">Postman</span>
+  <a href="#c1" class="mlink active">Why</a>
+  <a href="#c2" class="mlink">Setup</a>
+  <a href="#c3" class="mlink">A request</a>
+  <a href="#c4" class="mlink">Try it</a>
+  <a href="#c5" class="mlink">Collections</a>
+  <a href="#c6" class="mlink">Variables</a>
+  <a href="#c7" class="mlink">To code</a>
+  <a href="#recap" class="mlink">Recap</a>
+</div>
+
+<div class="wrap">
+  <nav class="side">
+    <div class="brand">Postman in VS Code<small>API client · interactive guide</small></div>
+    <div class="navsec">
+      <span>Sections</span>
+      <a href="#c1" class="link" data-sec><b>01</b> Why use it</a>
+      <a href="#c2" class="link" data-sec><b>02</b> Install &amp; sign in</a>
+      <a href="#c3" class="link" data-sec><b>03</b> Anatomy of a request</a>
+      <a href="#c4" class="link" data-sec><b>04</b> Build one yourself</a>
+      <a href="#c5" class="link" data-sec><b>05</b> Collections</a>
+      <a href="#c6" class="link" data-sec><b>06</b> Environments &amp; variables</a>
+      <a href="#c7" class="link" data-sec><b>07</b> From Postman to code</a>
+      <a href="#recap" class="link" data-sec><b>★</b> Recap</a>
+    </div>
+    <div class="navsec">
+      <span>The one idea</span>
+      <p style="font-size:13px;color:var(--muted);line-height:1.5;margin:0 12px">
+        Postman lets you <b>poke an API by hand</b> — no code — to see exactly what it returns. Confirm the shape
+        first, <em>then</em> write the fetch with confidence.</p>
+    </div>
+    <div class="backlink">
+      Related guides:
+      <a href="./consuming-apis.html">← Consuming APIs</a>
+      <a href="./react-query.html">← React Query</a>
+      <a href="./index.html">⌂ All guides</a>
+    </div>
+  </nav>
+
+  <main>
+    <header class="hero">
+      <div class="eyebrow">Tooling · Postman VS Code extension</div>
+      <h1>Poke the API <span class="brace">before you code it</span></h1>
+      <p class="lede">Before you write a single <code>fetch</code> or <code>useQuery</code>, you want to know what
+      the API actually returns — the status, the exact JSON shape, the fields. Postman lets you send that request
+      <b>by hand</b>, right inside VS Code, and read the response. No code, no guessing.</p>
+      <p class="lede">This guide is the fast path: install it, send your first request, and learn the few features
+      that matter for your workflow — then turn a working request straight into fetch code.</p>
+      <div class="runline"><span class="kbd">method + URL → Send → read the response</span> then write the fetch you already know works.</div>
+    </header>
+
+    <!-- ===== 1 ===== -->
+    <section class="chapter" id="c1">
+      <div class="chaphead"><span class="num">01</span><h2>Why use it</h2></div>
+      <p class="chapsub">It closes the guesswork gap. You see the real response before committing it to code.</p>
+
+      <p>When you consume an API in code, there's a frustrating loop: write the <code>fetch</code>, run the app,
+      <code>console.log</code> the result, realise the field is <code>results</code> not <code>data</code>, tweak,
+      re-run. Postman collapses that loop. You send the request manually, see the <b>exact</b> response — status
+      code, headers, and the full JSON — and only then write code against a shape you've confirmed.</p>
+
+      <p>It's the natural companion to what you already know from the <a href="./consuming-apis.html">Consuming
+      APIs</a> guide. Same methods, same status codes, same JSON — but as a <b>tool you drive by hand</b> instead
+      of code you write blind. And because it lives in VS Code, you never leave your editor.</p>
+
+      <div class="insight">
+        <div class="htag">◆ Insight — Postman is the scout, your code is the army</div>
+        <p>Think of Postman as sending a scout ahead. Before you build the <code>fetchPokemonByName</code> function
+        and wire it into a component, you fire one manual request at
+        <code>pokeapi.co/api/v2/pokemon/pikachu</code> and <em>see</em> what comes back: is it a 200? Is the name
+        under <code>name</code>? Are the types nested in an array? Five seconds of scouting saves twenty minutes of
+        <code>console.log</code> debugging once it's buried in React.</p>
+      </div>
+    </section>
+
+    <!-- ===== 2 ===== -->
+    <section class="chapter" id="c2">
+      <div class="chaphead"><span class="num">02</span><h2>Install &amp; sign in</h2></div>
+      <p class="chapsub">One extension from the marketplace, one free account. A couple of minutes, once.</p>
+
+      <div class="flow">
+        <div class="fh">getting set up</div>
+        <div class="frow"><div class="ftxt">Open the <b>Extensions</b> panel in VS Code (the squares icon, or <code>Cmd/Ctrl+Shift+X</code>).</div></div>
+        <div class="frow"><div class="ftxt">Search <b>"Postman"</b> and install the official one — publisher <b>Postman</b>, id <code>Postman.postman-for-vscode</code>.</div></div>
+        <div class="frow"><div class="ftxt">Click the new <b>Postman icon</b> in the activity bar on the left.</div></div>
+        <div class="frow"><div class="ftxt"><b>Sign in</b> to a Postman account — it's free, and the extension requires it. Create one if you don't have it.</div></div>
+        <div class="frow"><div class="ftxt">Pick a <b>workspace</b> from the dropdown. That's where your requests and history live.</div></div>
+      </div>
+
+      <div class="insight warn">
+        <div class="htag">▲ The sign-in is not optional</div>
+        <p>Unlike some lightweight API clients, the Postman VS Code extension <b>requires you to sign in</b> to a
+        Postman account — your requests sync to your workspace so they show up in both the extension and the Postman
+        app. The account is free for what you need. If a mandatory login is a dealbreaker for you, there are
+        no-login alternatives (Thunder Client, others) — but Postman is what Dev Academy uses, so it's worth the
+        two-minute setup.</p>
+      </div>
+    </section>
+
+    <!-- ===== 3 ===== -->
+    <section class="chapter" id="c3">
+      <div class="chaphead"><span class="num">03</span><h2>Anatomy of a request</h2></div>
+      <p class="chapsub">Four parts you set, one button you press. The same pieces you send from code — just laid out as a form.</p>
+
+      <p>A request in Postman has the same anatomy as one you'd write in <code>fetch</code>. You pick a
+      <b>method</b>, type a <b>URL</b>, optionally add <b>params / headers / a body</b>, and hit <b>Send</b>:</p>
+
+      <div class="anatomy">
+        <div class="ahead">Code anatomy — the parts of a request</div>
+        <div class="anacode"><span class="tok kw" data-exp="Method|The HTTP verb — GET to read, POST to create, PUT to update, DELETE to remove. Same verbs as the APIs guide. You pick it from a dropdown.">GET</span>  <span class="tok fn" data-exp="URL|The endpoint you're hitting. The base plus the path. This is the single most important field — it decides what data you get back.">https://pokeapi.co/api/v2/pokemon/pikachu</span>
+       <span class="tok pm" data-exp="Query params|Optional key=value pairs after a ? in the URL — like ?limit=20&offset=0. Postman gives them their own tab so you don't hand-edit the URL. They filter or page the data.">?limit=20&offset=0</span>
+
+<span class="tok rt" data-exp="Headers|Extra metadata sent with the request — like Authorization for an API key, or Accept for the format you want. Set on the Headers tab as key/value pairs.">Headers:</span>  Accept: application/json
+<span class="tok op" data-exp="Body|Data you SEND, used with POST/PUT. Usually JSON. GET requests don't have one. Set on the Body tab, typically as 'raw' JSON.">Body:</span>     (none for GET — used with POST/PUT)</div>
+        <div class="anapanel"><div class="anahint">Hover or tap a highlighted token above <span class="legend">· method + URL are the essentials; the rest are optional</span></div><div class="anatitle">—</div><div class="anatext">Every part explains its own job.</div></div>
+      </div>
+
+      <p>The four methods you'll use, same as always:</p>
+      <div class="methods">
+        <table>
+          <thead><tr><th>Method</th><th>Does</th><th style="text-align:left">Needs a body?</th></tr></thead>
+          <tbody>
+            <tr><td><span class="verb get">GET</span></td><td>Read / fetch data</td><td>No</td></tr>
+            <tr><td><span class="verb post">POST</span></td><td>Create new data</td><td>Yes — the thing to create</td></tr>
+            <tr><td><span class="verb put">PUT</span></td><td>Update existing data</td><td>Yes — the new values</td></tr>
+            <tr><td><span class="verb del">DELETE</span></td><td>Remove data</td><td>Usually no</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p>To create one: pick your workspace, click the <b>New</b> dropdown in the sidebar, choose <b>HTTP</b>, fill
+      in the details, and Send. (There's also a <code>Postman: Create a new HTTP Request</code> command in the
+      Command Palette.)</p>
+    </section>
+
+    <!-- ===== 4 ===== -->
+    <section class="chapter" id="c4">
+      <div class="chaphead"><span class="num">04</span><h2>Build one yourself</h2></div>
+      <p class="chapsub">A working mock of the Postman request pane. Pick a method, explore the tabs, and Send — then read the response like you would for real.</p>
+
+      <p>This behaves like the real thing against a pretend Pokémon API. Switch the method, click through the
+      <b>Params / Headers / Body</b> tabs to see how each changes, then <b>Send</b> and read the response panel —
+      status, time, and JSON:</p>
+
+      <div class="pm" id="pm">
+        <div class="pmtop"><span class="dots"><i></i><i></i><i></i></span><span class="ttl">Postman — VS Code extension</span><span class="badge">HTTP</span></div>
+        <div class="urlbar">
+          <select class="method" id="pmMethod">
+            <option value="GET">GET</option>
+            <option value="POST">POST</option>
+            <option value="PUT">PUT</option>
+            <option value="DELETE">DELETE</option>
+          </select>
+          <input class="url" id="pmUrl" value="https://pokeapi.co/api/v2/pokemon/pikachu" readonly>
+          <button class="send" id="pmSend">Send</button>
+        </div>
+        <div class="tabs" id="pmTabs">
+          <button class="tab active" data-tab="params">Params</button>
+          <button class="tab" data-tab="headers">Headers</button>
+          <button class="tab" data-tab="body">Body <span class="dotmark" id="pmBodyDot" style="display:none">•</span></button>
+        </div>
+        <div class="tabbody" id="pmTabBody"></div>
+        <div class="respwrap">
+          <div class="resphead">
+            <span>Response</span>
+            <span class="stat" id="pmStat" style="display:none"></span>
+            <span class="mt" id="pmMeta"></span>
+          </div>
+          <div class="respbody" id="pmResp"><span class="waiting">// press Send to see the response</span></div>
+        </div>
+        <div class="pmnote" id="pmNote">Try GET first — that's what you'll do most. Then switch to POST and watch the Body tab light up, since POST sends data.</div>
+      </div>
+
+      <div class="check" data-check
+        data-correct="2"
+        data-fb="Right — the response body is the JSON you'll be working with. Reading it here tells you the exact field names and nesting before you write a single line of fetch code.">
+        <div class="q">Checkpoint: you sent a GET and got a 200. What's the most useful thing to check before writing your fetch?</div>
+        <div class="opts">
+          <button class="opt" data-opt="0">The color of the Send button</button>
+          <button class="opt" data-opt="1">How long the request took</button>
+          <button class="opt" data-opt="2">The response body's shape — the exact field names and nesting</button>
+          <button class="opt" data-opt="3">Nothing, just start coding</button>
+        </div>
+        <div class="fb-msg" data-fbbox></div>
+      </div>
+    </section>
+
+    <!-- ===== 5 ===== -->
+    <section class="chapter" id="c5">
+      <div class="chaphead"><span class="num">05</span><h2>Collections</h2></div>
+      <p class="chapsub">Saved, organised requests. Stop retyping URLs — build up a little library of the endpoints you use.</p>
+
+      <p>A <b>collection</b> is a saved folder of requests. Instead of retyping
+      <code>pokeapi.co/api/v2/pokemon/...</code> every time, you save each request once and click to re-run it.
+      For a project, you might have a "PokeAPI" collection holding "get pokemon", "get generation", "list types" —
+      each ready to fire.</p>
+
+      <div class="insight">
+        <div class="htag">◆ Insight — collections are your project's API map</div>
+        <p>As you scout the endpoints your app will use, saving them into a collection builds a living map of your
+        backend. Later, when you're writing the <code>fetch</code> functions, every request you need is sitting
+        there — tested, with a known response. It's also how teammates share endpoints: a collection can be shared
+        so everyone hits the same requests. Requests you send also land in <b>History</b>, so even unsaved ones are
+        recoverable.</p>
+      </div>
+    </section>
+
+    <!-- ===== 6 ===== -->
+    <section class="chapter" id="c6">
+      <div class="chaphead"><span class="num">06</span><h2>Environments &amp; variables</h2></div>
+      <p class="chapsub">Store the base URL once, reference it everywhere with {{curly braces}}. Change it in one place.</p>
+
+      <p>Typing <code>https://pokeapi.co/api/v2</code> at the front of every request gets old — and when you switch
+      from a live API to a local one (<code>localhost:3000</code>), you'd have to edit every request. <b>Variables</b>
+      fix that. You store the base URL as a variable and reference it with double curly braces:</p>
+
+      <div class="anatomy">
+        <div class="ahead">Code anatomy — a variable in a URL</div>
+        <div class="anacode"><span class="tok op" data-exp="{{baseUrl}}|A variable reference. Postman swaps in the stored value when you Send. Define baseUrl once (e.g. https://pokeapi.co/api/v2) and every request using {{baseUrl}} updates when you change it.">{{baseUrl}}</span><span class="tok fn" data-exp="/pokemon/pikachu|The rest of the path, written normally. Only the changing part (the base) is a variable.">/pokemon/pikachu</span></div>
+        <div class="anapanel"><div class="anahint">Hover or tap a highlighted token above <span class="legend">· define once · reference with {{ }} · change in one place</span></div><div class="anatitle">—</div><div class="anatext">Every part explains its own job.</div></div>
+      </div>
+
+      <p>An <b>environment</b> is a named set of these variables — so you can have a "Production" environment where
+      <code>baseUrl</code> points to the live API and a "Local" one pointing at <code>localhost</code>, and switch
+      between them from a dropdown without touching a single request.</p>
+
+      <div class="insight warn">
+        <div class="htag">▲ Current value vs initial value — and secrets</div>
+        <p>Each variable has an <b>initial value</b> (synced to the cloud, shared with your team) and a
+        <b>current value</b> (local to you, never synced). Put shared, safe defaults in the initial value; keep
+        anything private — API keys, tokens — in the current value only, or mark the variable as a <b>secret</b> so
+        it's masked. Don't paste an API key into an initial value and sync it to a shared workspace.</p>
+      </div>
+    </section>
+
+    <!-- ===== 7 ===== -->
+    <section class="chapter" id="c7">
+      <div class="chaphead"><span class="num">07</span><h2>From Postman to code</h2></div>
+      <p class="chapsub">The payoff feature — turn a working request into a code snippet, then into your real fetch function.</p>
+
+      <p>Here's where scouting pays off directly. Once a request works in Postman, click <b>Code</b> (just below
+      Send) and pick a language — <b>Node.js</b>, JavaScript fetch, cURL, and more. Postman writes out the request
+      as code you can read and adapt:</p>
+
+      <div class="cell">
+        <div class="bar"><span class="dots"><i></i><i></i><i></i></span><span class="fname">generated snippet — then your version</span></div>
+        <pre class="code"><span class="cm">// Postman can generate something like this from your request:</span>
+<span class="kw">const</span> res = <span class="kw">await</span> <span class="fn">fetch</span>(<span class="st">'https://pokeapi.co/api/v2/pokemon/pikachu'</span>)
+<span class="kw">const</span> data = <span class="kw">await</span> res.<span class="fn">json</span>()
+
+<span class="cm">// ...which you then shape into YOUR fetch function —</span>
+<span class="cm">// the same superagent/fetch style from your workshop.</span></pre>
+      </div>
+
+      <div class="insight gotcha">
+        <div class="htag">✖ Generated code is a starting point, not the final answer</div>
+        <p>Don't paste the snippet in wholesale. It's a <em>reference</em> that confirms the URL, method, and
+        headers are right — but your app has its own patterns (your API-client functions, your error handling, your
+        <code>useQuery</code> wrapping). Read the snippet to check you've got the request correct, then write it
+        <em>your</em> way. The value is the confirmation, not the copy-paste.</p>
+      </div>
+
+      <p>That's the whole loop this tool exists for, and how it plugs into everything else you've built:</p>
+      <div class="flow">
+        <div class="fh">the scout-then-build loop</div>
+        <div class="frow"><div class="ftxt"><b>Scout</b> in Postman — send the request, confirm status + JSON shape.</div></div>
+        <div class="frow"><div class="ftxt"><b>Write</b> your fetch / API-client function against the shape you saw (<a href="./consuming-apis.html">Consuming APIs</a>).</div></div>
+        <div class="frow"><div class="ftxt"><b>Wire</b> it into a component with <code>useQuery</code> (<a href="./react-query.html">React Query</a>).</div></div>
+        <div class="frow"><div class="ftxt"><b>Debug</b> — if the data looks wrong, go back to Postman to check whether it's your code or the API.</div></div>
+      </div>
+
+      <div class="check" data-check
+        data-correct="0"
+        data-fb="Right — Postman removes the variable of 'is the API even returning what I think?'. If Postman shows the right data but your app doesn't, the bug is in your code, not the endpoint. That's a huge debugging shortcut.">
+        <div class="q">Checkpoint: your React app shows undefined, but the same request in Postman returns correct data. Where's the bug?</div>
+        <div class="opts">
+          <button class="opt" data-opt="0">In your code — the API is fine, so it's how you fetch or read the data</button>
+          <button class="opt" data-opt="1">In the API — it's broken</button>
+          <button class="opt" data-opt="2">In Postman</button>
+          <button class="opt" data-opt="3">Impossible to tell</button>
+        </div>
+        <div class="fb-msg" data-fbbox></div>
+      </div>
+    </section>
+
+    <!-- ===== RECAP ===== -->
+    <section class="chapter" id="recap">
+      <div class="chaphead"><span class="num">★</span><h2>Recap</h2></div>
+      <div class="recap">
+        <h3>What &amp; why</h3>
+        <ul>
+          <li>Postman is an <b>API client</b> — send requests by hand and read the exact response, inside VS Code.</li>
+          <li>Use it to <b>scout an endpoint</b> (status + JSON shape) before writing any fetch code.</li>
+          <li>Install <b>Postman.postman-for-vscode</b> from the marketplace; <b>sign in</b> (free, required).</li>
+        </ul>
+      </div>
+      <div class="recap">
+        <h3>Sending requests</h3>
+        <ul>
+          <li>A request = <b>method + URL</b> (+ optional params, headers, body). New → HTTP → fill in → <b>Send</b>.</li>
+          <li>Methods: <b>GET</b> read · <b>POST</b> create · <b>PUT</b> update · <b>DELETE</b> remove. POST/PUT carry a body.</li>
+          <li>Read the response: <b>status code</b>, time, and the <b>JSON body</b> — that shape is what you code against.</li>
+        </ul>
+      </div>
+      <div class="recap">
+        <h3>Organising &amp; bridging to code</h3>
+        <ul>
+          <li><b>Collections</b> save &amp; group requests; <b>History</b> keeps what you've sent.</li>
+          <li><b>Variables</b> with <code>{{baseUrl}}</code> store repeated values; <b>environments</b> switch sets (live vs local).</li>
+          <li>Keep secrets in the <b>current value</b> or mark as <b>secret</b> — never sync API keys to a shared initial value.</li>
+          <li><b>Code</b> button generates a snippet — use it to <em>confirm</em> the request, then write it your own way.</li>
+        </ul>
+      </div>
+
+      <footer>
+        <p>Built for your API workshop — Dev Academy Aotearoa. The request builder is a browser simulation of the
+        Postman VS Code pane; the real extension sends live requests. Details from Postman's official docs
+        (current as of the build date).</p>
+        <p class="mono">reference:
+          <a href="https://learning.postman.com/docs/reference/vs-code-extension/overview" target="_blank" rel="noopener">Postman VS Code docs</a> ·
+          <a href="./consuming-apis.html">← Consuming APIs</a> ·
+          <a href="./react-query.html">← React Query</a> ·
+          <a href="./index.html">⌂ All guides</a></p>
+      </footer>
+    </section>
+  </main>
+</div>
+
+<script>
+/* ---------- anatomy ---------- */
+document.querySelectorAll('.anatomy').forEach(an=>{
+  const title=an.querySelector('.anatitle'), text=an.querySelector('.anatext'), hint=an.querySelector('.anahint');
+  const toks=an.querySelectorAll('.tok');
+  function show(tok){
+    const raw=tok.getAttribute('data-exp')||''; const i=raw.indexOf('|');
+    title.textContent=i>=0?raw.slice(0,i):tok.textContent.trim();
+    text.textContent=i>=0?raw.slice(i+1):raw;
+    hint.textContent='what this part does';
+    toks.forEach(x=>x.classList.remove('active')); tok.classList.add('active');
+  }
+  toks.forEach(tok=>{tok.setAttribute('tabindex','0');
+    tok.addEventListener('mouseenter',()=>show(tok));
+    tok.addEventListener('click',()=>show(tok));
+    tok.addEventListener('focus',()=>show(tok));});
+});
+
+/* ---------- POSTMAN REQUEST BUILDER ---------- */
+(function(){
+  const methodSel=document.getElementById('pmMethod');
+  const urlEl=document.getElementById('pmUrl');
+  const tabsEl=document.getElementById('pmTabs');
+  const tabBody=document.getElementById('pmTabBody');
+  const bodyDot=document.getElementById('pmBodyDot');
+  const sendBtn=document.getElementById('pmSend');
+  const statEl=document.getElementById('pmStat');
+  const metaEl=document.getElementById('pmMeta');
+  const respEl=document.getElementById('pmResp');
+  const note=document.getElementById('pmNote');
+
+  const URLS={
+    GET:'https://pokeapi.co/api/v2/pokemon/pikachu',
+    POST:'https://pokeapi.co/api/v2/pokemon',
+    PUT:'https://pokeapi.co/api/v2/pokemon/25',
+    DELETE:'https://pokeapi.co/api/v2/pokemon/25'
+  };
+  let activeTab='params';
+
+  const TAB_CONTENT={
+    params:()=>'<div class="kvrow"><span class="k">limit</span><span class="eq">=</span><span class="v">20</span></div>'
+              +'<div class="kvrow"><span class="k">offset</span><span class="eq">=</span><span class="v">0</span></div>'
+              +'<div class="muted">Query params — appended to the URL after a ?. Optional; used to filter or page results.</div>',
+    headers:()=>'<div class="kvrow"><span class="k">Accept</span><span class="eq">:</span><span class="v">application/json</span></div>'
+              +'<div class="kvrow"><span class="k">Content-Type</span><span class="eq">:</span><span class="v">application/json</span></div>'
+              +'<div class="muted">Headers — metadata sent with the request. Authorization would go here for a protected API.</div>',
+    body:()=>{
+      const m=methodSel.value;
+      if(m==='GET'||m==='DELETE') return '<div class="muted">'+m+' requests don\'t send a body. Switch to POST or PUT to see one.</div>';
+      return '<div class="bodybox">{\n  <span class="k">"name"</span>: <span class="s">"pikachu"</span>,\n  <span class="k">"type"</span>: <span class="s">"electric"</span>\n}</div>'
+           +'<div class="muted" style="margin-top:8px">Body (raw JSON) — the data you SEND. Used with '+m+'.</div>';
+    }
+  };
+
+  function renderTab(){ tabBody.innerHTML=TAB_CONTENT[activeTab](); }
+  function refreshBodyDot(){
+    const m=methodSel.value;
+    bodyDot.style.display=(m==='POST'||m==='PUT')?'':'none';
+  }
+
+  tabsEl.querySelectorAll('.tab').forEach(t=>{
+    t.addEventListener('click',()=>{
+      tabsEl.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+      t.classList.add('active'); activeTab=t.dataset.tab; renderTab();
+    });
+  });
+  methodSel.addEventListener('change',()=>{
+    urlEl.value=URLS[methodSel.value];
+    refreshBodyDot(); renderTab();
+    statEl.style.display='none'; metaEl.textContent='';
+    respEl.innerHTML='<span class="waiting">// press Send to see the response</span>';
+  });
+
+  const RESP={
+    GET:{ status:200, text:'OK', ms:142,
+      body:'{\n  <span class="k">"name"</span>: <span class="s">"pikachu"</span>,\n  <span class="k">"id"</span>: <span class="n">25</span>,\n  <span class="k">"height"</span>: <span class="n">4</span>,\n  <span class="k">"weight"</span>: <span class="n">60</span>,\n  <span class="k">"types"</span>: [\n    { <span class="k">"type"</span>: { <span class="k">"name"</span>: <span class="s">"electric"</span> } }\n  ]\n}',
+      note:'A 200 with the full pokemon object. THIS is what you scout for — note the shape: name is top-level, types is an array of nested objects. Now you know exactly how to read it in code.' },
+    POST:{ status:201, text:'Created', ms:210,
+      body:'{\n  <span class="k">"id"</span>: <span class="n">1026</span>,\n  <span class="k">"name"</span>: <span class="s">"pikachu"</span>,\n  <span class="k">"created"</span>: <span class="s">"true"</span>\n}',
+      note:'POST returned 201 (Created) — a 2xx success — with the new record, now carrying an id the server assigned. POST sends a body and creates.' },
+    PUT:{ status:200, text:'OK', ms:158,
+      body:'{\n  <span class="k">"id"</span>: <span class="n">25</span>,\n  <span class="k">"name"</span>: <span class="s">"pikachu"</span>,\n  <span class="k">"type"</span>: <span class="s">"electric"</span>,\n  <span class="k">"updated"</span>: <span class="s">"true"</span>\n}',
+      note:'PUT returned 200 with the updated record. The URL targeted a specific id (/25) — PUT updates something that already exists.' },
+    DELETE:{ status:204, text:'No Content', ms:96, body:null,
+      note:'DELETE returned 204 (No Content) — success, and deliberately no body. The resource is gone; there\'s nothing to send back.' }
+  };
+
+  sendBtn.addEventListener('click',()=>{
+    const m=methodSel.value; const r=RESP[m];
+    sendBtn.disabled=true;
+    respEl.innerHTML='<span class="waiting">// sending…</span>';
+    statEl.style.display='none'; metaEl.textContent='';
+    setTimeout(()=>{
+      const cls=r.status<300?'s2':(r.status<500?'s4':'s5');
+      statEl.style.display=''; statEl.className='stat '+cls;
+      statEl.textContent=r.status+' '+r.text;
+      metaEl.innerHTML='Time: <b>'+r.ms+' ms</b>';
+      respEl.innerHTML = r.body===null ? '<span class="p">// 204 — no response body</span>' : r.body;
+      note.innerHTML='<b>'+m+' → '+r.status+'.</b> '+r.note;
+      sendBtn.disabled=false;
+    }, 480);
+  });
+
+  refreshBodyDot(); renderTab();
+})();
+
+/* ---------- checkpoints ---------- */
+document.querySelectorAll('[data-check]').forEach(chk=>{
+  const correct=parseInt(chk.dataset.correct,10);
+  const fbbox=chk.querySelector('[data-fbbox]');
+  chk.querySelectorAll('.opt').forEach(opt=>{
+    opt.addEventListener('click',()=>{
+      const pick=parseInt(opt.dataset.opt,10);
+      if(pick===correct){opt.classList.add('correct');fbbox.textContent=chk.dataset.fb;fbbox.classList.add('show');chk.querySelectorAll('.opt').forEach(o=>o.style.pointerEvents='none');}
+      else{opt.classList.add('wrong');opt.style.pointerEvents='none';}
+    });
+  });
+});
+
+/* ---------- scrollspy ---------- */
+const sections=[...document.querySelectorAll('section.chapter')];
+const links=[...document.querySelectorAll('nav.side a[data-sec]')];
+const mlinks=[...document.querySelectorAll('.mobtop .mlink')];
+function spy(){
+  const y=window.scrollY+120;let cur=sections[0].id;
+  for(const s of sections){if(s.offsetTop<=y)cur=s.id;}
+  links.forEach(l=>l.classList.toggle('active',l.getAttribute('href')==='#'+cur));
+  mlinks.forEach(l=>l.classList.toggle('active',l.getAttribute('href')==='#'+cur));
+}
+window.addEventListener('scroll',spy,{passive:true});spy();
+</script>
+</body>
+</html>

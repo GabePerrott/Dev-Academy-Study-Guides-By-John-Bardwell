@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Consuming APIs — interactive guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;450;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F1F1F4;--card:#FBFBFD;--ink:#1B1E26;--muted:#5A5F6B;--line:#E1E1E8;
+    --violet:#6C4CE0;--violet-soft:#EDE8FC;--violet-line:#D8CEF7;
+    --emerald:#12905F;--amber:#B67A08;--rose:#D6455D;
+    --term-bg:#15171E;--term-panel:#1D2029;--term-fg:#E6E8EC;--term-dim:#8A90A0;
+    --t-num:#E7B45A;--t-str:#93D6A0;--t-null:#8A90A0;--t-err:#F0808F;
+    --get:#12905F;--post:#B67A08;--put:#2C6FE0;--del:#D6455D;
+    --radius:14px;
+    --mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+    --disp:'Space Grotesk',system-ui,sans-serif;--body:'Inter',system-ui,sans-serif;
+  }
+  *{box-sizing:border-box}html{scroll-behavior:smooth}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);font-size:16.5px;line-height:1.62;-webkit-font-smoothing:antialiased}
+  a{color:var(--violet);text-decoration:none}a:hover{text-decoration:underline}
+  code{font-family:var(--mono);font-size:.88em;background:#E7E7EE;padding:.08em .38em;border-radius:5px;color:#2C2140}
+
+  .wrap{display:grid;grid-template-columns:270px minmax(0,1fr);max-width:1200px;margin:0 auto}
+  nav.side{position:sticky;top:0;align-self:start;height:100vh;overflow-y:auto;padding:30px 22px 40px;border-right:1px solid var(--line)}
+  main{padding:0 clamp(20px,5vw,64px) 120px;min-width:0}
+  .brand{font-family:var(--mono);font-weight:700;font-size:14px;letter-spacing:.04em;color:var(--violet);margin-bottom:4px}
+  .brand small{color:var(--muted);font-weight:400;display:block;letter-spacing:0;margin-top:3px;font-family:var(--body);font-size:12.5px}
+  .navsec{margin-top:26px}
+  .navsec > span{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:9px;padding-left:12px}
+  nav.side a.link{display:flex;gap:10px;align-items:baseline;padding:7px 12px;border-radius:9px;color:var(--ink);font-size:14.5px;line-height:1.35}
+  nav.side a.link:hover{background:#E9E9F0;text-decoration:none}
+  nav.side a.link.active{background:var(--violet-soft);color:#3B2A73;font-weight:500}
+  nav.side a.link b{font-family:var(--mono);font-size:11.5px;color:var(--violet);min-width:20px}
+  .backlink{margin-top:24px;font-size:13px;color:var(--muted)}
+  .backlink a{font-family:var(--mono);font-size:12.5px;display:block;margin-top:6px}
+
+  header.hero{padding:64px 0 30px}
+  .eyebrow{font-family:var(--mono);font-size:12.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--violet);margin-bottom:18px}
+  h1{font-family:var(--disp);font-weight:700;font-size:clamp(34px,5.4vw,54px);line-height:1.04;letter-spacing:-.02em;margin:0 0 20px}
+  h1 .brace{color:var(--violet)}
+  .lede{font-size:19px;color:#3A3E48;max-width:62ch;margin:0}.lede + .lede{margin-top:14px}
+  .runline{font-family:var(--mono);font-size:13.5px;color:var(--muted);margin-top:26px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .runline .kbd{background:var(--term-bg);color:var(--t-str);padding:5px 11px;border-radius:7px;font-size:12.5px}
+
+  section.chapter{padding-top:56px;scroll-margin-top:20px}
+  .chaphead{display:flex;align-items:baseline;gap:16px;border-bottom:2px solid var(--ink);padding-bottom:12px;margin-bottom:8px}
+  .chaphead .num{font-family:var(--mono);font-weight:700;font-size:15px;color:var(--violet)}
+  h2{font-family:var(--disp);font-weight:600;font-size:clamp(25px,3.4vw,34px);letter-spacing:-.015em;margin:0}
+  .chapsub{color:var(--muted);font-size:15px;margin:14px 0 0}
+  h3{font-family:var(--disp);font-weight:600;font-size:21px;letter-spacing:-.01em;margin:40px 0 10px}
+  p{margin:14px 0}main p,main li{color:#24272F}
+
+  /* code cell */
+  .cell{margin:22px 0;border-radius:var(--radius);overflow:hidden;border:1px solid #2A2E3A;box-shadow:0 10px 30px -18px rgba(20,20,40,.4)}
+  .cell .bar{background:var(--term-panel);display:flex;align-items:center;gap:8px;padding:9px 14px;border-bottom:1px solid #2A2E3A}
+  .cell .bar .dots{display:flex;gap:6px}.cell .bar .dots i{width:11px;height:11px;border-radius:50%;display:block}
+  .dots i:nth-child(1){background:#E06C75}.dots i:nth-child(2){background:#E5C07B}.dots i:nth-child(3){background:#98C379}
+  .cell .bar .fname{font-family:var(--mono);font-size:12px;color:var(--term-dim);margin-left:4px}
+  .cell pre.code{margin:0;background:var(--term-bg);color:var(--term-fg);font-family:var(--mono);font-size:13.5px;line-height:1.7;padding:16px 18px;white-space:pre;overflow-x:auto;tab-size:2}
+  .cell pre.code .cm{color:#6B7180}.cell pre.code .kw{color:#C9A6F6}.cell pre.code .fn{color:#8CC0F5}
+  .cell pre.code .st{color:#93D6A0}.cell pre.code .nm{color:#E7B45A}.cell pre.code .tag{color:#F0909F}
+
+  /* anatomy */
+  .anatomy{margin:22px 0;border:1px solid #2A2E3A;border-radius:var(--radius);overflow:hidden;box-shadow:0 10px 30px -18px rgba(20,20,40,.4)}
+  .anatomy .ahead{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--term-dim);padding:10px 16px;border-bottom:1px solid #2A2E3A;background:var(--term-panel);display:flex;align-items:center;gap:8px}
+  .anatomy .ahead::before{content:'⌖';color:#C39BF5;font-size:14px}
+  .anacode{padding:18px;background:var(--term-bg);font-family:var(--mono);font-size:14px;line-height:2.1;color:var(--term-fg);overflow-x:auto;white-space:pre-wrap;word-break:break-word}
+  .tok{cursor:pointer;border-radius:5px;padding:2px 3px;transition:.12s;outline:1.5px solid transparent}
+  .tok:hover{outline-color:rgba(255,255,255,.28)}
+  .tok.kw{background:rgba(195,155,245,.16);color:#C9A6F6}
+  .tok.fn{background:rgba(124,183,240,.15);color:#8CC0F5}
+  .tok.pm{background:rgba(231,180,90,.15);color:#E7B45A}
+  .tok.rt{background:rgba(147,214,160,.15);color:#93D6A0}
+  .tok.op{background:rgba(240,128,143,.14);color:#F0909F}
+  .tok.pn{background:rgba(150,156,172,.16);color:#B4BAC8}
+  .tok.st{background:rgba(147,214,160,.13);color:#93D6A0}
+  .tok.active{outline-color:var(--violet)!important;background:rgba(108,76,224,.32)!important;color:#fff}
+  .anapanel{padding:15px 18px;min-height:78px;background:var(--card)}
+  .anahint{font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:.05em}
+  .anahint .legend{color:var(--muted);opacity:.8}
+  .anatitle{font-family:var(--mono);font-weight:700;font-size:14px;color:var(--violet);margin:6px 0 3px}
+  .anatext{font-size:13.5px;color:#2A2D36;line-height:1.55}
+  @media(max-width:640px){.anacode{font-size:13px;line-height:2}}
+
+  /* ---------- REQUEST CONSOLE ---------- */
+  .req{margin:26px 0;border:1px solid var(--line);border-radius:16px;background:var(--card);overflow:hidden}
+  .req .rqh{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:11px 18px;border-bottom:1px solid var(--line);background:#F5F5F9}
+  .req .bar2{display:flex;gap:8px;padding:14px 18px 10px;align-items:center;flex-wrap:wrap}
+  .req select{font-family:var(--mono);font-size:13px;font-weight:700;padding:9px 11px;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--ink);cursor:pointer}
+  .req .url{flex:1;min-width:180px;font-family:var(--mono);font-size:13px;padding:9px 12px;border:1px solid var(--line);border-radius:8px;background:#FAFAFC;color:var(--muted)}
+  .req .send{font-family:var(--mono);font-size:13px;font-weight:600;border:none;background:var(--violet);color:#fff;border-radius:8px;padding:9px 18px;cursor:pointer}
+  .req .send:hover{background:#5B3ED1}
+  .req .send:disabled{opacity:.5;cursor:wait}
+  .req .panes{display:grid;grid-template-columns:1fr 1fr;gap:0;border-top:1px solid var(--line)}
+  @media(max-width:640px){.req .panes{grid-template-columns:1fr}}
+  .req .pane{padding:14px 18px}
+  .req .pane.reqp{border-right:1px solid var(--line);background:#FDFDFE}
+  @media(max-width:640px){.req .pane.reqp{border-right:none;border-bottom:1px solid var(--line)}}
+  .req .plab{font-family:var(--mono);font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin-bottom:9px;display:flex;align-items:center;gap:8px}
+  .req .status{margin-left:auto;font-weight:700;padding:2px 8px;border-radius:12px;font-size:11px}
+  .req .status.s2{background:#EAF7F0;color:#0C6B45}
+  .req .status.s4{background:#FBECEE;color:#9E2B3B}
+  .req .status.s5{background:#FBF3E4;color:#8A5A00}
+  .req pre{margin:0;font-family:var(--mono);font-size:12.5px;line-height:1.65;white-space:pre-wrap;word-break:break-word;min-height:120px}
+  .req .reqp pre{color:var(--muted)}
+  .req .respp{background:#0F1116;border-radius:0}
+  .req .respp pre{color:var(--term-fg)}
+  .req .respp .k{color:#C9A6F6}.req .respp .s{color:#93D6A0}.req .respp .n{color:#E7B45A}.req .respp .p{color:#8A90A0}
+  .req .respp .waiting{color:var(--term-dim);font-style:italic}
+  .req .methodline .m-get{color:var(--get);font-weight:700}
+  .req .methodline .m-post{color:var(--post);font-weight:700}
+  .req .methodline .m-put{color:var(--put);font-weight:700}
+  .req .methodline .m-del{color:var(--del);font-weight:700}
+  .req .note{padding:10px 18px 16px;font-size:13px;color:var(--muted);line-height:1.5;border-top:1px solid var(--line);background:#FAFAFC}
+  .req .note b{color:var(--violet)}
+
+  /* methods table */
+  .methods{margin:24px 0;border:1px solid var(--line);border-radius:14px;overflow:hidden}
+  .methods table{width:100%;border-collapse:collapse;font-size:14px}
+  .methods th{background:#F5F5F9;font-family:var(--mono);font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);text-align:left;padding:11px 14px;border-bottom:1px solid var(--line)}
+  .methods td{padding:11px 14px;border-bottom:1px solid var(--line);vertical-align:middle}
+  .methods tr:last-child td{border-bottom:none}
+  .methods .verb{font-family:var(--mono);font-weight:700;font-size:12px;padding:3px 9px;border-radius:6px;display:inline-block}
+  .methods .verb.get{background:#EAF7F0;color:var(--get)}
+  .methods .verb.post{background:#FBF3E4;color:var(--post)}
+  .methods .verb.put{background:#EAF1FD;color:var(--put)}
+  .methods .verb.del{background:#FBECEE;color:var(--del)}
+  .methods td.desc{color:#24272F}
+
+  /* status codes */
+  .codes{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:22px 0}
+  .codec{border:1px solid var(--line);border-radius:12px;padding:14px 16px;background:var(--card)}
+  .codec .cnum{font-family:var(--mono);font-size:22px;font-weight:700;margin-bottom:3px}
+  .codec.two{border-top:3px solid var(--emerald)}.codec.two .cnum{color:var(--emerald)}
+  .codec.four{border-top:3px solid var(--rose)}.codec.four .cnum{color:var(--rose)}
+  .codec.five{border-top:3px solid var(--amber)}.codec.five .cnum{color:var(--amber)}
+  .codec .cname{font-family:var(--mono);font-size:12px;color:var(--ink);font-weight:600;margin-bottom:5px}
+  .codec p{font-size:12.5px;margin:0;color:var(--muted);line-height:1.45}
+
+  /* JSON path explorer */
+  .jsonx{margin:24px 0;border:1px solid var(--line);border-radius:14px;background:var(--card);overflow:hidden}
+  .jsonx .jh{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:11px 18px;border-bottom:1px solid var(--line);background:#F5F5F9}
+  .jsonx .jbody{display:grid;grid-template-columns:1fr 1fr;gap:0}
+  @media(max-width:640px){.jsonx .jbody{grid-template-columns:1fr}}
+  .jsonx .jleft{background:#0F1116;padding:16px 18px;overflow-x:auto}
+  .jsonx .jleft pre{margin:0;font-family:var(--mono);font-size:12.5px;line-height:1.7;color:var(--term-fg)}
+  .jsonx .jleft .k{color:#C9A6F6}.jsonx .jleft .s{color:#93D6A0}.jsonx .jleft .n{color:#E7B45A}.jsonx .jleft .p{color:#8A90A0}
+  .jsonx .jright{padding:16px 18px}
+  .jsonx .jlab{font-family:var(--mono);font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin-bottom:9px}
+  .jsonx .paths{display:flex;flex-direction:column;gap:7px;margin-bottom:14px}
+  .jsonx .paths button{font-family:var(--mono);font-size:12.5px;text-align:left;cursor:pointer;border:1px solid var(--line);background:#fff;border-radius:8px;padding:8px 11px;color:var(--violet);transition:.12s}
+  .jsonx .paths button:hover{border-color:var(--violet-line);background:#FAF8FF}
+  .jsonx .paths button.active{border-color:var(--violet);background:var(--violet-soft)}
+  .jsonx .result{font-family:var(--mono);font-size:13px;background:var(--term-bg);color:var(--term-fg);border-radius:9px;padding:12px 14px;line-height:1.6}
+  .jsonx .result .val{color:#93D6A0}.jsonx .result .type{color:#8A90A0;font-size:11px}
+
+  .insight{margin:24px 0;background:var(--card);border:1px solid var(--line);border-left:3px solid var(--violet);border-radius:12px;padding:16px 20px}
+  .insight .htag{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--violet);font-weight:700;display:flex;align-items:center;gap:8px;margin-bottom:6px}
+  .insight.warn{border-left-color:var(--amber)}.insight.warn .htag{color:var(--amber)}
+  .insight.gotcha{border-left-color:var(--rose)}.insight.gotcha .htag{color:var(--rose)}
+  .insight p{margin:6px 0}.insight p:first-of-type{margin-top:0}
+
+  /* states cards */
+  .states{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:22px 0}
+  @media(max-width:600px){.states{grid-template-columns:1fr}}
+  .statec{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px}
+  .statec.load{border-top:3px solid var(--amber)}
+  .statec.ok{border-top:3px solid var(--emerald)}
+  .statec.err{border-top:3px solid var(--rose)}
+  .statec .sn{font-family:var(--mono);font-size:12px;letter-spacing:.04em;text-transform:uppercase;font-weight:700;margin-bottom:6px}
+  .statec.load .sn{color:var(--amber)}.statec.ok .sn{color:var(--emerald)}.statec.err .sn{color:var(--rose)}
+  .statec p{font-size:13px;margin:0}
+
+  /* predict */
+  .predict{margin:22px 0;border:1px solid var(--violet-line);border-radius:var(--radius);background:linear-gradient(180deg,#FAF8FF,#F4F0FE);overflow:hidden}
+  .predict .phead{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--violet-line)}
+  .predict .phead .icon{width:22px;height:22px;border-radius:6px;background:var(--violet);color:#fff;display:grid;place-items:center;font-size:13px;font-weight:700;font-family:var(--mono)}
+  .predict .phead b{font-family:var(--disp);font-size:15px}
+  .predict .pbody{padding:16px}
+  .predict pre.psrc{margin:0 0 14px;background:var(--term-bg);color:var(--term-fg);border-radius:10px;font-family:var(--mono);font-size:13px;line-height:1.6;padding:14px 16px;overflow-x:auto;white-space:pre-wrap}
+  .predict pre.psrc .cm{color:#6B7180}.predict pre.psrc .kw{color:#C9A6F6}.predict pre.psrc .fn{color:#8CC0F5}.predict pre.psrc .st{color:#93D6A0}.predict pre.psrc .nm{color:#E7B45A}
+  .predict .reveal-btn{font-family:var(--mono);font-size:12.5px;font-weight:600;cursor:pointer;background:var(--violet);color:#fff;border:none;border-radius:8px;padding:8px 16px}
+  .predict .reveal-btn:hover{background:#5B3ED1}
+  .predict .answer{display:none;margin-top:14px;background:#0F1116;border-radius:10px;padding:13px 16px}
+  .predict .answer.show{display:block}
+  .predict .answer .out{font-family:var(--mono);font-size:13px;color:#fff;background:#20232C;border-radius:8px;padding:10px 12px;margin-bottom:9px;line-height:1.6}
+  .predict .answer .out .s{color:#93D6A0}.predict .answer .out .n{color:#E7B45A}
+  .predict .answer .why{color:var(--term-dim);font-size:12.5px;line-height:1.55}
+
+  /* checkpoint */
+  .check{margin:26px 0;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px}
+  .check .q{font-family:var(--disp);font-weight:600;font-size:16px;margin-bottom:14px}
+  .check .opts{display:flex;flex-direction:column;gap:9px}
+  .check .opt{font-family:var(--mono);font-size:13.5px;text-align:left;cursor:pointer;background:#fff;border:1px solid var(--line);border-radius:9px;padding:11px 14px;transition:.15s}
+  .check .opt:hover{border-color:var(--violet-line);background:#FAF8FF}
+  .check .opt.correct{border-color:var(--emerald);background:#EAF7F0;color:#0C6B45}
+  .check .opt.wrong{border-color:var(--rose);background:#FBECEE;color:#9E2B3B}
+  .check .fb-msg{margin-top:12px;font-size:13.5px;color:var(--muted);display:none}
+  .check .fb-msg.show{display:block}
+
+  .recap{background:var(--term-bg);border-radius:16px;padding:26px 28px;margin:26px 0;color:var(--term-fg)}
+  .recap h3{color:#fff;margin-top:0}
+  .recap ul{list-style:none;padding:0;margin:0;display:grid;gap:10px}
+  .recap li{font-family:var(--mono);font-size:13px;line-height:1.55;padding-left:22px;position:relative;color:#D3D7E0}
+  .recap li::before{content:'›';position:absolute;left:0;color:var(--violet);font-weight:700}
+  .recap li b{color:var(--t-num);font-weight:500}
+
+  footer{border-top:1px solid var(--line);margin-top:70px;padding-top:24px;color:var(--muted);font-size:13.5px}
+  footer .mono{font-family:var(--mono);font-size:12px}
+
+  .mobtop{display:none}
+  @media(max-width:860px){
+    .wrap{grid-template-columns:1fr}nav.side{display:none}
+    .mobtop{display:flex;position:sticky;top:0;z-index:20;background:rgba(241,241,244,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);padding:12px 18px;gap:10px;align-items:center;overflow-x:auto}
+    .mobtop .brand{margin:0;white-space:nowrap}
+    .mobtop a{font-family:var(--mono);font-size:12px;white-space:nowrap;color:var(--muted);padding:5px 10px;border-radius:7px}
+    .mobtop a.active{background:var(--violet-soft);color:#3B2A73}
+    main{padding-left:20px;padding-right:20px}
+  }
+  @media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important;scroll-behavior:auto}}
+</style>
+</head>
+<body>
+
+<div class="mobtop">
+  <span class="brand">APIs</span>
+  <a href="#c1" class="mlink active">What's an API</a>
+  <a href="#c2" class="mlink">Methods &amp; codes</a>
+  <a href="#c3" class="mlink">Try requests</a>
+  <a href="#c4" class="mlink">fetch</a>
+  <a href="#c5" class="mlink">In React</a>
+  <a href="#c6" class="mlink">States</a>
+  <a href="#recap" class="mlink">Recap</a>
+</div>
+
+<div class="wrap">
+  <nav class="side">
+    <div class="brand">Consuming APIs<small>Unit 2 — interactive guide</small></div>
+    <div class="navsec">
+      <span>Sections</span>
+      <a href="#c1" class="link" data-sec><b>01</b> What an API is</a>
+      <a href="#c2" class="link" data-sec><b>02</b> Methods &amp; status codes</a>
+      <a href="#c3" class="link" data-sec><b>03</b> Fire some requests</a>
+      <a href="#c4" class="link" data-sec><b>04</b> fetch &amp; async/await</a>
+      <a href="#c5" class="link" data-sec><b>05</b> Fetching in React</a>
+      <a href="#c6" class="link" data-sec><b>06</b> Loading &amp; error states</a>
+      <a href="#recap" class="link" data-sec><b>★</b> Recap</a>
+    </div>
+    <div class="navsec">
+      <span>The one idea</span>
+      <p style="font-size:13px;color:var(--muted);line-height:1.5;margin:0 12px">
+        An API is a <b>waiter</b>. You ask for data (a request), it fetches from the kitchen (server/database) and
+        brings back a plate (JSON). Your job: order politely, and handle the wait.</p>
+    </div>
+    <div class="backlink">
+      Related guides:
+      <a href="./react-and-testing.html">← React intro</a>
+      <a href="./react-forms.html">← Forms</a>
+      <a href="./index.html">⌂ All guides</a>
+    </div>
+  </nav>
+
+  <main>
+    <header class="hero">
+      <div class="eyebrow">Unit 2 — Consuming APIs</div>
+      <h1>Fetching data from <span class="brace">somewhere else</span></h1>
+      <p class="lede">Until now your data has been hardcoded in your app. APIs let you fetch <b>live data from a
+      server</b> — weather, pokémon, movies, anything. This guide covers what an API is, how you ask it for things,
+      and the React pattern for loading that data into your components without freezing the page.</p>
+      <p class="lede">It pulls together threads from across the course: async/await, JSON, state, and the effects
+      that run when a component loads.</p>
+      <div class="runline"><span class="kbd">request → wait → JSON → state → render</span> the shape of every data fetch you'll write.</div>
+    </header>
+
+    <!-- ===== 1 ===== -->
+    <section class="chapter" id="c1">
+      <div class="chaphead"><span class="num">01</span><h2>What an API is</h2></div>
+      <p class="chapsub">A doorway to someone else's data. You send a request to a URL; it sends back data — usually JSON.</p>
+
+      <p><b>API</b> stands for Application Programming Interface, but the words don't help much. The useful picture: an
+      API is a <b>waiter at a restaurant</b>. You don't walk into the kitchen and cook — you tell the waiter what you
+      want, they go fetch it, and bring back a plate. You never see the kitchen (the server and database); you just
+      make polite, specific requests and get data back.</p>
+
+      <p>Concretely: you send an HTTP request to a URL called an <b>endpoint</b> — like
+      <code>api.weather.com/today?city=wellington</code> — and the server sends back data, almost always as
+      <b>JSON</b> (the same key-value shape you know from objects). Your app then displays it.</p>
+
+      <div class="insight">
+        <div class="htag">◆ Insight — you've been consuming APIs already, sort of</div>
+        <p>Every website you use is quietly making API requests — scrolling a feed, checking a price, loading a map.
+        The difference now is <em>you're</em> the one writing the request. And because the data lives on someone
+        else's server, two new realities appear: it takes <b>time</b> to arrive (the network isn't instant), and it
+        can <b>fail</b> (servers go down, URLs change). Most of this guide is really about handling those two facts
+        gracefully.</p>
+      </div>
+    </section>
+
+    <!-- ===== 2 ===== -->
+    <section class="chapter" id="c2">
+      <div class="chaphead"><span class="num">02</span><h2>Methods &amp; status codes</h2></div>
+      <p class="chapsub">The HTTP method says what you want to do; the status code says how it went.</p>
+
+      <p>Every request carries a <b>method</b> — a verb saying what you intend. Four cover almost everything:</p>
+
+      <div class="methods">
+        <table>
+          <thead><tr><th>Method</th><th>Means</th><th style="text-align:left">Restaurant analogy</th></tr></thead>
+          <tbody>
+            <tr><td><span class="verb get">GET</span></td><td class="desc">Read data. Fetch and display something.</td><td>"Bring me the menu."</td></tr>
+            <tr><td><span class="verb post">POST</span></td><td class="desc">Create new data. Send something to be added.</td><td>"I'd like to place an order."</td></tr>
+            <tr><td><span class="verb put">PUT</span></td><td class="desc">Update existing data.</td><td>"Change my order to no onions."</td></tr>
+            <tr><td><span class="verb del">DELETE</span></td><td class="desc">Remove data.</td><td>"Cancel my order."</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p>When you're just displaying data — which is most of what you'll do first — you use <b>GET</b>. The server
+      replies with a <b>status code</b>, a three-digit number telling you how it went. You don't need all of them,
+      just the families:</p>
+
+      <div class="codes">
+        <div class="codec two"><div class="cnum">2xx</div><div class="cname">Success</div><p>It worked. <b>200 OK</b> is the one you want — data's on its way.</p></div>
+        <div class="codec four"><div class="cnum">4xx</div><div class="cname">You messed up</div><p>Bad request. <b>404 Not Found</b> (wrong URL), <b>401</b> (not allowed in).</p></div>
+        <div class="codec five"><div class="cnum">5xx</div><div class="cname">They messed up</div><p>The server broke. <b>500</b> — not your fault, their problem. Try again later.</p></div>
+      </div>
+
+      <div class="insight warn">
+        <div class="htag">▲ The memory hook for status codes</div>
+        <p><b>2xx</b> = all good. <b>4xx</b> = <em>you</em> did something wrong (mistyped the URL, missing
+        permission). <b>5xx</b> = <em>the server</em> did something wrong. That 4-vs-5 split is the useful instinct:
+        a 404 means check your request; a 500 means it's not you, wait and retry. When a fetch misbehaves, the status
+        code is the first clue about whose problem it is.</p>
+      </div>
+    </section>
+
+    <!-- ===== 3 ===== -->
+    <section class="chapter" id="c3">
+      <div class="chaphead"><span class="num">03</span><h2>Fire some requests</h2></div>
+      <p class="chapsub">A live console against a pretend API. Pick a method, send it, and read the status code and JSON that come back.</p>
+
+      <p>Here's a fake "cohort API". Choose a method and hit Send — watch the request go out and the response come
+      back, complete with status code and JSON body. Notice each method behaves differently:</p>
+
+      <div class="req" id="req">
+        <div class="rqh">Request console — endpoint: /api/students</div>
+        <div class="bar2">
+          <select id="reqMethod">
+            <option value="GET">GET</option>
+            <option value="POST">POST</option>
+            <option value="PUT">PUT</option>
+            <option value="DELETE">DELETE</option>
+            <option value="GET404">GET (wrong URL)</option>
+          </select>
+          <span class="url" id="reqUrl">https://cohort.dev/api/students</span>
+          <button class="send" id="reqSend">Send →</button>
+        </div>
+        <div class="panes">
+          <div class="pane reqp">
+            <div class="plab">request</div>
+            <pre class="methodline" id="reqPreview"></pre>
+          </div>
+          <div class="pane respp">
+            <div class="plab">response <span class="status" id="reqStatus" style="display:none"></span></div>
+            <pre id="reqResp"><span class="waiting">// hit Send to make a request</span></pre>
+          </div>
+        </div>
+        <div class="note" id="reqNote">GET reads data. The other verbs create, update, and delete — try each and compare the status codes.</div>
+      </div>
+
+      <div class="check" data-check
+        data-correct="0"
+        data-fb="Right — GET is for reading/fetching data to display. POST creates, PUT updates, DELETE removes. When you're just showing data on a page, you want GET.">
+        <div class="q">Checkpoint: you want to fetch and display a list of pokémon. Which method?</div>
+        <div class="opts">
+          <button class="opt" data-opt="0">GET</button>
+          <button class="opt" data-opt="1">POST</button>
+          <button class="opt" data-opt="2">DELETE</button>
+          <button class="opt" data-opt="3">PUT</button>
+        </div>
+        <div class="fb-msg" data-fbbox></div>
+      </div>
+    </section>
+
+    <!-- ===== 4 ===== -->
+    <section class="chapter" id="c4">
+      <div class="chaphead"><span class="num">04</span><h2>fetch &amp; async/await</h2></div>
+      <p class="chapsub">fetch is the built-in function that makes requests. It returns a promise — so you await it, twice.</p>
+
+      <p>The browser gives you <code>fetch</code> to make requests. Because a request takes time, <code>fetch</code>
+      returns a <b>promise</b> — the same promises from the testing guide's <code>findBy</code>. So you
+      <code>await</code> it, inside an <code>async</code> function:</p>
+
+      <div class="anatomy">
+        <div class="ahead">Code anatomy — a fetch, start to finish</div>
+        <div class="anacode"><span class="tok kw" data-exp="async|Marks the function as asynchronous — it contains awaits and won't block the page while waiting for the network.">async</span> <span class="tok kw" data-exp="function|A normal function, just async.">function</span> <span class="tok fn" data-exp="getStudents|Your function that fetches the data.">getStudents</span>() {
+  <span class="tok kw" data-exp="const response|Store what fetch gives back — a Response object (NOT the data yet; the wrapper around it).">const response</span> = <span class="tok kw" data-exp="await|Pause here until the server responds. Without await you'd get an unresolved promise, not the response.">await</span> <span class="tok fn" data-exp="fetch(url)|The built-in that sends the request. GET is the default method, so fetch(url) alone is a GET.">fetch(url)</span>
+  <span class="tok kw" data-exp="const data|Store the actual usable data.">const data</span> = <span class="tok kw" data-exp="await|A SECOND await — parsing the body also takes a moment and returns a promise.">await</span> <span class="tok op" data-exp="response.json()|Turns the response body into a real JS object/array you can use. This is the step people forget — the response isn't your data until you call .json() on it.">response.json()</span>
+  <span class="tok kw" data-exp="return data|Hand back the parsed data for the caller (or your component) to use.">return data</span>
+}</div>
+        <div class="anapanel"><div class="anahint">Hover or tap a highlighted token above <span class="legend">· two awaits: one for the response, one for the JSON</span></div><div class="anatitle">—</div><div class="anatext">Every part explains its own job.</div></div>
+      </div>
+
+      <div class="insight gotcha">
+        <div class="htag">✖ The two-await trap that catches everyone</div>
+        <p>You <code>await</code> <b>twice</b>, and forgetting the second is the most common fetch bug. The first
+        await gets the <em>response</em> — a wrapper with the status code and headers, but not your data. The second,
+        <code>await response.json()</code>, unwraps the actual JSON body. Skip it and you'll be staring at a
+        confusing Response object or a Promise, wondering where your data went. Response first, then
+        <code>.json()</code>.</p>
+      </div>
+
+      <div class="predict" data-predict>
+        <div class="phead"><span class="icon">?</span><b>Spot the bug</b></div>
+        <div class="pbody">
+          <pre class="psrc"><span class="kw">const</span> response = <span class="kw">await</span> <span class="fn">fetch</span>(url)
+<span class="kw">const</span> data = response.<span class="fn">json</span>()   <span class="cm">// ← what's wrong here?</span>
+<span class="fn">console</span>.log(data)</pre>
+          <button class="reveal-btn" data-reveal>Reveal the bug</button>
+          <div class="answer" data-answer>
+            <div class="out">data is a <span class="s">Promise</span>, not your JSON</div>
+            <div class="why">The <code>await</code> is missing on <code>response.json()</code>. Since
+            <code>.json()</code> returns a promise, without <code>await</code> you store the promise itself, not the
+            resolved data. Fix: <code>const data = await response.json()</code>. This exact slip is behind most "why
+            is my data undefined / a Promise?" moments.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== 5 ===== -->
+    <section class="chapter" id="c5">
+      <div class="chaphead"><span class="num">05</span><h2>Fetching in React</h2></div>
+      <p class="chapsub">Fetch when the component loads, store the result in state, and the component re-renders with the data. useEffect handles the "when it loads" part.</p>
+
+      <p>In React the pattern is always the same shape: <b>fetch → store in state → render</b>. Two questions: where
+      do you put the data (state), and when do you fetch it (when the component first appears). That "when it loads"
+      timing is what <code>useEffect</code> is for:</p>
+
+      <div class="anatomy">
+        <div class="ahead">Code anatomy — the data-fetching component</div>
+        <div class="anacode"><span class="tok kw" data-exp="const [students, setStudents]|State to hold the fetched data. Starts empty; fills once the request resolves.">const [students, setStudents]</span> = <span class="tok fn" data-exp="useState([])|Start with an empty array — a safe default so .map() works before the data arrives (no undefined crash).">useState([])</span>
+
+  <span class="tok fn" data-exp="useEffect|The hook for 'run this when the component loads'. Perfect home for a fetch — you want data as the component appears.">useEffect</span>(() =&gt; {
+    <span class="tok fn" data-exp="getStudents|Call your async fetch function. (Defined inside or outside; it sets state when done.)">getStudents</span>().<span class="tok fn" data-exp="then(setStudents)|When the data arrives, store it in state. Storing triggers a re-render, so the UI updates with the data.">then(setStudents)</span>
+  }, <span class="tok op" data-exp="[] empty deps|The empty dependency array means 'run once, when the component first loads'. Leave it out and you'd fetch on every render — an infinite loop.">[]</span>)
+
+  <span class="tok kw" data-exp="return|Render the data from state...">return</span> students.<span class="tok fn" data-exp="map(...)|Map the state array to JSX — the same list rendering from the React guide. Empty at first, fills when state updates.">map</span>(<span class="tok pm" data-exp="s => <li>{s.name}</li>|One list item per student. Each needs a key (omitted here for brevity).">s =&gt; ...</span>)</div>
+        <div class="anapanel"><div class="anahint">Hover or tap a highlighted token above <span class="legend">· fetch in useEffect · store in state · render</span></div><div class="anatitle">—</div><div class="anatext">Every part explains its own job.</div></div>
+      </div>
+
+      <div class="insight gotcha">
+        <div class="htag">✖ The empty [] is not optional</div>
+        <p>That empty dependency array <code>[]</code> at the end of <code>useEffect</code> is critical. It means
+        "run this effect <b>once</b>, when the component first loads." Forget it, and the effect runs on every
+        render — but fetching sets state, and setting state causes a render, which runs the effect, which fetches
+        again... an <b>infinite loop</b> hammering the API. If your app is firing endless requests, a missing
+        <code>[]</code> is almost always why.</p>
+      </div>
+
+      <div class="insight">
+        <div class="htag">◆ Insight — it all connects here</div>
+        <p>Look at how many earlier pieces show up: <code>useState</code> and <code>.map()</code> from the React
+        guide, <code>async/await</code> and promises from testing, JSON from data models, even the "start with an
+        empty array so nothing crashes" instinct from the undefined cliff. Consuming APIs isn't a new island — it's
+        where the whole course so far clicks together into something that feels like a real app.</p>
+      </div>
+    </section>
+
+    <!-- ===== 6 ===== -->
+    <section class="chapter" id="c6">
+      <div class="chaphead"><span class="num">06</span><h2>Loading &amp; error states</h2></div>
+      <p class="chapsub">Because data takes time and can fail, a good component tracks three situations — not just the happy one.</p>
+
+      <p>A real fetch has <b>three</b> possible states, and beginners only handle one (success). The network takes
+      time, and it can break — so your component should know which situation it's in:</p>
+
+      <div class="states">
+        <div class="statec load"><div class="sn">⏳ Loading</div><p>The request is out, data hasn't arrived. Show a spinner or "Loading…" so the user knows something's happening.</p></div>
+        <div class="statec ok"><div class="sn">✓ Success</div><p>Data arrived. Render it. The state you always remember to build.</p></div>
+        <div class="statec err"><div class="sn">✖ Error</div><p>The request failed (404, 500, no internet). Show a friendly message, not a blank or broken page.</p></div>
+      </div>
+
+      <p>You track this with a little state — either a status string, or a loading boolean plus an error value. Then
+      you render different UI for each:</p>
+
+      <div class="cell">
+        <div class="bar"><span class="dots"><i></i><i></i><i></i></span><span class="fname">StudentList.tsx</span></div>
+        <pre class="code"><span class="kw">const</span> [status, setStatus] = <span class="fn">useState</span>(<span class="st">'loading'</span>)  <span class="cm">// 'loading' | 'success' | 'error'</span>
+
+<span class="cm">// in your fetch: setStatus('success') when it works,</span>
+<span class="cm">// setStatus('error') inside a catch when it throws</span>
+
+<span class="kw">if</span> (status === <span class="st">'loading'</span>) <span class="kw">return</span> <span class="tag">&lt;p&gt;</span>Loading…<span class="tag">&lt;/p&gt;</span>
+<span class="kw">if</span> (status === <span class="st">'error'</span>)   <span class="kw">return</span> <span class="tag">&lt;p&gt;</span>Something went wrong<span class="tag">&lt;/p&gt;</span>
+<span class="kw">return</span> <span class="tag">&lt;ul&gt;</span>{students.<span class="fn">map</span>(...)}<span class="tag">&lt;/ul&gt;</span>       <span class="cm">// success</span></pre>
+      </div>
+
+      <div class="insight warn">
+        <div class="htag">▲ try / catch is how you catch the failure</div>
+        <p>To handle errors you wrap the fetch in a <code>try / catch</code>: the <code>try</code> holds the happy
+        path (fetch, parse, <code>setStatus('success')</code>), and the <code>catch</code> runs if anything throws —
+        that's where <code>setStatus('error')</code> goes. Without it, a failed request throws an uncaught error and
+        your app shows a blank or broken screen. Assume the network <em>will</em> fail sometimes, and your users get
+        a graceful message instead of a mystery.</p>
+      </div>
+
+      <div class="check" data-check
+        data-correct="2"
+        data-fb="Right — a spinner covers the gap between sending the request and the data arriving. Without a loading state, users stare at a blank page and assume it's broken.">
+        <div class="q">Checkpoint: why show a "Loading…" state?</div>
+        <div class="opts">
+          <button class="opt" data-opt="0">It makes the request faster</button>
+          <button class="opt" data-opt="1">React requires it</button>
+          <button class="opt" data-opt="2">The data takes time to arrive; it tells the user something's happening</button>
+          <button class="opt" data-opt="3">It prevents errors</button>
+        </div>
+        <div class="fb-msg" data-fbbox></div>
+      </div>
+
+      <h3>Reading the JSON you get back</h3>
+      <p>APIs often return deeply nested JSON, and you dig in with the dot/bracket paths from the data-structures
+      guide. Click a path to pull a value out of a real response:</p>
+
+      <div class="jsonx" id="jsonx">
+        <div class="jh">JSON path explorer — a typical API response</div>
+        <div class="jbody">
+          <div class="jleft"><pre id="jsonSrc"></pre></div>
+          <div class="jright">
+            <div class="jlab">click a path to resolve it</div>
+            <div class="paths" id="jsonPaths"></div>
+            <div class="result" id="jsonResult">Pick a path above.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== RECAP ===== -->
+    <section class="chapter" id="recap">
+      <div class="chaphead"><span class="num">★</span><h2>Recap</h2></div>
+      <div class="recap">
+        <h3>The concepts</h3>
+        <ul>
+          <li>An <b>API</b> is a waiter: you send a request to an <b>endpoint</b> (URL), it returns data as <b>JSON</b>.</li>
+          <li>Methods: <b>GET</b> (read) · <b>POST</b> (create) · <b>PUT</b> (update) · <b>DELETE</b> (remove). Displaying data = GET.</li>
+          <li>Status codes: <b>2xx</b> good · <b>4xx</b> you erred (404 wrong URL) · <b>5xx</b> server erred (500).</li>
+        </ul>
+      </div>
+      <div class="recap">
+        <h3>Fetching</h3>
+        <ul>
+          <li><b>fetch(url)</b> returns a promise → <b>await</b> it. GET is the default.</li>
+          <li><b>Two awaits</b>: <code>await fetch(url)</code> for the response, then <code>await response.json()</code> for the data.</li>
+          <li>In React: fetch in <b>useEffect(() => {...}, [])</b>, store in <b>state</b>, render from state.</li>
+          <li>The empty <b>[]</b> = run once on load. Forgetting it = infinite fetch loop.</li>
+          <li>Default state to an <b>empty array</b> so <code>.map()</code> is safe before data arrives.</li>
+        </ul>
+      </div>
+      <div class="recap">
+        <h3>Real-world robustness</h3>
+        <ul>
+          <li>Handle <b>three states</b>: loading, success, error — not just success.</li>
+          <li>Wrap the fetch in <b>try / catch</b>; set the error state in the catch.</li>
+          <li>Show a <b>spinner</b> while loading and a <b>friendly message</b> on error.</li>
+          <li>Dig into nested JSON with the <b>dot/bracket paths</b> from the data-structures guide.</li>
+        </ul>
+      </div>
+
+      <footer>
+        <p>Built from your Consuming APIs lecture — Dev Academy Aotearoa. The request console and JSON explorer are
+        browser simulations; real apps use fetch against live endpoints.</p>
+        <p class="mono">reference:
+          <a href="https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API" target="_blank" rel="noopener">MDN — Fetch API</a> ·
+          <a href="https://react.dev/reference/react/useEffect" target="_blank" rel="noopener">react.dev — useEffect</a> ·
+          <a href="./index.html">⌂ All guides</a></p>
+      </footer>
+    </section>
+  </main>
+</div>
+
+<script>
+/* ---------- anatomy ---------- */
+document.querySelectorAll('.anatomy').forEach(an=>{
+  const title=an.querySelector('.anatitle'), text=an.querySelector('.anatext'), hint=an.querySelector('.anahint');
+  const toks=an.querySelectorAll('.tok');
+  function show(tok){
+    const raw=tok.getAttribute('data-exp')||''; const i=raw.indexOf('|');
+    title.textContent=i>=0?raw.slice(0,i):tok.textContent.trim();
+    text.textContent=i>=0?raw.slice(i+1):raw;
+    hint.textContent='what this part does';
+    toks.forEach(x=>x.classList.remove('active')); tok.classList.add('active');
+  }
+  toks.forEach(tok=>{tok.setAttribute('tabindex','0');
+    tok.addEventListener('mouseenter',()=>show(tok));
+    tok.addEventListener('click',()=>show(tok));
+    tok.addEventListener('focus',()=>show(tok));});
+});
+
+/* ---------- REQUEST CONSOLE ---------- */
+(function(){
+  const methodSel=document.getElementById('reqMethod');
+  const preview=document.getElementById('reqPreview');
+  const resp=document.getElementById('reqResp');
+  const statusEl=document.getElementById('reqStatus');
+  const note=document.getElementById('reqNote');
+  const sendBtn=document.getElementById('reqSend');
+  const urlEl=document.getElementById('reqUrl');
+
+  const SCENARIOS={
+    GET:{ method:'GET', url:'https://cohort.dev/api/students', status:200, statusText:'OK',
+      body:[{id:1,name:'Sina',track:'web'},{id:2,name:'Wiremu',track:'web'}],
+      note:'GET fetched the list. Status 200 — success. The body is the JSON array you\'d store in state and map over.' },
+    POST:{ method:'POST', url:'https://cohort.dev/api/students', status:201, statusText:'Created',
+      body:{id:3,name:'Aroha',track:'web'},
+      note:'POST created a new student. Status 201 (Created) — a 2xx success. The body is the newly created record, now with an id.' },
+    PUT:{ method:'PUT', url:'https://cohort.dev/api/students/2', status:200, statusText:'OK',
+      body:{id:2,name:'Wiremu',track:'data'},
+      note:'PUT updated student 2 (track changed to data). Status 200. Note the URL targets a specific id.' },
+    DELETE:{ method:'DELETE', url:'https://cohort.dev/api/students/2', status:204, statusText:'No Content',
+      body:null,
+      note:'DELETE removed student 2. Status 204 (No Content) — success, and there\'s deliberately no body to return.' },
+    GET404:{ method:'GET', url:'https://cohort.dev/api/studnets', status:404, statusText:'Not Found',
+      body:{error:'Not Found',message:'no route /api/studnets'},
+      note:'Spot the typo — /studnets. Status 404: a 4xx, meaning YOU got the request wrong (bad URL). The fix is on your side.' }
+  };
+
+  function mclass(m){ return 'm-'+m.toLowerCase(); }
+  function sclass(s){ return s<300?'s2':(s<500?'s4':'s5'); }
+  function fmtJSON(v, ind){
+    ind=ind||0; const pad='  '.repeat(ind), pad2='  '.repeat(ind+1);
+    if(v===null) return '<span class="p">null</span>';
+    if(typeof v==='number') return '<span class="n">'+v+'</span>';
+    if(typeof v==='string') return '<span class="s">"'+v+'"</span>';
+    if(Array.isArray(v)){
+      if(!v.length) return '[]';
+      return '[\n'+v.map(x=>pad2+fmtJSON(x,ind+1)).join(',\n')+'\n'+pad+']';
+    }
+    const keys=Object.keys(v);
+    return '{\n'+keys.map(k=>pad2+'<span class="k">"'+k+'"</span>: '+fmtJSON(v[k],ind+1)).join(',\n')+'\n'+pad+'}';
+  }
+
+  function updatePreview(){
+    const key=methodSel.value; const sc=SCENARIOS[key];
+    urlEl.textContent=sc.url;
+    preview.innerHTML='<span class="'+mclass(sc.method)+'">'+sc.method+'</span> '+sc.url+'\n<span style="color:#6B7180">Accept: application/json</span>';
+  }
+  methodSel.addEventListener('change',()=>{ updatePreview(); resp.innerHTML='<span class="waiting">// hit Send to make a request</span>'; statusEl.style.display='none'; });
+
+  sendBtn.addEventListener('click',()=>{
+    const key=methodSel.value; const sc=SCENARIOS[key];
+    sendBtn.disabled=true;
+    resp.innerHTML='<span class="waiting">// waiting for response…</span>';
+    statusEl.style.display='none';
+    setTimeout(()=>{
+      statusEl.style.display='';
+      statusEl.className='status '+sclass(sc.status);
+      statusEl.textContent=sc.status+' '+sc.statusText;
+      resp.innerHTML = sc.body===null
+        ? '<span class="p">// 204 — no body returned</span>'
+        : fmtJSON(sc.body,0);
+      note.innerHTML='<b>'+sc.method+' → '+sc.status+'.</b> '+sc.note;
+      sendBtn.disabled=false;
+    }, 520);
+  });
+  updatePreview();
+})();
+
+/* ---------- JSON PATH EXPLORER ---------- */
+(function(){
+  const DATA={
+    trainer:'Ash',
+    team:[
+      { name:'Pikachu', type:'electric', level:25, moves:['thunderbolt','quick attack'] },
+      { name:'Charizard', type:'fire', level:36, moves:['flamethrower','fly'] }
+    ],
+    badges:8
+  };
+  const PATHS=[
+    {p:'data.trainer', get:d=>d.trainer},
+    {p:'data.team.length', get:d=>d.team.length},
+    {p:'data.team[0].name', get:d=>d.team[0].name},
+    {p:'data.team[0].moves[0]', get:d=>d.team[0].moves[0]},
+    {p:'data.team[1].level', get:d=>d.team[1].level},
+    {p:'data.badges', get:d=>d.badges}
+  ];
+  function fmtSrc(v,ind){
+    ind=ind||0; const pad='  '.repeat(ind), pad2='  '.repeat(ind+1);
+    if(v===null) return '<span class="p">null</span>';
+    if(typeof v==='number') return '<span class="n">'+v+'</span>';
+    if(typeof v==='string') return '<span class="s">"'+v+'"</span>';
+    if(Array.isArray(v)){ if(!v.length) return '[]'; return '[\n'+v.map(x=>pad2+fmtSrc(x,ind+1)).join(',\n')+'\n'+pad+']'; }
+    const keys=Object.keys(v);
+    return '{\n'+keys.map(k=>pad2+'<span class="k">"'+k+'"</span>: '+fmtSrc(v[k],ind+1)).join(',\n')+'\n'+pad+'}';
+  }
+  document.getElementById('jsonSrc').innerHTML=fmtSrc(DATA,0);
+  const pathsEl=document.getElementById('jsonPaths');
+  const resultEl=document.getElementById('jsonResult');
+  PATHS.forEach(item=>{
+    const b=document.createElement('button'); b.textContent=item.p;
+    b.addEventListener('click',()=>{
+      document.querySelectorAll('#jsonPaths button').forEach(x=>x.classList.remove('active'));
+      b.classList.add('active');
+      let val;
+      try{ val=item.get(DATA); }catch(e){ val=undefined; }
+      const type=Array.isArray(val)?'array':typeof val;
+      const shown=typeof val==='string'?'"'+val+'"':(Array.isArray(val)?'['+val.map(x=>'"'+x+'"').join(', ')+']':String(val));
+      resultEl.innerHTML='<span style="color:#C9A6F6">'+item.p+'</span> → <span class="val">'+shown+'</span>  <span class="type">('+type+')</span>';
+    });
+  });
+})();
+
+/* ---------- predict reveals ---------- */
+document.querySelectorAll('[data-predict]').forEach(p=>{
+  p.querySelector('[data-reveal]').addEventListener('click',function(){
+    p.querySelector('[data-answer]').classList.add('show');
+    this.textContent='Answer shown ↓';this.disabled=true;this.style.opacity=.55;
+  });
+});
+
+/* ---------- checkpoints ---------- */
+document.querySelectorAll('[data-check]').forEach(chk=>{
+  const correct=parseInt(chk.dataset.correct,10);
+  const fbbox=chk.querySelector('[data-fbbox]');
+  chk.querySelectorAll('.opt').forEach(opt=>{
+    opt.addEventListener('click',()=>{
+      const pick=parseInt(opt.dataset.opt,10);
+      if(pick===correct){opt.classList.add('correct');fbbox.textContent=chk.dataset.fb;fbbox.classList.add('show');chk.querySelectorAll('.opt').forEach(o=>o.style.pointerEvents='none');}
+      else{opt.classList.add('wrong');opt.style.pointerEvents='none';}
+    });
+  });
+});
+
+/* ---------- scrollspy ---------- */
+const sections=[...document.querySelectorAll('section.chapter')];
+const links=[...document.querySelectorAll('nav.side a[data-sec]')];
+const mlinks=[...document.querySelectorAll('.mobtop .mlink')];
+function spy(){
+  const y=window.scrollY+120;let cur=sections[0].id;
+  for(const s of sections){if(s.offsetTop<=y)cur=s.id;}
+  links.forEach(l=>l.classList.toggle('active',l.getAttribute('href')==='#'+cur));
+  mlinks.forEach(l=>l.classList.toggle('active',l.getAttribute('href')==='#'+cur));
+}
+window.addEventListener('scroll',spy,{passive:true});spy();
+</script>
+</body>
+</html>

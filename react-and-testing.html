@@ -1,0 +1,948 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>React &amp; Testing React — interactive guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;450;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F1F1F4;--card:#FBFBFD;--ink:#1B1E26;--muted:#5A5F6B;--line:#E1E1E8;
+    --violet:#6C4CE0;--violet-soft:#EDE8FC;--violet-line:#D8CEF7;
+    --emerald:#12905F;--amber:#B67A08;--rose:#D6455D;
+    --term-bg:#15171E;--term-panel:#1D2029;--term-fg:#E6E8EC;--term-dim:#8A90A0;
+    --t-num:#E7B45A;--t-str:#93D6A0;--t-null:#8A90A0;--t-err:#F0808F;
+    --radius:14px;
+    --mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+    --disp:'Space Grotesk',system-ui,sans-serif;--body:'Inter',system-ui,sans-serif;
+  }
+  *{box-sizing:border-box}html{scroll-behavior:smooth}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);font-size:16.5px;line-height:1.62;-webkit-font-smoothing:antialiased}
+  a{color:var(--violet);text-decoration:none}a:hover{text-decoration:underline}
+  code{font-family:var(--mono);font-size:.88em;background:#E7E7EE;padding:.08em .38em;border-radius:5px;color:#2C2140}
+
+  .wrap{display:grid;grid-template-columns:270px minmax(0,1fr);max-width:1200px;margin:0 auto}
+  nav.side{position:sticky;top:0;align-self:start;height:100vh;overflow-y:auto;padding:30px 22px 40px;border-right:1px solid var(--line)}
+  main{padding:0 clamp(20px,5vw,64px) 120px;min-width:0}
+  .brand{font-family:var(--mono);font-weight:700;font-size:14px;letter-spacing:.04em;color:var(--violet);margin-bottom:4px}
+  .brand small{color:var(--muted);font-weight:400;display:block;letter-spacing:0;margin-top:3px;font-family:var(--body);font-size:12.5px}
+  .navsec{margin-top:24px}
+  .navsec > span{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:9px;padding-left:12px}
+  nav.side a.link{display:flex;gap:10px;align-items:baseline;padding:7px 12px;border-radius:9px;color:var(--ink);font-size:14.5px;line-height:1.35}
+  nav.side a.link:hover{background:#E9E9F0;text-decoration:none}
+  nav.side a.link.active{background:var(--violet-soft);color:#3B2A73;font-weight:500}
+  nav.side a.link b{font-family:var(--mono);font-size:11.5px;color:var(--violet);min-width:20px}
+  .backlink{margin-top:24px;font-size:13px;color:var(--muted)}
+  .backlink a{font-family:var(--mono);font-size:12.5px;display:block;margin-top:6px}
+
+  header.hero{padding:64px 0 30px}
+  .eyebrow{font-family:var(--mono);font-size:12.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--violet);margin-bottom:18px}
+  h1{font-family:var(--disp);font-weight:700;font-size:clamp(34px,5.4vw,54px);line-height:1.04;letter-spacing:-.02em;margin:0 0 20px}
+  h1 .brace{color:var(--violet)}
+  .lede{font-size:19px;color:#3A3E48;max-width:62ch;margin:0}.lede + .lede{margin-top:14px}
+  .runline{font-family:var(--mono);font-size:13.5px;color:var(--muted);margin-top:26px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .runline .kbd{background:var(--term-bg);color:var(--t-str);padding:5px 11px;border-radius:7px;font-size:12.5px}
+
+  .partdiv{margin:64px 0 0;padding:22px 26px;border-radius:16px;background:linear-gradient(100deg,#2A2140,#1D2029);color:#fff;display:flex;align-items:center;gap:18px}
+  .partdiv .pl{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#C9A6F6}
+  .partdiv h2{font-family:var(--disp);font-weight:600;font-size:26px;margin:2px 0 0;color:#fff;border:none}
+  .partdiv p{margin:6px 0 0;color:#B7BCCB;font-size:14px}
+
+  section.chapter{padding-top:52px;scroll-margin-top:20px}
+  .chaphead{display:flex;align-items:baseline;gap:16px;border-bottom:2px solid var(--ink);padding-bottom:12px;margin-bottom:8px}
+  .chaphead .num{font-family:var(--mono);font-weight:700;font-size:15px;color:var(--violet)}
+  h2{font-family:var(--disp);font-weight:600;font-size:clamp(25px,3.4vw,34px);letter-spacing:-.015em;margin:0}
+  .chapsub{color:var(--muted);font-size:15px;margin:14px 0 0}
+  h3{font-family:var(--disp);font-weight:600;font-size:21px;letter-spacing:-.01em;margin:40px 0 10px}
+  p{margin:14px 0}main p,main li{color:#24272F}
+
+  /* code cell (static display) */
+  .cell{margin:22px 0;border-radius:var(--radius);overflow:hidden;border:1px solid #2A2E3A;box-shadow:0 10px 30px -18px rgba(20,20,40,.4)}
+  .cell .bar{background:var(--term-panel);display:flex;align-items:center;gap:8px;padding:9px 14px;border-bottom:1px solid #2A2E3A}
+  .cell .bar .dots{display:flex;gap:6px}.cell .bar .dots i{width:11px;height:11px;border-radius:50%;display:block}
+  .dots i:nth-child(1){background:#E06C75}.dots i:nth-child(2){background:#E5C07B}.dots i:nth-child(3){background:#98C379}
+  .cell .bar .fname{font-family:var(--mono);font-size:12px;color:var(--term-dim);margin-left:4px}
+  .cell pre.code{margin:0;background:var(--term-bg);color:var(--term-fg);font-family:var(--mono);font-size:13.5px;line-height:1.7;padding:16px 18px;white-space:pre;overflow-x:auto;tab-size:2}
+  .cell pre.code .cm{color:#6B7180}.cell pre.code .kw{color:#C9A6F6}.cell pre.code .fn{color:#8CC0F5}
+  .cell pre.code .st{color:#93D6A0}.cell pre.code .nm{color:#E7B45A}.cell pre.code .tag{color:#F0909F}
+
+  /* anatomy */
+  .anatomy{margin:22px 0;border:1px solid #2A2E3A;border-radius:var(--radius);overflow:hidden;box-shadow:0 10px 30px -18px rgba(20,20,40,.4)}
+  .anatomy .ahead{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--term-dim);padding:10px 16px;border-bottom:1px solid #2A2E3A;background:var(--term-panel);display:flex;align-items:center;gap:8px}
+  .anatomy .ahead::before{content:'⌖';color:#C39BF5;font-size:14px}
+  .anacode{padding:18px;background:var(--term-bg);font-family:var(--mono);font-size:14px;line-height:2.1;color:var(--term-fg);overflow-x:auto;white-space:pre-wrap;word-break:break-word}
+  .tok{cursor:pointer;border-radius:5px;padding:2px 3px;transition:.12s;outline:1.5px solid transparent}
+  .tok:hover{outline-color:rgba(255,255,255,.28)}
+  .tok.kw{background:rgba(195,155,245,.16);color:#C9A6F6}
+  .tok.fn{background:rgba(124,183,240,.15);color:#8CC0F5}
+  .tok.pm{background:rgba(231,180,90,.15);color:#E7B45A}
+  .tok.rt{background:rgba(147,214,160,.15);color:#93D6A0}
+  .tok.op{background:rgba(240,128,143,.14);color:#F0909F}
+  .tok.pn{background:rgba(150,156,172,.16);color:#B4BAC8}
+  .tok.st{background:rgba(147,214,160,.13);color:#93D6A0}
+  .tok.active{outline-color:var(--violet)!important;background:rgba(108,76,224,.32)!important;color:#fff}
+  .anapanel{padding:15px 18px;min-height:78px;background:var(--card)}
+  .anahint{font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:.05em}
+  .anahint .legend{color:var(--muted);opacity:.8}
+  .anatitle{font-family:var(--mono);font-weight:700;font-size:14px;color:var(--violet);margin:6px 0 3px}
+  .anatext{font-size:13.5px;color:#2A2D36;line-height:1.55}
+  @media(max-width:640px){.anacode{font-size:13px;line-height:2}}
+
+  /* ---- RENDER VISUALISER ---- */
+  .rv{margin:26px 0;border:1px solid var(--line);border-radius:16px;background:var(--card);overflow:hidden}
+  .rv .rvh{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:11px 18px;border-bottom:1px solid var(--line);background:#F5F5F9}
+  .rv .rvgrid{display:grid;grid-template-columns:1fr 1fr;gap:0}
+  @media(max-width:680px){.rv .rvgrid{grid-template-columns:1fr}}
+  .rv .side{padding:18px}
+  .rv .side.left{border-right:1px solid var(--line)}
+  @media(max-width:680px){.rv .side.left{border-right:none;border-bottom:1px solid var(--line)}}
+  .rv .slabel{font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
+  .rv .statebox{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+  .rv .statebox .val{font-family:var(--mono);font-size:30px;font-weight:700;color:var(--violet);min-width:44px;text-align:center}
+  .rv button.inc{font-family:var(--mono);font-size:13px;font-weight:600;cursor:pointer;border:1px solid var(--violet);background:var(--violet);color:#fff;border-radius:9px;padding:10px 16px}
+  .rv button.inc:hover{background:#5B3ED1}
+  .rv button.reset{font-family:var(--mono);font-size:12px;cursor:pointer;border:1px solid var(--line);background:#fff;color:var(--muted);border-radius:8px;padding:8px 12px;margin-left:8px}
+  .rv .preview{border:1px dashed var(--violet-line);border-radius:10px;padding:16px;background:#FAF8FF;text-align:center;font-family:var(--disp);font-size:18px;font-weight:600;color:var(--ink);transition:.1s}
+  .rv .preview.flash{background:#E4DBFA;transform:scale(1.02)}
+  .rv .renderlog{font-family:var(--mono);font-size:12px;line-height:1.7;max-height:150px;overflow-y:auto;color:var(--muted)}
+  .rv .renderlog .r{padding:2px 0}
+  .rv .renderlog .r b{color:var(--emerald)}
+  .rv .rmsg{margin:14px 18px 18px;padding:11px 14px;border-radius:9px;background:#FAFAFC;border:1px solid var(--line);font-size:13px;line-height:1.5;color:#2A2D36}
+
+  /* ---- LIVE TEST RUNNER ---- */
+  .runner{margin:26px 0;border:1px solid var(--line);border-radius:16px;background:var(--card);overflow:hidden}
+  .runner .rnh{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:11px 18px;border-bottom:1px solid var(--line);background:#F5F5F9;display:flex;align-items:center;gap:8px}
+  .runner .rnh .badge{margin-left:auto;font-size:10px;background:var(--violet-soft);color:#4A3B85;padding:3px 8px;border-radius:20px;letter-spacing:.04em}
+  .runner .split{display:grid;grid-template-columns:1fr 1.15fr;gap:0}
+  @media(max-width:760px){.runner .split{grid-template-columns:1fr}}
+  .runner .appcol{padding:18px;border-right:1px solid var(--line);background:#FDFDFE}
+  @media(max-width:760px){.runner .appcol{border-right:none;border-bottom:1px solid var(--line)}}
+  .runner .collab{font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
+  .greetapp{border:1px solid var(--line);border-radius:12px;padding:16px;background:linear-gradient(160deg,#FFF6F9,#F3F0FE)}
+  .greetapp h1{font-family:var(--disp);font-size:20px;margin:0 0 8px;letter-spacing:-.01em;color:var(--ink);border:none}
+  .greetapp .cat{font-size:40px;line-height:1;margin:4px 0 10px}
+  .greetapp .hi{font-family:var(--disp);font-size:15px;font-weight:600;margin:3px 0;color:#3A2E6B}
+  .greetapp .tag{font-family:var(--body);font-style:italic;color:var(--muted);margin:10px 0 0;font-size:14px}
+  .runner .testcol{padding:18px}
+  .tcard{border:1px solid var(--line);border-radius:10px;margin-bottom:12px;overflow:hidden}
+  .tcard .tcode{background:var(--term-bg);color:var(--term-fg);font-family:var(--mono);font-size:12px;line-height:1.6;padding:11px 13px;white-space:pre-wrap;word-break:break-word}
+  .tcard .tcode .fn{color:#8CC0F5}.tcard .tcode .st{color:#93D6A0}.tcard .tcode .kw{color:#C9A6F6}.tcard .tcode .cm{color:#6B7180}
+  .tcard .trow{display:flex;align-items:center;gap:10px;padding:9px 12px;background:#FAFAFC}
+  .tcard .trow button{font-family:var(--mono);font-size:11.5px;font-weight:600;cursor:pointer;border:1px solid var(--violet);background:var(--violet);color:#fff;border-radius:7px;padding:6px 13px}
+  .tcard .trow button:hover{background:#5B3ED1}
+  .tcard .trow .res{font-family:var(--mono);font-size:12px;font-weight:600}
+  .tcard .trow .res.pass{color:var(--emerald)}
+  .tcard .trow .res.fail{color:var(--rose)}
+  .tcard .trow .res.idle{color:var(--muted);font-weight:400}
+  .tcard .trow input{font-family:var(--mono);font-size:12px;padding:5px 8px;border:1px solid var(--line);border-radius:6px;width:170px;background:#fff;color:var(--ink)}
+  .tcard .msg{font-family:var(--mono);font-size:11.5px;padding:0 12px 10px;color:var(--muted);line-height:1.5;display:none}
+  .tcard .msg.show{display:block}
+
+  /* query reference */
+  .qref{margin:24px 0;border:1px solid var(--line);border-radius:14px;overflow:hidden}
+  .qref table{width:100%;border-collapse:collapse;font-size:13.5px}
+  .qref th{background:#F5F5F9;font-family:var(--mono);font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);text-align:left;padding:11px 14px;border-bottom:1px solid var(--line)}
+  .qref td{padding:11px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+  .qref tr:last-child td{border-bottom:none}
+  .qref td code{font-size:12px}
+  .qref td.q{font-family:var(--mono);color:var(--violet);white-space:nowrap}
+
+  .insight{margin:24px 0;background:var(--card);border:1px solid var(--line);border-left:3px solid var(--violet);border-radius:12px;padding:16px 20px}
+  .insight .htag{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--violet);font-weight:700;display:flex;align-items:center;gap:8px;margin-bottom:6px}
+  .insight.warn{border-left-color:var(--amber)}.insight.warn .htag{color:var(--amber)}
+  .insight.gotcha{border-left-color:var(--rose)}.insight.gotcha .htag{color:var(--rose)}
+  .insight p{margin:6px 0}.insight p:first-of-type{margin-top:0}
+
+  /* concept cards */
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px;margin:22px 0}
+  .ccard{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px;border-top:3px solid var(--violet)}
+  .ccard .cn{font-family:var(--mono);font-size:12px;letter-spacing:.04em;text-transform:uppercase;font-weight:700;color:var(--violet);margin-bottom:6px}
+  .ccard p{font-size:13.5px;margin:0}
+  .ccard code{font-size:12px}
+
+  /* predict */
+  .predict{margin:22px 0;border:1px solid var(--violet-line);border-radius:var(--radius);background:linear-gradient(180deg,#FAF8FF,#F4F0FE);overflow:hidden}
+  .predict .phead{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--violet-line)}
+  .predict .phead .icon{width:22px;height:22px;border-radius:6px;background:var(--violet);color:#fff;display:grid;place-items:center;font-size:13px;font-weight:700;font-family:var(--mono)}
+  .predict .phead b{font-family:var(--disp);font-size:15px}
+  .predict .pbody{padding:16px}
+  .predict pre.psrc{margin:0 0 14px;background:var(--term-bg);color:var(--term-fg);border-radius:10px;font-family:var(--mono);font-size:13px;line-height:1.6;padding:14px 16px;overflow-x:auto;white-space:pre-wrap}
+  .predict pre.psrc .cm{color:#6B7180}.predict pre.psrc .kw{color:#C9A6F6}.predict pre.psrc .fn{color:#8CC0F5}.predict pre.psrc .st{color:#93D6A0}.predict pre.psrc .tag{color:#F0909F}.predict pre.psrc .nm{color:#E7B45A}
+  .predict .reveal-btn{font-family:var(--mono);font-size:12.5px;font-weight:600;cursor:pointer;background:var(--violet);color:#fff;border:none;border-radius:8px;padding:8px 16px}
+  .predict .reveal-btn:hover{background:#5B3ED1}
+  .predict .answer{display:none;margin-top:14px;background:#0F1116;border-radius:10px;padding:13px 16px}
+  .predict .answer.show{display:block}
+  .predict .answer .out{font-family:var(--body);font-size:14px;color:#fff;background:#20232C;border-radius:8px;padding:10px 12px;margin-bottom:9px}
+  .predict .answer .out .h{font-family:var(--disp);font-weight:600;font-size:16px;display:block}
+  .predict .answer .why{color:var(--term-dim);font-size:12.5px;line-height:1.55}
+
+  /* checkpoint */
+  .check{margin:26px 0;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px}
+  .check .q{font-family:var(--disp);font-weight:600;font-size:16px;margin-bottom:14px}
+  .check .opts{display:flex;flex-direction:column;gap:9px}
+  .check .opt{font-family:var(--mono);font-size:13.5px;text-align:left;cursor:pointer;background:#fff;border:1px solid var(--line);border-radius:9px;padding:11px 14px;transition:.15s}
+  .check .opt:hover{border-color:var(--violet-line);background:#FAF8FF}
+  .check .opt.correct{border-color:var(--emerald);background:#EAF7F0;color:#0C6B45}
+  .check .opt.wrong{border-color:var(--rose);background:#FBECEE;color:#9E2B3B}
+  .check .fb{margin-top:12px;font-size:13.5px;color:var(--muted);display:none}
+  .check .fb.show{display:block}
+
+  .recap{background:var(--term-bg);border-radius:16px;padding:26px 28px;margin:26px 0;color:var(--term-fg)}
+  .recap h3{color:#fff;margin-top:0}
+  .recap ul{list-style:none;padding:0;margin:0;display:grid;gap:10px}
+  .recap li{font-family:var(--mono);font-size:13px;line-height:1.55;padding-left:22px;position:relative;color:#D3D7E0}
+  .recap li::before{content:'›';position:absolute;left:0;color:var(--violet);font-weight:700}
+  .recap li b{color:var(--t-num);font-weight:500}
+
+  footer{border-top:1px solid var(--line);margin-top:70px;padding-top:24px;color:var(--muted);font-size:13.5px}
+  footer .mono{font-family:var(--mono);font-size:12px}
+
+  .mobtop{display:none}
+  @media(max-width:860px){
+    .wrap{grid-template-columns:1fr}nav.side{display:none}
+    .mobtop{display:flex;position:sticky;top:0;z-index:20;background:rgba(241,241,244,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);padding:12px 18px;gap:10px;align-items:center;overflow-x:auto}
+    .mobtop .brand{margin:0;white-space:nowrap}
+    .mobtop a{font-family:var(--mono);font-size:12px;white-space:nowrap;color:var(--muted);padding:5px 10px;border-radius:7px}
+    .mobtop a.active{background:var(--violet-soft);color:#3B2A73}
+    main{padding-left:20px;padding-right:20px}
+  }
+  @media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important;scroll-behavior:auto}}
+</style>
+</head>
+<body>
+
+<div class="mobtop">
+  <span class="brand">React + testing</span>
+  <a href="#c1" class="mlink active">Mental model</a>
+  <a href="#c2" class="mlink">Components &amp; JSX</a>
+  <a href="#c3" class="mlink">Props</a>
+  <a href="#c4" class="mlink">State</a>
+  <a href="#c5" class="mlink">Dynamic UI</a>
+  <a href="#c6" class="mlink">Testing mindset</a>
+  <a href="#c7" class="mlink">Setup</a>
+  <a href="#c8" class="mlink">Queries</a>
+  <a href="#c9" class="mlink">Matchers</a>
+  <a href="#c10" class="mlink">Break &amp; a11y</a>
+</div>
+
+<div class="wrap">
+  <nav class="side">
+    <div class="brand">React &amp; testing<small>Unit 2 · T02 — interactive guide</small></div>
+    <div class="navsec">
+      <span>Part A · React</span>
+      <a href="#c1" class="link" data-sec><b>01</b> The mental model</a>
+      <a href="#c2" class="link" data-sec><b>02</b> Components &amp; JSX</a>
+      <a href="#c3" class="link" data-sec><b>03</b> Props</a>
+      <a href="#c4" class="link" data-sec><b>04</b> State &amp; re-rendering</a>
+      <a href="#c5" class="link" data-sec><b>05</b> Dynamic UI</a>
+    </div>
+    <div class="navsec">
+      <span>Part B · Testing</span>
+      <a href="#c6" class="link" data-sec><b>06</b> The testing mindset</a>
+      <a href="#c7" class="link" data-sec><b>07</b> Setup: library &amp; jsdom</a>
+      <a href="#c8" class="link" data-sec><b>08</b> Queries &amp; the screen</a>
+      <a href="#c9" class="link" data-sec><b>09</b> Async &amp; matchers</a>
+      <a href="#c10" class="link" data-sec><b>10</b> Break tests + a11y</a>
+      <a href="#recap" class="link" data-sec><b>★</b> Recap</a>
+    </div>
+    <div class="backlink">
+      Related guides:
+      <a href="./index.html">⌂ All guides</a>
+      <a href="./js-vite-data-models.html">← Vite &amp; data models</a>
+      <a href="./js-foundations.html">← Types &amp; functions</a>
+    </div>
+  </nav>
+
+  <main>
+    <header class="hero">
+      <div class="eyebrow">Unit 2 · T02 — React &amp; Testing React</div>
+      <h1>Build UI from <span class="brace">components</span>, then prove it works</h1>
+      <p class="lede">You're entering React — the library that builds interfaces out of small, reusable pieces
+      that redraw themselves whenever your data changes. This guide covers React from the ground up, then turns to
+      <b>testing</b> it: how you write code that checks your components render what you meant.</p>
+      <p class="lede">Two live tools do the heavy lifting — a re-render visualiser for the core React idea, and a
+      real test runner you can fire at a mini app and watch pass or fail.</p>
+      <div class="runline"><span class="kbd">UI = f(state)</span> the whole of React in three symbols. We'll unpack it.</div>
+    </header>
+
+    <div class="partdiv">
+      <div><div class="pl">Part A</div><h2>React</h2><p>Components, JSX, props, state — everything you need before testing makes sense.</p></div>
+    </div>
+
+    <!-- ===== 1 ===== -->
+    <section class="chapter" id="c1">
+      <div class="chaphead"><span class="num">01</span><h2>The mental model</h2></div>
+      <p class="chapsub">React builds your page out of components, and redraws them automatically when their data changes. That's the core.</p>
+
+      <p>Before any syntax, hold two ideas. First: a React app is built from <b>components</b> — self-contained
+      pieces of UI (a header, a button, a greeting card) that you combine like building blocks, and reuse. Second,
+      and the one that makes React <em>React</em>:</p>
+
+      <div class="insight">
+        <div class="htag">◆ The one idea — UI = f(state)</div>
+        <p>Your interface is a <b>function of your data</b>. You don't manually reach into the page and change text
+        when something happens (that's the old, "imperative" way). Instead you describe what the UI <em>should look
+        like</em> for any given data, and when the data changes, React re-runs your component and updates the screen
+        for you. You write the <em>what</em>; React handles the <em>how</em>. This is called being
+        <b>declarative</b>.</p>
+      </div>
+
+      <p>Think of a component as a stamp that prints UI from data. Same stamp, different data in → different UI out.
+      Change the data, and React re-stamps. Everything below is detail on top of that.</p>
+    </section>
+
+    <!-- ===== 2 ===== -->
+    <section class="chapter" id="c2">
+      <div class="chaphead"><span class="num">02</span><h2>Components &amp; JSX</h2></div>
+      <p class="chapsub">A component is a function that returns markup. That markup is written in JSX — HTML-like syntax living inside JavaScript.</p>
+
+      <p>A component is just a <b>function whose name starts with a capital letter</b> and which <b>returns what to
+      show</b>. Here's the smallest real one:</p>
+
+      <div class="anatomy">
+        <div class="ahead">Code anatomy — a component</div>
+        <div class="anacode"><span class="tok kw" data-exp="function|A component is an ordinary function. Nothing exotic — it just happens to return UI.">function</span> <span class="tok fn" data-exp="Greeting|The component name. MUST start with a capital letter — that is how React tells your components apart from plain HTML tags like div.">Greeting</span><span class="tok pn" data-exp="()|Parentheses for parameters. Empty here; props go in this spot (next section).">()</span> <span class="tok pn" data-exp="{ }|The function body.">{</span>
+  <span class="tok kw" data-exp="return|A component returns the UI it should render. Whatever you return is what appears on screen.">return</span> <span class="tok op" data-exp="<h1> ... </h1>|This HTML-looking markup is JSX. It is NOT a string and NOT real HTML — it is syntax that compiles into JavaScript React can render.">&lt;h1&gt;Kia ora!&lt;/h1&gt;</span>
+<span class="tok pn" data-exp="}|Closes the component. You would then use it elsewhere as <Greeting /> — like a custom HTML tag.">}</span></div>
+        <div class="anapanel"><div class="anahint">Hover or tap a highlighted token above <span class="legend">· a component in, UI out</span></div><div class="anatitle">—</div><div class="anatext">Every part explains its own job.</div></div>
+      </div>
+
+      <p>You then use it like a tag: <code>&lt;Greeting /&gt;</code>. That "HTML inside JavaScript" is <b>JSX</b>,
+      and it has a few rules that trip everyone up at first:</p>
+
+      <div class="cards">
+        <div class="ccard"><div class="cn">One root element</div><p>A component must return <b>one</b> top-level element. Wrap siblings in a <code>&lt;div&gt;</code> or an empty <code>&lt;&gt;…&lt;/&gt;</code> fragment.</p></div>
+        <div class="ccard"><div class="cn">className, not class</div><p><code>class</code> is a reserved word in JS, so JSX uses <code>className</code> for CSS classes.</p></div>
+        <div class="ccard"><div class="cn">{ } drops in JavaScript</div><p>Curly braces embed a JS <b>expression</b>: <code>&lt;h1&gt;Hi {name}!&lt;/h1&gt;</code>. Anything that produces a value works.</p></div>
+        <div class="ccard"><div class="cn">Close every tag</div><p>Even lone tags self-close: <code>&lt;img /&gt;</code>, <code>&lt;br /&gt;</code>. JSX is stricter than HTML here.</p></div>
+      </div>
+
+      <div class="insight warn">
+        <div class="htag">▲ JSX is not HTML wearing a costume</div>
+        <p>It looks identical, but JSX compiles down to function calls that build a description of your UI. That's
+        why the rules feel fussy — you're really writing JavaScript. The <code>{ }</code> braces are the seam where
+        you drop back into plain JS: a variable, a bit of math, a <code>.map()</code>. Whenever you want
+        <em>dynamic</em> content in your markup, you reach for braces.</p>
+      </div>
+
+      <div class="check" data-check
+        data-correct="1"
+        data-fb="Right — curly braces embed a JavaScript expression inside JSX. That's how you get dynamic values (a name, a total, a mapped list) into your markup.">
+        <div class="q">Checkpoint: in JSX, what do the curly braces <code>{ }</code> do?</div>
+        <div class="opts">
+          <button class="opt" data-opt="0">Define a new CSS class</button>
+          <button class="opt" data-opt="1">Drop a JavaScript expression into the markup</button>
+          <button class="opt" data-opt="2">Start a code comment</button>
+          <button class="opt" data-opt="3">Nothing — they're decorative</button>
+        </div>
+        <div class="fb" data-fbbox></div>
+      </div>
+    </section>
+
+    <!-- ===== 3 ===== -->
+    <section class="chapter" id="c3">
+      <div class="chaphead"><span class="num">03</span><h2>Props</h2></div>
+      <p class="chapsub">Props pass data <em>into</em> a component from its parent — the inputs that let one component render many ways.</p>
+
+      <p>A component that always says the same thing isn't much use. <b>Props</b> (short for properties) are the
+      data you pass in, exactly like attributes on an HTML tag. They're what make a component reusable — same
+      stamp, different ink:</p>
+
+      <div class="anatomy">
+        <div class="ahead">Code anatomy — props in, and passing them</div>
+        <div class="anacode"><span class="tok kw" data-exp="function|The component, now taking a parameter.">function</span> <span class="tok fn" data-exp="Greeting|Same component as before.">Greeting</span>(<span class="tok pm" data-exp="{ name }|Destructuring the props object. React passes ONE object of all the attributes you gave the tag; this pulls out the `name` property. You could also write (props) and use props.name.">{ name }</span>) {
+  <span class="tok kw" data-exp="return|Returns UI that USES the prop.">return</span> <span class="tok op" data-exp="<h1>Hi {name}!</h1>|The braces drop the prop's value into the markup. Pass name='Aroha' and this renders 'Hi Aroha!'.">&lt;h1&gt;Hi {name}!&lt;/h1&gt;</span>
+}
+
+<span class="tok pn" data-exp="usage|Somewhere else, you render the component and hand it props:">// used as:</span>
+<span class="tok op" data-exp="<Greeting name='Aroha' />|Passing the `name` prop, just like an HTML attribute. This is the data flowing IN. Renders 'Hi Aroha!'.">&lt;Greeting name=&apos;Aroha&apos; /&gt;</span></div>
+        <div class="anapanel"><div class="anahint">Hover or tap a highlighted token above <span class="legend">· parent hands data down to child</span></div><div class="anatitle">—</div><div class="anatext">Every part explains its own job.</div></div>
+      </div>
+
+      <div class="insight gotcha">
+        <div class="htag">✖ Props are read-only</div>
+        <p>A component must never change its own props — they belong to the parent that passed them. Think of them as
+        arguments to a function: you receive them, you use them, you don't reassign them. If a component needs data
+        that <em>changes over time</em> in response to what the user does, that's not props — that's <b>state</b>,
+        which is next, and which is the actual heart of React.</p>
+      </div>
+
+      <div class="predict" data-predict>
+        <div class="phead"><span class="icon">?</span><b>Predict what renders</b></div>
+        <div class="pbody">
+          <pre class="psrc"><span class="kw">function</span> <span class="fn">Hi</span>({ name }) {
+  <span class="kw">return</span> <span class="tag">&lt;p&gt;</span>Hi {name}!<span class="tag">&lt;/p&gt;</span>
+}
+
+<span class="cm">// rendered as:</span>
+<span class="tag">&lt;Hi</span> <span class="nm">name</span>=<span class="st">"Wiremu"</span> <span class="tag">/&gt;</span></pre>
+          <button class="reveal-btn" data-reveal>Reveal what appears</button>
+          <div class="answer" data-answer>
+            <div class="out"><span class="h">Hi Wiremu!</span></div>
+            <div class="why">The <code>name</code> prop arrives as <code>"Wiremu"</code>, the braces drop it into
+            the paragraph, and the component renders that one line. Pass a different name and the same component
+            renders differently — that's the whole point of props.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== 4 ===== -->
+    <section class="chapter" id="c4">
+      <div class="chaphead"><span class="num">04</span><h2>State &amp; re-rendering</h2></div>
+      <p class="chapsub">State is data a component owns and can change. When it changes, React re-runs the component and updates the screen. This is UI = f(state) in motion.</p>
+
+      <p>State is memory that lives inside a component and can change over time — a counter's count, whether a menu
+      is open, text in an input. You create it with the <code>useState</code> hook:</p>
+
+      <div class="anatomy">
+        <div class="ahead">Code anatomy — useState</div>
+        <div class="anacode"><span class="tok kw" data-exp="const|We store the result in a constant. You never reassign this directly — you use the setter (below) to change state.">const</span> <span class="tok pn" data-exp="[count, setCount]|Array destructuring. useState hands back exactly two things: the current value, and a function to update it. Names are yours; the pair convention is [thing, setThing].">[count, setCount]</span> = <span class="tok fn" data-exp="useState|The hook that adds state to a component. Import it from React. Calling it registers one piece of state.">useState</span>(<span class="tok nm" data-exp="0|The INITIAL value — what count is on the very first render. Here it starts at 0.">0</span>)
+
+<span class="tok pn" data-exp="later|To change it, you call the setter — never count = count + 1 directly:">// to update:</span>
+<span class="tok fn" data-exp="setCount|Calling the setter does two things: updates the value AND tells React to re-render this component. Reassigning count by hand would do neither.">setCount</span>(<span class="tok op" data-exp="count + 1|The new value. React re-runs the component, and this time useState hands back the updated count.">count + 1</span>)</div>
+        <div class="anapanel"><div class="anahint">Hover or tap a highlighted token above <span class="legend">· value + setter, always a pair</span></div><div class="anatitle">—</div><div class="anatext">Every part explains its own job.</div></div>
+      </div>
+
+      <p>The magic is in that setter. Calling <code>setCount</code> doesn't just change a number — it tells React
+      to <b>re-render</b>: re-run the component with the new value and update the screen. Watch it happen. Click the
+      button and see each state change trigger a fresh render:</p>
+
+      <div class="rv" id="rv">
+        <div class="rvh">Live: state change → re-render</div>
+        <div class="rvgrid">
+          <div class="side left">
+            <div class="slabel">state</div>
+            <div class="statebox">
+              <span class="val" id="rvVal">0</span>
+              <button class="inc" id="rvInc">setCount(count + 1)</button>
+              <button class="reset" id="rvReset">reset</button>
+            </div>
+            <div class="slabel">what the user sees (the re-rendered component)</div>
+            <div class="preview" id="rvPreview">You clicked 0 times</div>
+          </div>
+          <div class="side">
+            <div class="slabel">render log — one entry per re-render</div>
+            <div class="renderlog" id="rvLog"></div>
+          </div>
+        </div>
+        <div class="rmsg" id="rvMsg">Click the button. Each click updates state, and React re-runs the component to match — that's a re-render.</div>
+      </div>
+
+      <div class="insight">
+        <div class="htag">◆ Insight — why not just change the variable?</div>
+        <p>You might wonder why you can't write <code>count = count + 1</code>. Because React wouldn't know anything
+        changed — nothing would tell it to update the screen. The setter is the signal. State and re-rendering are
+        two halves of one mechanism: <b>state changes cause re-renders, and re-renders reflect state</b>. That loop
+        is why a React UI stays in sync with its data without you touching the page directly.</p>
+      </div>
+
+      <div class="check" data-check
+        data-correct="2"
+        data-fb="Correct — calling the state setter (like setCount) updates the value and triggers a re-render. Reassigning the variable directly changes nothing on screen.">
+        <div class="q">Checkpoint: what causes a React component to re-render and update the screen?</div>
+        <div class="opts">
+          <button class="opt" data-opt="0">Saving the file</button>
+          <button class="opt" data-opt="1">Reassigning a variable with =</button>
+          <button class="opt" data-opt="2">Calling a state setter like setCount</button>
+          <button class="opt" data-opt="3">Adding a CSS class</button>
+        </div>
+        <div class="fb" data-fbbox></div>
+      </div>
+    </section>
+
+    <!-- ===== 5 ===== -->
+    <section class="chapter" id="c5">
+      <div class="chaphead"><span class="num">05</span><h2>Dynamic UI</h2></div>
+      <p class="chapsub">Three everyday patterns: rendering a list from an array, responding to events, and showing things conditionally.</p>
+
+      <h3>Lists with .map()</h3>
+      <p>To render many items you <code>.map()</code> an array into an array of JSX — the same
+      <code>.map()</code> from the arrays guide, now producing markup:</p>
+      <div class="cell">
+        <div class="bar"><span class="dots"><i></i><i></i><i></i></span><span class="fname">Greetings.jsx</span></div>
+        <pre class="code"><span class="kw">const</span> people = [<span class="st">'Sina'</span>, <span class="st">'Wiremu'</span>, <span class="st">'Aroha'</span>]
+
+<span class="kw">return</span> (
+  <span class="tag">&lt;div&gt;</span>
+    {people.<span class="fn">map</span>((name) =&gt; (
+      <span class="tag">&lt;h1</span> <span class="nm">key</span>={name}<span class="tag">&gt;</span>Hi {name}!<span class="tag">&lt;/h1&gt;</span>
+    ))}
+  <span class="tag">&lt;/div&gt;</span>
+)
+<span class="cm">// renders three headings: Hi Sina!  Hi Wiremu!  Hi Aroha!</span></pre>
+      </div>
+
+      <div class="insight warn">
+        <div class="htag">▲ The key prop — don't skip it</div>
+        <p>Each mapped element needs a unique <code>key</code> prop. React uses it to tell list items apart when the
+        data changes, so it can update efficiently instead of redrawing everything. Leave it out and React warns
+        you. Use something stable and unique — an id if you have one, not the array index if the list can reorder.</p>
+      </div>
+
+      <h3>Events</h3>
+      <p>You respond to user actions with event props like <code>onClick</code> — camelCased, and you hand them a
+      function to run:</p>
+      <div class="cell">
+        <div class="bar"><span class="dots"><i></i><i></i><i></i></span><span class="fname">Button.jsx</span></div>
+        <pre class="code"><span class="tag">&lt;button</span> <span class="nm">onClick</span>={() =&gt; <span class="fn">setCount</span>(count + <span class="nm">1</span>)}<span class="tag">&gt;</span>
+  Clicked {count} times
+<span class="tag">&lt;/button&gt;</span>
+<span class="cm">// note: onClick={fn} — you pass the function, you don't call it</span></pre>
+      </div>
+
+      <h3>Conditional rendering</h3>
+      <p>Show something only sometimes, using plain JS inside braces — a ternary, or <code>&&</code> for
+      show-or-nothing:</p>
+      <div class="cell">
+        <div class="bar"><span class="dots"><i></i><i></i><i></i></span><span class="fname">Status.jsx</span></div>
+        <pre class="code">{isLoggedIn <span class="op">?</span> <span class="tag">&lt;p&gt;</span>Welcome back<span class="tag">&lt;/p&gt;</span> <span class="op">:</span> <span class="tag">&lt;p&gt;</span>Please log in<span class="tag">&lt;/p&gt;</span>}
+
+{hasError <span class="op">&amp;&amp;</span> <span class="tag">&lt;p&gt;</span>Something went wrong<span class="tag">&lt;/p&gt;</span>}
+<span class="cm">// &&: render the right side only when the left is true</span></pre>
+      </div>
+
+      <p>That's the working core of React. With components, props, state, lists, events and conditionals, you can
+      build real interfaces — and now you have enough to understand what it means to <em>test</em> them.</p>
+    </section>
+
+    <div class="partdiv">
+      <div><div class="pl">Part B</div><h2>Testing React</h2><p>Writing code that renders a component in a fake browser and checks it shows what you meant.</p></div>
+    </div>
+
+    <!-- ===== 6 ===== -->
+    <section class="chapter" id="c6">
+      <div class="chaphead"><span class="num">06</span><h2>The testing mindset</h2></div>
+      <p class="chapsub">Same Arrange / Act / Assert you know — but now you assert on the DOM: what's on the screen, not what a number equals.</p>
+
+      <p>You've written tests before with <b>Arrange, Act, Assert</b>. The shape carries over; what changes is what
+      you're checking. With React you're testing the <em>front end</em> — what actually renders — so:</p>
+
+      <div class="cards">
+        <div class="ccard"><div class="cn">Arrange</div><p>Render the component into a pretend browser. You're setting the stage — putting the component on a fake screen.</p></div>
+        <div class="ccard"><div class="cn">Act</div><p>Do the thing you're testing — click, type. Often <b>nothing yet</b> for simple "does it render?" tests.</p></div>
+        <div class="ccard"><div class="cn">Assert</div><p>Observe the DOM: is this heading visible? does the image have the right alt text? Checking the screen, not arithmetic.</p></div>
+      </div>
+
+      <div class="insight">
+        <div class="htag">◆ Insight — the shift from "3 + 3 === 6"</div>
+        <p>Earlier tests asked "does this logic produce the right value?" React tests ask "does the right thing
+        appear on screen, and is it accessible?" The assertion targets an element in the page — its text, its
+        attributes, whether it exists at all. You no longer have to write Arrange/Act/Assert as comments, but
+        keeping the three beats in mind keeps tests readable.</p>
+      </div>
+    </section>
+
+    <!-- ===== 7 ===== -->
+    <section class="chapter" id="c7">
+      <div class="chaphead"><span class="num">07</span><h2>Setup: library &amp; jsdom</h2></div>
+      <p class="chapsub">Two tools make React testable: Testing Library (renders &amp; queries components) and jsdom (a fake DOM). You set this up once — and you don't memorise it.</p>
+
+      <p>Two pieces of vocabulary you'll meet immediately:</p>
+      <div class="cards">
+        <div class="ccard"><div class="cn">Testing Library (React)</div><p>Gives you <code>render</code> and <code>screen</code>. It renders a component and lets you query it the way a <b>user</b> would — by visible text, by role — which also nudges you toward accessible markup.</p></div>
+        <div class="ccard"><div class="cn">jsdom</div><p>A fake DOM in memory. Tests don't open a real browser — jsdom builds a pretend one so your component has somewhere to render. Nothing appears on screen when tests run.</p></div>
+      </div>
+
+      <p>We run tests with <b>Vitest</b> (the Vite-native equivalent of the older Jest). To make Testing Library's
+      DOM matchers work with Vitest, a project needs a bit of one-time wiring in a setup file. <b>You don't memorise
+      this</b> — it lives in code-for-class to copy when starting a fresh project. But one line is special:</p>
+
+      <div class="anatomy">
+        <div class="ahead">Code anatomy — the special comment at the top of a test file</div>
+        <div class="anacode"><span class="tok op" data-exp="// @vitest-environment jsdom|A normal comment is ignored by JS — but Vitest READS this one. It tells Vitest to run this test file inside the jsdom fake-DOM environment. Without it, there is no document to render into and your DOM tests fail.">// @vitest-environment jsdom</span>
+
+<span class="tok kw" data-exp="import|Standard imports below — the setup pieces.">import</span> { <span class="tok pm" data-exp="render, screen|render puts your component into the fake DOM; screen is how you query what got rendered.">render, screen</span> } <span class="tok kw" data-exp="from|...from Testing Library for React.">from</span> <span class="tok st" data-exp="'@testing-library/react'|The Testing Library package for React components.">&apos;@testing-library/react&apos;</span>
+<span class="tok kw" data-exp="import|The test functions themselves.">import</span> { <span class="tok pm" data-exp="describe, it, expect|Your familiar test tools: describe groups tests, it defines one, expect makes assertions.">describe, it, expect</span> } <span class="tok kw" data-exp="from|...from Vitest.">from</span> <span class="tok st" data-exp="'vitest'|Vitest — the test runner.">&apos;vitest&apos;</span></div>
+        <div class="anapanel"><div class="anahint">Hover or tap a highlighted token above <span class="legend">· the one comment that isn't ignored</span></div><div class="anatitle">—</div><div class="anatext">Every part explains its own job.</div></div>
+      </div>
+
+      <div class="insight gotcha">
+        <div class="htag">✖ The comment that breaks everything if missing</div>
+        <p>We spend all of Foundations learning that comments are ignored — so this one feels wrong. But
+        <code>// @vitest-environment jsdom</code> is a directive Vitest deliberately reads. Forget it and you'll get
+        confusing errors about <code>document</code> not existing, because there's no fake DOM to render into. When a
+        React test mysteriously can't find the page, check this line is at the very top first.</p>
+      </div>
+
+      <p>The other setup wiring, briefly, so you recognise it: a <code>beforeEach(cleanup)</code> that wipes the
+      fake DOM before every test (so tests don't bleed into each other), and an <code>expect.extend(matchers)</code>
+      that adds the DOM-aware checks like <code>toBeVisible</code>. Copy it once; move on.</p>
+    </section>
+
+    <!-- ===== 8 ===== -->
+    <section class="chapter" id="c8">
+      <div class="chaphead"><span class="num">08</span><h2>Queries &amp; the screen</h2></div>
+      <p class="chapsub">render puts the component in the fake DOM; screen finds elements in it. Getting the right query is most of the skill.</p>
+
+      <p>You <code>render(&lt;App /&gt;)</code>, then reach for elements through <code>screen</code>. The query name
+      encodes two choices: <b>how many</b> you expect, and <b>what to match on</b>.</p>
+
+      <div class="qref">
+        <table>
+          <thead><tr><th>Query</th><th>When to use it</th></tr></thead>
+          <tbody>
+            <tr><td class="q">getByRole</td><td>One element of a role. Roles come from semantic tags: an <code>&lt;h1&gt;</code> is role <code>heading</code>, an <code>&lt;img&gt;</code> is role <code>img</code>.</td></tr>
+            <tr><td class="q">getAllByRole</td><td>Many of a role — returns an <b>array</b>. Use when the page has several headings and you want them all.</td></tr>
+            <tr><td class="q">getByText</td><td>Find by visible text. Good for things with no obvious role, like a <code>&lt;p&gt;</code> tagline.</td></tr>
+            <tr><td class="q">getByAltText</td><td>Find an image by its alt text — the accessible description.</td></tr>
+            <tr><td class="q">findBy… / findAllBy…</td><td>The <b>async</b> versions. Same queries, but they wait for the element to appear. More on why next section.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p>A role query can be narrowed — <code>getAllByRole('heading', { level: 2 })</code> grabs only
+      <code>&lt;h2&gt;</code>s. Now try it for real. Below is a live mini "greetings app" rendered into this page,
+      and real tests you can run against it. Hit <b>Run</b> and watch each pass or fail:</p>
+
+      <div class="runner" id="runner">
+        <div class="rnh">Live test runner <span class="badge">real DOM · real queries</span></div>
+        <div class="split">
+          <div class="appcol">
+            <div class="collab">rendered component (the fake screen)</div>
+            <div class="greetapp" id="greetApp">
+              <h1>Greetings to everyone</h1>
+              <div class="cat" role="img" aria-hidden="true">🐱👋</div>
+              <img id="catImg" alt="cat waving" src="images/cat-waving.png" width="1" height="1" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none">
+              <div class="hi">Hi Sina!</div>
+              <div class="hi">Hi Wiremu!</div>
+              <div class="hi">Hi Aroha!</div>
+              <p class="tag" id="tagLine">because I like to say hi!</p>
+            </div>
+            <div class="collab" style="margin-top:12px">note</div>
+            <p style="font-size:12.5px;color:var(--muted);margin:0;line-height:1.5">The headings and image here are real elements. The runner queries them exactly the way Testing Library would.</p>
+          </div>
+          <div class="testcol" id="testCol"></div>
+        </div>
+      </div>
+
+      <div class="check" data-check
+        data-correct="1"
+        data-fb="Right — getAllByRole returns an array of every matching element. Reach for it when there are several (like many headings); getByRole expects exactly one and errors if it finds more.">
+        <div class="q">Checkpoint: the page has seven headings and you want all of them. Which query?</div>
+        <div class="opts">
+          <button class="opt" data-opt="0">getByRole('heading')</button>
+          <button class="opt" data-opt="1">getAllByRole('heading')</button>
+          <button class="opt" data-opt="2">getByText('heading')</button>
+          <button class="opt" data-opt="3">getByAltText('heading')</button>
+        </div>
+        <div class="fb" data-fbbox></div>
+      </div>
+    </section>
+
+    <!-- ===== 9 ===== -->
+    <section class="chapter" id="c9">
+      <div class="chaphead"><span class="num">09</span><h2>Async &amp; matchers</h2></div>
+      <p class="chapsub">Why findBy needs await, and the handful of matchers you'll use to assert on the DOM — including regex for flexible text.</p>
+
+      <h3>Why async / await</h3>
+      <p>Grabbing something from the fake screen can take a beat — a millisecond longer than the test itself. The
+      <code>findBy</code> queries return a <b>promise</b> for that reason, so you <code>await</code> them, and mark
+      the test <code>async</code>:</p>
+      <div class="cell">
+        <div class="bar"><span class="dots"><i></i><i></i><i></i></span><span class="fname">async-query</span></div>
+        <pre class="code"><span class="kw">it</span>(<span class="st">'renders a heading'</span>, <span class="kw">async</span> () =&gt; {
+  <span class="fn">render</span>(<span class="tag">&lt;App /&gt;</span>)
+  <span class="kw">const</span> headings = <span class="kw">await</span> screen.<span class="fn">findAllByRole</span>(<span class="st">'heading'</span>)
+  <span class="fn">expect</span>(headings[<span class="nm">1</span>]).<span class="fn">toHaveTextContent</span>(<span class="st">'Hi Sina!'</span>)
+})
+<span class="cm">// async + await: wait for the query before asserting</span></pre>
+      </div>
+
+      <div class="insight">
+        <div class="htag">◆ Insight — array indexing comes back</div>
+        <p>Note <code>headings[1]</code> — the queries hand you a normal array, so everything from the arrays guide
+        applies: <code>[0]</code> is the first, <code>[1]</code> the second. The same off-by-one care you practised
+        in the katas is exactly what you need when you grab "the second heading" from a list of results.</p>
+      </div>
+
+      <h3>The matchers</h3>
+      <p>Matchers are the DOM-aware checks chained after <code>expect(...)</code>. The ones you'll reach for most:</p>
+      <div class="qref">
+        <table>
+          <thead><tr><th>Matcher</th><th>Checks that…</th></tr></thead>
+          <tbody>
+            <tr><td class="q">toBeInTheDocument()</td><td>the element exists in the DOM at all.</td></tr>
+            <tr><td class="q">toBeVisible()</td><td>the element is actually visible on the page (not hidden).</td></tr>
+            <tr><td class="q">toHaveTextContent(text)</td><td>the element contains that text. Accepts a string or a regex.</td></tr>
+            <tr><td class="q">toHaveAttribute(name, value)</td><td>the element has an attribute — e.g. an <code>&lt;img&gt;</code> has the right <code>src</code>.</td></tr>
+            <tr><td class="q">toHaveAccessibleName()</td><td>the element has an accessible name (alt text, a heading label) for screen readers.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Regex for flexible text</h3>
+      <p>Sometimes you only care that a word is <em>present</em>, not the whole exact string. A regex between
+      slashes does that, and <code>i</code> makes it case-insensitive:</p>
+      <div class="cell">
+        <div class="bar"><span class="dots"><i></i><i></i><i></i></span><span class="fname">regex-match</span></div>
+        <pre class="code"><span class="cm">// exact string — must match all of it:</span>
+<span class="fn">expect</span>(heading).<span class="fn">toHaveTextContent</span>(<span class="st">'Greetings to everyone'</span>)
+
+<span class="cm">// regex — just needs to CONTAIN 'greetings', any case:</span>
+<span class="fn">expect</span>(heading).<span class="fn">toHaveTextContent</span>(<span class="st">/greetings/i</span>)</pre>
+      </div>
+      <div class="insight warn">
+        <div class="htag">▲ The /i flag, plainly</div>
+        <p><code>/greetings/i</code> means "the letters g-r-e-e-t-i-n-g-s appear somewhere, and don't care about
+        capitals." Without <code>i</code>, <code>Greetings</code> wouldn't match <code>greetings</code>. Regex
+        matching is looser and often what you want for user-facing copy that might get reworded slightly — you
+        assert the important word is there rather than pinning the exact sentence.</p>
+      </div>
+    </section>
+
+    <!-- ===== 10 ===== -->
+    <section class="chapter" id="c10">
+      <div class="chaphead"><span class="num">10</span><h2>Break your tests + accessibility</h2></div>
+      <p class="chapsub">A passing test you've never seen fail might be lying. And good, accessible markup is what makes components testable in the first place.</p>
+
+      <h3>Always break a passing test</h3>
+      <p>In the demo, a test passed — then the presenter changed the expected text and it <em>still</em> passed for a
+      moment, because of a subtle mistake. Only by deliberately breaking it did the real failure show up. The habit:
+      when a test passes on the first try, <b>change something so it should fail, and confirm it does</b>. Then put
+      it back.</p>
+
+      <div class="insight gotcha">
+        <div class="htag">✖ Why a green test can still be wrong</div>
+        <p>A test that passes no matter what isn't testing anything — maybe it's querying the wrong element, or the
+        assertion is weaker than you think. Watching it fail when it <em>should</em> proves it's actually wired to
+        the thing you care about. A test you've never seen go red is a test you can't fully trust. Try it in the
+        runner above: edit the expected tagline text and re-run — watch it turn red, which is the proof it's real.</p>
+      </div>
+
+      <h3>Accessible markup makes testable markup</h3>
+      <p>Testing Library queries by role and by alt text on purpose — it wants you to build pages that screen
+      readers can navigate. That means the same choices help users <em>and</em> make your tests natural to write:</p>
+      <div class="cards">
+        <div class="ccard"><div class="cn">Semantic tags</div><p>Use an <code>&lt;h3&gt;</code> for a heading, not a styled <code>&lt;span&gt;</code>. The tag carries meaning: role "heading", level 3. That's what <code>getByRole</code> finds.</p></div>
+        <div class="ccard"><div class="cn">Alt text on images</div><p>Non-decorative images need a short, descriptive alt. It's what a screen reader announces — and what <code>getByAltText</code> queries.</p></div>
+        <div class="ccard"><div class="cn">Keep alt short</div><p>Descriptive like a tweet. Don't write "image of…" — the <code>&lt;img&gt;</code> tag already says it's an image. Decorative images can have empty alt.</p></div>
+      </div>
+
+      <div class="insight">
+        <div class="htag">◆ Insight — accessibility and testability are the same discipline</div>
+        <p>This is the quiet lesson of the whole unit. When you reach for a real heading tag instead of a styled
+        span, and give your images honest alt text, you're helping people who use screen readers <em>and</em> giving
+        your tests a stable, meaningful handle to grab. Testing Library was designed this way on purpose: the tests
+        get easier precisely when the markup gets kinder. Good markup pays double.</p>
+      </div>
+    </section>
+
+    <!-- ===== RECAP ===== -->
+    <section class="chapter" id="recap">
+      <div class="chaphead"><span class="num">★</span><h2>Recap</h2></div>
+      <div class="recap">
+        <h3>React</h3>
+        <ul>
+          <li><b>UI = f(state)</b> — describe what the UI should be for given data; React redraws when data changes (declarative).</li>
+          <li>A <b>component</b> = a capitalised function returning <b>JSX</b> (HTML-like syntax in JS).</li>
+          <li>JSX rules: one root element, <b>className</b> not class, <b>{ }</b> drops in JS, self-close every tag.</li>
+          <li><b>Props</b> = data passed in from the parent. Read-only — never change your own props.</li>
+          <li><b>State</b> = <code>useState(initial)</code> → <b>[value, setter]</b>. The setter updates value AND triggers a re-render.</li>
+          <li><b>Lists</b>: <code>.map()</code> array → JSX, each item needs a unique <b>key</b>.</li>
+          <li><b>Events</b> <code>onClick={fn}</code> (pass, don't call) · <b>conditionals</b> with ternary or <code>&&</code>.</li>
+        </ul>
+      </div>
+      <div class="recap">
+        <h3>Testing React</h3>
+        <ul>
+          <li>Still <b>Arrange / Act / Assert</b> — but assert on the <b>DOM</b>, not arithmetic.</li>
+          <li><b>Testing Library</b> gives <code>render</code> + <code>screen</code>; <b>jsdom</b> is the fake DOM; <b>Vitest</b> runs it.</li>
+          <li><b>// @vitest-environment jsdom</b> — the one comment Vitest reads; forget it and DOM tests break.</li>
+          <li>Queries: <b>getByRole / getAllByRole</b> (heading, img), <b>getByText</b>, <b>getByAltText</b>.</li>
+          <li><b>findBy…</b> are async — <code>await</code> them, mark the test <code>async</code>.</li>
+          <li>Matchers: <b>toBeInTheDocument, toBeVisible, toHaveTextContent, toHaveAttribute, toHaveAccessibleName</b>.</li>
+          <li><b>/word/i</b> = contains that word, case-insensitive.</li>
+          <li><b>Always break a passing test</b> once, to prove it's real.</li>
+          <li>Semantic tags + alt text = accessible <em>and</em> testable. Same discipline.</li>
+        </ul>
+      </div>
+
+      <footer>
+        <p>Built from your Unit 2 · T02 lectures (Testing React intro + code demo) — Dev Academy Aotearoa, with a
+        ground-up React intro added. The test runner uses a real in-page DOM and a small Testing Library-style shim;
+        real projects use @testing-library/react with Vitest.</p>
+        <p class="mono">reference:
+          <a href="https://react.dev/learn" target="_blank" rel="noopener">react.dev/learn</a> ·
+          <a href="https://testing-library.com/docs/react-testing-library/intro/" target="_blank" rel="noopener">Testing Library</a> ·
+          <a href="https://vitest.dev/" target="_blank" rel="noopener">Vitest</a></p>
+      </footer>
+    </section>
+  </main>
+</div>
+
+<script>
+/* ---------- anatomy ---------- */
+document.querySelectorAll('.anatomy').forEach(an=>{
+  const title=an.querySelector('.anatitle'), text=an.querySelector('.anatext'), hint=an.querySelector('.anahint');
+  const toks=an.querySelectorAll('.tok');
+  function show(tok){
+    const raw=tok.getAttribute('data-exp')||''; const i=raw.indexOf('|');
+    title.textContent=i>=0?raw.slice(0,i):tok.textContent.trim();
+    text.textContent=i>=0?raw.slice(i+1):raw;
+    hint.textContent='what this part does';
+    toks.forEach(x=>x.classList.remove('active')); tok.classList.add('active');
+  }
+  toks.forEach(tok=>{tok.setAttribute('tabindex','0');
+    tok.addEventListener('mouseenter',()=>show(tok));
+    tok.addEventListener('click',()=>show(tok));
+    tok.addEventListener('focus',()=>show(tok));});
+});
+
+/* ---------- RENDER VISUALISER ---------- */
+(function(){
+  let count=0, renders=0;
+  const val=document.getElementById('rvVal');
+  const prev=document.getElementById('rvPreview');
+  const log=document.getElementById('rvLog');
+  const msg=document.getElementById('rvMsg');
+  function render(initial){
+    renders++;
+    val.textContent=count;
+    prev.textContent='You clicked '+count+' times';
+    prev.classList.add('flash'); setTimeout(()=>prev.classList.remove('flash'),150);
+    const row=document.createElement('div'); row.className='r';
+    row.innerHTML= initial
+      ? 'render <b>#'+renders+'</b> · first render · count = '+count
+      : 'render <b>#'+renders+'</b> · state changed → count = '+count;
+    log.insertBefore(row, log.firstChild);
+    if(!initial) msg.innerHTML='State went to <b>'+count+'</b>, so React re-ran the component — that\'s render #'+renders+'. Same component, new output.';
+  }
+  document.getElementById('rvInc').addEventListener('click',()=>{ count++; render(false); });
+  document.getElementById('rvReset').addEventListener('click',()=>{
+    count=0; renders=0; log.innerHTML=''; msg.innerHTML='Reset. Click the button — each click updates state and triggers a re-render.'; render(true);
+  });
+  render(true);
+})();
+
+/* ---------- LIVE TEST RUNNER (Testing Library-style shim) ---------- */
+(function(){
+  const app=document.getElementById('greetApp');
+  // query shim scoped to the app container
+  function normalize(t){ return (t||'').replace(/\s+/g,' ').trim(); }
+  function matches(text, matcher){
+    if(matcher instanceof RegExp) return matcher.test(text);
+    return normalize(text)===normalize(matcher);
+  }
+  function containsText(text, matcher){
+    if(matcher instanceof RegExp) return matcher.test(text);
+    return normalize(text).includes(normalize(matcher));
+  }
+  const screen={
+    getAllByRole(role){
+      if(role==='heading') return [...app.querySelectorAll('h1,h2,h3,h4,h5,h6,.hi')];
+      if(role==='img') return [...app.querySelectorAll('img')];
+      return [];
+    },
+    getByRole(role){ const a=screen.getAllByRole(role); if(a.length===0) throw new Error('no element with role '+role); return a[0]; },
+    getByText(m){ const el=[...app.querySelectorAll('*')].find(e=>e.children.length===0 && matches(e.textContent,m)); if(!el) throw new Error('no element with text '+m); return el; },
+    getByAltText(s){ const el=app.querySelector('img[alt="'+s+'"]'); if(!el) throw new Error('no image with alt '+s); return el; }
+  };
+  // matchers → return {ok, msg}
+  const M={
+    toBeInTheDocument(el){ const ok=!!el && app.contains(el); return {ok, msg: ok?'element is in the document':'element not found in document'}; },
+    toBeVisible(el){ const ok=!!el && app.contains(el); return {ok, msg: ok?'element is visible':'element is not visible'}; },
+    toHaveTextContent(el,expected){ const ok=!!el && containsText(el.textContent, expected); return {ok, msg: ok?'text content matches':'expected text '+expected+', got "'+normalize(el&&el.textContent)+'"'}; },
+    toHaveAttribute(el,name,value){ if(!el) return {ok:false,msg:'no element'}; const has=el.hasAttribute(name); if(value===undefined) return {ok:has,msg:has?'has attribute '+name:'missing attribute '+name}; const ok=el.getAttribute(name)===value; return {ok,msg: ok?'attribute matches':'expected '+name+'="'+value+'", got "'+el.getAttribute(name)+'"'}; }
+  };
+
+  const TESTS=[
+    {
+      code:"const headings = screen.getAllByRole('heading')\nexpect(headings[1]).toHaveTextContent('Hi Sina!')",
+      run:()=>{ const h=screen.getAllByRole('heading'); return M.toHaveTextContent(h[1],'Hi Sina!'); }
+    },
+    {
+      code:"const h = screen.getByText(/greetings/i)\nexpect(h).toBeInTheDocument()",
+      run:()=>{ const h=screen.getByText(/greetings/i); return M.toBeInTheDocument(h); }
+    },
+    {
+      code:"const cat = screen.getByAltText('cat waving')\nexpect(cat).toBeInTheDocument()",
+      run:()=>{ const c=screen.getByAltText('cat waving'); return M.toBeInTheDocument(c); }
+    },
+    {
+      code:"const cat = screen.getByAltText('cat waving')\nexpect(cat).toHaveAttribute('src')",
+      run:()=>{ const c=screen.getByAltText('cat waving'); return M.toHaveAttribute(c,'src'); }
+    },
+    {
+      code:"// edit the expected text, then Run — break it on purpose\nconst tag = screen.getByText('because I like to say hi!')\nexpect(tag).toBeInTheDocument()",
+      editable:true, expected:'because I like to say hi!',
+      run:(val)=>{
+        try{ const t=screen.getByText(val); return M.toBeInTheDocument(t); }
+        catch(e){ return {ok:false, msg:'getByText found nothing matching "'+val+'" — the query threw, so the test fails.'}; }
+      }
+    }
+  ];
+
+  function hl(code){
+    return code
+      .replace(/(\/\/[^\n]*)/g,'<span class="cm">$1</span>')
+      .replace(/\b(const|expect|screen)\b/g,'<span class="kw">$1</span>')
+      .replace(/\.(getAllByRole|getByRole|getByText|getByAltText|toHaveTextContent|toBeInTheDocument|toBeVisible|toHaveAttribute)\b/g,'.<span class="fn">$1</span>')
+      .replace(/('[^']*')/g,'<span class="st">$1</span>')
+      .replace(/(\/[a-z]+\/i)/g,'<span class="st">$1</span>');
+  }
+
+  const col=document.getElementById('testCol');
+  TESTS.forEach((t,i)=>{
+    const card=document.createElement('div'); card.className='tcard';
+    let controls='<button data-run>▶ Run</button>';
+    if(t.editable){
+      controls='<button data-run>▶ Run</button><input data-exp value="'+t.expected+'">';
+    }
+    card.innerHTML=
+      '<div class="tcode">'+hl(t.code)+'</div>'+
+      '<div class="trow">'+controls+'<span class="res idle" data-res>not run</span></div>'+
+      '<div class="msg" data-msg></div>';
+    const resEl=card.querySelector('[data-res]');
+    const msgEl=card.querySelector('[data-msg]');
+    card.querySelector('[data-run]').addEventListener('click',()=>{
+      let out;
+      try{
+        if(t.editable){ out=t.run(card.querySelector('[data-exp]').value); }
+        else{ out=t.run(); }
+      }catch(e){ out={ok:false,msg:e.message}; }
+      resEl.className='res '+(out.ok?'pass':'fail');
+      resEl.textContent=out.ok?'✓ PASS':'✗ FAIL';
+      msgEl.textContent=out.msg; msgEl.classList.add('show');
+    });
+    col.appendChild(card);
+  });
+})();
+
+/* ---------- predict reveals ---------- */
+document.querySelectorAll('[data-predict]').forEach(p=>{
+  p.querySelector('[data-reveal]').addEventListener('click',function(){
+    p.querySelector('[data-answer]').classList.add('show');
+    this.textContent='Answer shown ↓';this.disabled=true;this.style.opacity=.55;
+  });
+});
+
+/* ---------- checkpoints ---------- */
+document.querySelectorAll('[data-check]').forEach(chk=>{
+  const correct=parseInt(chk.dataset.correct,10);
+  const fbbox=chk.querySelector('[data-fbbox]');
+  chk.querySelectorAll('.opt').forEach(opt=>{
+    opt.addEventListener('click',()=>{
+      const pick=parseInt(opt.dataset.opt,10);
+      if(pick===correct){opt.classList.add('correct');fbbox.textContent=chk.dataset.fb;fbbox.classList.add('show');chk.querySelectorAll('.opt').forEach(o=>o.style.pointerEvents='none');}
+      else{opt.classList.add('wrong');opt.style.pointerEvents='none';}
+    });
+  });
+});
+
+/* ---------- scrollspy ---------- */
+const sections=[...document.querySelectorAll('section.chapter')];
+const links=[...document.querySelectorAll('nav.side a[data-sec]')];
+const mlinks=[...document.querySelectorAll('.mobtop .mlink')];
+function spy(){
+  const y=window.scrollY+120;let cur=sections[0].id;
+  for(const s of sections){if(s.offsetTop<=y)cur=s.id;}
+  links.forEach(l=>l.classList.toggle('active',l.getAttribute('href')==='#'+cur));
+  mlinks.forEach(l=>l.classList.toggle('active',l.getAttribute('href')==='#'+cur));
+}
+window.addEventListener('scroll',spy,{passive:true});spy();
+</script>
+</body>
+</html>

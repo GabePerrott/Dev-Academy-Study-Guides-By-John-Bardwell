@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Week 3 — your guide to the guides</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;450;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F1F1F4;--card:#FBFBFD;--ink:#1B1E26;--muted:#5A5F6B;--line:#E1E1E8;
+    --violet:#6C4CE0;--violet-soft:#EDE8FC;--violet-line:#D8CEF7;
+    --amber:#B67A08;--amber-soft:#FBF3E4;
+    --blue:#2C6FE0;--blue-soft:#EAF1FD;
+    --emerald:#12905F;--emerald-soft:#EAF7F0;
+    --slate:#556070;--slate-soft:#EEF0F3;
+    --rose:#D6455D;
+    --radius:14px;
+    --mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+    --disp:'Space Grotesk',system-ui,sans-serif;--body:'Inter',system-ui,sans-serif;
+  }
+  *{box-sizing:border-box}html{scroll-behavior:smooth}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);font-size:16.5px;line-height:1.62;-webkit-font-smoothing:antialiased}
+  a{color:var(--violet);text-decoration:none}
+  code{font-family:var(--mono);font-size:.86em;background:#E7E7EE;padding:.08em .38em;border-radius:5px;color:#2C2140}
+  .shell{max-width:1120px;margin:0 auto;padding:0 clamp(20px,5vw,56px) 120px}
+
+  /* hero */
+  header.hero{padding:58px 0 8px}
+  .kicker{font-family:var(--mono);font-size:12.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--violet);margin-bottom:20px;display:flex;align-items:center;gap:10px}
+  .kicker::before{content:'';width:26px;height:2px;background:var(--violet);display:inline-block}
+  h1{font-family:var(--disp);font-weight:700;font-size:clamp(34px,5.6vw,56px);line-height:1.03;letter-spacing:-.02em;margin:0 0 18px}
+  h1 .b{color:var(--violet)}
+  .lede{font-size:19px;color:#3A3E48;max-width:64ch;margin:0}
+  .meta{margin-top:24px;display:flex;gap:22px;flex-wrap:wrap;font-family:var(--mono);font-size:12.5px;color:var(--muted)}
+  .meta span{display:flex;align-items:center;gap:7px}
+  .meta b{color:var(--ink);font-weight:500}
+
+  /* start-here block */
+  .starthere{margin:40px 0 8px;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:26px 28px;box-shadow:0 10px 34px -22px rgba(20,20,40,.4)}
+  .starthere h2{font-family:var(--disp);font-weight:600;font-size:22px;letter-spacing:-.01em;margin:0 0 4px}
+  .starthere .sub{color:var(--muted);font-size:14.5px;margin:0 0 20px}
+  .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+  .step{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:16px 18px}
+  .step .n{font-family:var(--mono);font-size:11px;font-weight:700;color:#fff;background:var(--violet);width:24px;height:24px;border-radius:7px;display:grid;place-items:center;margin-bottom:11px}
+  .step h4{font-family:var(--disp);font-weight:600;font-size:15.5px;margin:0 0 5px}
+  .step p{margin:0;font-size:13.5px;color:#333842;line-height:1.5}
+  @media(max-width:760px){.steps{grid-template-columns:1fr}}
+
+  /* reassurance callout */
+  .behind{margin:20px 0 8px;border:1px solid var(--violet-line);background:linear-gradient(180deg,#FaF8FF, #F4F0FE);border-radius:16px;padding:22px 26px}
+  .behind .tag{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--violet);font-weight:700;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+  .behind p{margin:8px 0;font-size:15px;color:#2C3038;line-height:1.58}
+  .behind p:first-of-type{margin-top:0}
+  .behind .small-step{margin-top:14px;font-family:var(--mono);font-size:13px;background:#fff;border:1px dashed var(--violet-line);border-radius:10px;padding:12px 15px;color:#3B2A73}
+  .behind .small-step b{color:var(--violet)}
+
+  /* path strip */
+  .path{margin:24px 0 6px;display:flex;align-items:stretch;gap:0;flex-wrap:wrap;border:1px solid var(--line);border-radius:14px;overflow:hidden;background:var(--card)}
+  .path .p{flex:1;min-width:150px;padding:15px 18px;border-right:1px solid var(--line);position:relative}
+  .path .p:last-child{border-right:none}
+  .path .p .u{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+  .path .p .nm{font-family:var(--disp);font-weight:600;font-size:16px;margin-top:3px}
+  .path .p .nm.u1{color:var(--amber)}.path .p .nm.u2{color:var(--violet)}.path .p .nm.u3{color:var(--blue)}
+  .path .p .dc{font-size:12.5px;color:var(--muted);margin-top:3px}
+  .path .p .arrow{position:absolute;right:-9px;top:50%;transform:translateY(-50%);z-index:2;background:var(--card);color:var(--muted);font-size:15px;width:18px;text-align:center}
+  @media(max-width:760px){.path .p .arrow{display:none}}
+
+  /* search */
+  .searchwrap{position:sticky;top:0;z-index:30;padding:18px 0 8px;background:linear-gradient(180deg,var(--paper) 72%,rgba(241,241,244,0));margin-top:34px}
+  .searchbar{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--line);border-radius:13px;padding:13px 18px;box-shadow:0 6px 24px -14px rgba(20,20,40,.3)}
+  .searchbar svg{flex:none;color:var(--muted)}
+  .searchbar input{border:none;outline:none;background:none;font-family:var(--body);font-size:15.5px;color:var(--ink);width:100%}
+  .searchbar input::placeholder{color:#9AA0AC}
+  .searchbar .hint{font-family:var(--mono);font-size:11px;color:var(--muted);white-space:nowrap}
+  .searchbar .count{font-family:var(--mono);font-size:12px;color:var(--violet);white-space:nowrap}
+  .noresults{display:none;text-align:center;color:var(--muted);font-family:var(--mono);font-size:14px;padding:40px 0}
+  .noresults.show{display:block}
+
+  /* units */
+  .unit{margin-top:44px;scroll-margin-top:80px}
+  .unit.hidden{display:none}
+  .unithead{display:flex;align-items:center;gap:15px;margin-bottom:6px}
+  .unithead .badge{font-family:var(--mono);font-size:12px;font-weight:700;color:#fff;padding:5px 11px;border-radius:9px;flex:none}
+  .u1 .badge{background:var(--amber)}.u2 .badge{background:var(--violet)}.u3 .badge{background:var(--blue)}.uw .badge{background:var(--slate)}
+  .unithead h2{font-family:var(--disp);font-weight:600;font-size:clamp(21px,3vw,27px);letter-spacing:-.015em;margin:0}
+  .unithead .cnt{font-family:var(--mono);font-size:12px;color:var(--muted);margin-left:auto;flex:none}
+  .prereq{font-size:13.5px;margin:2px 0 4px;padding:10px 14px;border-radius:10px;display:flex;gap:9px;align-items:baseline}
+  .u1 .prereq{background:var(--amber-soft);color:#6E4C08}
+  .u2 .prereq{background:var(--violet-soft);color:#3B2A73}
+  .u3 .prereq{background:var(--blue-soft);color:#1C447E}
+  .uw .prereq{background:var(--slate-soft);color:#3A424E}
+  .prereq b{font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;flex:none}
+  .prereq.stuck{background:#fff;border:1px dashed var(--line);color:var(--muted)}
+
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(272px,1fr));gap:16px;margin-top:18px}
+  a.card{display:flex;flex-direction:column;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 19px;text-decoration:none;color:var(--ink);transition:.16s;position:relative;overflow:hidden}
+  a.card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--ac,var(--line))}
+  .u1 a.card{--ac:var(--amber)}.u2 a.card{--ac:var(--violet)}.u3 a.card{--ac:var(--blue)}.uw a.card{--ac:var(--slate)}
+  a.card:hover{border-color:var(--ac);transform:translateY(-2px);box-shadow:0 14px 32px -20px rgba(20,20,40,.5)}
+  a.card.hidden{display:none}
+  .card .top{display:flex;align-items:center;gap:9px;margin-bottom:11px}
+  .card .cnum{font-family:var(--mono);font-size:12px;font-weight:700;color:var(--ac)}
+  .card .ctag{font-family:var(--mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);background:var(--paper);border:1px solid var(--line);padding:2px 7px;border-radius:20px;margin-left:auto}
+  .card h3{font-family:var(--disp);font-weight:600;font-size:17.5px;letter-spacing:-.01em;margin:0 0 6px;line-height:1.2}
+  .card p{margin:0;font-size:13.7px;color:#40454F;line-height:1.5;flex:1}
+  .card .go{margin-top:14px;font-family:var(--mono);font-size:12px;color:var(--ac);display:flex;align-items:center;gap:6px}
+  a.card:hover .go{gap:10px}
+
+  footer{border-top:1px solid var(--line);margin-top:64px;padding-top:24px;color:var(--muted);font-size:13.5px;line-height:1.6}
+  footer b{color:var(--ink)}
+  footer .mono{font-family:var(--mono);font-size:12px;margin-top:8px;display:block}
+  @media(prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto}}
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <header class="hero">
+    <div class="kicker">Dev Academy Aotearoa · Ngahuru 2026 · Week 3</div>
+    <h1>Your guide <span class="b">to the guides</span></h1>
+    <p class="lede">Fourteen interactive guides, organised into three units that stack on top of each other.
+    Whether you're flying or feeling completely lost, start with the panel below — it tells you where to go and
+    what to do when something doesn't make sense yet.</p>
+    <div class="meta">
+      <span><b>17</b> guides</span>
+      <span><b>3</b> units + extras</span>
+      <span>built from the lectures</span>
+      <span>every one is interactive</span>
+    </div>
+  </header>
+
+  <!-- START HERE -->
+  <div class="starthere">
+    <h2>Start here — how to use these</h2>
+    <p class="sub">Three habits that make the difference, especially if the material feels fast.</p>
+    <div class="steps">
+      <div class="step">
+        <div class="n">1</div>
+        <h4>The units build on each other</h4>
+        <p>Unit 1 (JavaScript) holds up Unit 2 (React), which holds up Unit 3 (APIs). If a later guide feels like
+        nonsense, the missing piece is almost always <em>one unit down</em> — not in the guide you're reading.</p>
+      </div>
+      <div class="step">
+        <div class="n">2</div>
+        <h4>Poke it, don't just read it</h4>
+        <p>Every guide has clickable widgets, predict-the-output cards, and checkpoints. Reading them is worth a
+        little. Actually <em>using</em> them — guessing before you reveal — is worth a lot.</p>
+      </div>
+      <div class="step">
+        <div class="n">3</div>
+        <h4>Use the 15-minute rule</h4>
+        <p>Stuck on one thing for 15 minutes? That's your signal to ask — a peer, David, or Rosie. Getting stuck
+        isn't falling behind; noticing it and asking <em>is</em> the process.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- FEELING BEHIND -->
+  <div class="behind">
+    <div class="tag">◆ Foundations feeling shaky? Read this first</div>
+    <p>Struggling with the basics isn't a sign you're behind everyone else — it's a sign you've found the exact
+    thing worth working on. That's useful information, not a verdict.</p>
+    <p>The trap is pushing forward into React or APIs while objects, arrays, and functions still feel slippery.
+    That doesn't skip the confusion — it just moves it somewhere harder to see. It's genuinely faster to go
+    <em>back</em> a unit than to power through on a cracked foundation.</p>
+    <div class="small-step">Smallest possible first step: open <b>Unit 1 → Data Types, Functions &amp; Modules</b>,
+    do the one <code>typeof</code> playground, then stop. That's a real win. Come back for the next piece when
+    you're ready.</div>
+  </div>
+
+  <!-- PATH -->
+  <div class="path">
+    <div class="p"><div class="u">Unit 1</div><div class="nm u1">JavaScript</div><div class="dc">the ground floor</div><span class="arrow">→</span></div>
+    <div class="p"><div class="u">Unit 2</div><div class="nm u2">React</div><div class="dc">building UIs</div><span class="arrow">→</span></div>
+    <div class="p"><div class="u">Unit 3</div><div class="nm u3">APIs &amp; data</div><div class="dc">this week's focus</div></div>
+  </div>
+
+  <!-- SEARCH -->
+  <div class="searchwrap">
+    <div class="searchbar">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.5" y2="16.5"/></svg>
+      <input id="search" type="text" placeholder="Search all guides — try 'fetch', 'props', 'array', 'query'…" autocomplete="off">
+      <span class="count" id="count"></span>
+      <span class="hint">press /</span>
+    </div>
+  </div>
+  <div class="noresults" id="noresults">No guide matches that. Try a broader word, or press Esc to clear.</div>
+
+  <!-- UNIT 1 -->
+  <section class="unit u1" data-unit>
+    <div class="unithead"><span class="badge">UNIT 1</span><h2>JavaScript foundations</h2><span class="cnt">7 guides</span></div>
+    <div class="prereq"><b>Prereq</b><span>None — this is the ground floor. Everything else assumes this unit, so time here is never wasted.</span></div>
+    <div class="grid">
+      <a class="card" href="./js-foundations.html" data-card data-kw="types functions modules typeof import export variables const let ground floor vocabulary">
+        <div class="top"><span class="cnum">1.1</span><span class="ctag">interactive</span></div>
+        <h3>Data Types, Functions &amp; Modules</h3>
+        <p>The vocabulary everything else is built on — what values are, how functions work, how files share code.</p>
+        <div class="go">Open guide →</div>
+      </a>
+      <a class="card" href="./js-mutability.html" data-card data-kw="mutability reference value copy spread mutate objects arrays by-reference by-value memory">
+        <div class="top"><span class="cnum">1.2</span><span class="ctag">deep dive</span></div>
+        <h3>Mutability</h3>
+        <p>By-value vs by-reference — why copying an object sometimes doesn't copy it, and how spread helps.</p>
+        <div class="go">Open guide →</div>
+      </a>
+      <a class="card" href="./js-npm.html" data-card data-kw="npm package.json dependencies semver install scripts node modules packages versions">
+        <div class="top"><span class="cnum">1.3</span><span class="ctag">interactive</span></div>
+        <h3>npm &amp; package.json</h3>
+        <p>How a project pulls in other people's code, and what all those numbers and fields actually mean.</p>
+        <div class="go">Open guide →</div>
+      </a>
+      <a class="card" href="./js-arrays.html" data-card data-kw="arrays map filter reduce methods iteration loop kata transform list foreach">
+        <div class="top"><span class="cnum">1.4</span><span class="ctag">interactive</span></div>
+        <h3>Arrays</h3>
+        <p>Lists and the methods that transform them — <code>map</code>, <code>filter</code>, <code>reduce</code> — with kata to practise on.</p>
+        <div class="go">Open guide →</div>
+      </a>
+      <a class="card" href="./js-data-structures.html" data-card data-kw="nested data objects arrays path access json dot bracket reaching into deep">
+        <div class="top"><span class="cnum">1.5</span><span class="ctag">interactive</span></div>
+        <h3>Nested Data Structures</h3>
+        <p>Reaching into objects-inside-arrays-inside-objects without getting lost. The skill every API needs.</p>
+        <div class="go">Open guide →</div>
+      </a>
+      <a class="card" href="./js-ddd-bowling.html" data-card data-kw="domain driven design ddd modelling bowling logic scorecard problem real world">
+        <div class="top"><span class="cnum">1.6</span><span class="ctag">interactive</span></div>
+        <h3>Domain Driven Design — Bowling</h3>
+        <p>Turning a real problem into code you can reason about, with a playable bowling scorecard.</p>
+        <div class="go">Open guide →</div>
+      </a>
+      <a class="card" href="./js-vite-data-models.html" data-card data-kw="vite data models interface types modules build tooling project setup shape">
+        <div class="top"><span class="cnum">1.7</span><span class="ctag">interactive</span></div>
+        <h3>Vite &amp; Data Models</h3>
+        <p>Project tooling with Vite, plus shaping your data with clear models before you build on it.</p>
+        <div class="go">Open guide →</div>
+      </a>
+    </div>
+  </section>
+
+  <!-- UNIT 2 -->
+  <section class="unit u2" data-unit>
+    <div class="unithead"><span class="badge">UNIT 2</span><h2>React</h2><span class="cnt">3 guides</span></div>
+    <div class="prereq"><b>Prereq</b><span>Assumes Unit 1 — comfortable with objects, arrays, and functions. If those feel shaky, go back first; React piles new ideas on top of them.</span></div>
+    <div class="grid">
+      <a class="card" href="./react-and-testing.html" data-card data-kw="react components props state testing vitest render jsx first component testing library">
+        <div class="top"><span class="cnum">2.1</span><span class="ctag">interactive</span></div>
+        <h3>React &amp; Testing React</h3>
+        <p>Your first components, props and state — and how to prove they work with tests. Start here for React.</p>
+        <div class="go">Open guide →</div>
+      </a>
+      <a class="card" href="./react-routing.html" data-card data-kw="react router routing pages params link navigate client-side url route multiple pages">
+        <div class="top"><span class="cnum">2.2</span><span class="ctag">interactive</span></div>
+        <h3>Client-Side Routing</h3>
+        <p>Multiple pages without a full reload — links, routes, and reading values out of the URL.</p>
+        <div class="go">Open guide →</div>
+      </a>
+      <a class="card" href="./react-forms.html" data-card data-kw="react forms controlled inputs onchange preventdefault value state typing user input multi-input">
+        <div class="top"><span class="cnum">2.3</span><span class="ctag">interactive</span></div>
+        <h3>React Forms</h3>
+        <p>Controlled inputs — making React own exactly what the user types, for one field or many.</p>
+        <div class="go">Open guide →</div>
+      </a>
+    </div>
+  </section>
+
+  <!-- UNIT 3 -->
+  <section class="unit u3" data-unit>
+    <div class="unithead"><span class="badge">UNIT 3</span><h2>APIs &amp; fetching data</h2><span class="cnt">3 guides</span></div>
+    <div class="prereq"><b>Prereq</b><span>Assumes Unit 2 — you can build a component and pass it props. Also leans on Unit 1's nested data (1.5), since that's the shape APIs hand back.</span></div>
+    <div class="grid">
+      <a class="card" href="./consuming-apis.html" data-card data-kw="api fetch http get post put delete status json async await request response server endpoint consuming">
+        <div class="top"><span class="cnum">3.1</span><span class="ctag">interactive</span></div>
+        <h3>Consuming APIs</h3>
+        <p><code>fetch</code>, the HTTP methods, and status codes — how your app talks to a server. Start Unit 3 here.</p>
+        <div class="go">Open guide →</div>
+      </a>
+      <a class="card" href="./postman-vscode.html" data-card data-kw="postman vscode api client request collection environment variable send http endpoint test scout tool extension">
+        <div class="top"><span class="cnum">3.2</span><span class="ctag">interactive</span></div>
+        <h3>Postman in VS Code</h3>
+        <p>Scout an API by hand — see the exact response — before you commit a line of it to code.</p>
+        <div class="go">Open guide →</div>
+      </a>
+      <a class="card" href="./react-query.html" data-card data-kw="react query tanstack usequery cache isPending querykey queryfn loading error fetching server state invalidate">
+        <div class="top"><span class="cnum">3.3</span><span class="ctag">interactive</span></div>
+        <h3>React Query</h3>
+        <p>Loading server data the easy way — caching, loading, and errors handled for you instead of by hand.</p>
+        <div class="go">Open guide →</div>
+      </a>
+    </div>
+  </section>
+
+  <!-- SUPPLEMENTARY -->
+  <section class="unit u1" data-unit>
+    <div class="unithead"><span class="badge" style="background:var(--emerald)">EXTRA</span><h2>Supplementary — fill the gaps</h2><span class="cnt">3 guides</span></div>
+    <div class="prereq" style="background:var(--emerald-soft);color:#0C5A3C"><b>What</b><span>Topics the units lean on but don't stop to teach. Reach for one the moment it's referenced and doesn't feel solid yet.</span></div>
+    <div class="grid">
+      <a class="card" href="./js-async.html" data-card data-kw="async await promise promises then catch fetch asynchronous event loop order pending fulfilled rejected concurrency" style="--ac:var(--emerald)">
+        <div class="top"><span class="cnum" style="color:var(--emerald)">＋</span><span class="ctag">interactive</span></div>
+        <h3>Async &amp; Promises</h3>
+        <p>What <code>async</code>/<code>await</code> actually do — the mechanism under every <code>fetch</code>. Pairs with Unit 3.</p>
+        <div class="go" style="color:var(--emerald)">Open guide →</div>
+      </a>
+      <a class="card" href="./js-typescript.html" data-card data-kw="typescript types interface type annotation string number boolean optional shape tsx any inference generics" style="--ac:var(--emerald)">
+        <div class="top"><span class="cnum" style="color:var(--emerald)">＋</span><span class="ctag">interactive</span></div>
+        <h3>TypeScript Basics</h3>
+        <p>Types and interfaces — the annotations woven through every <code>.tsx</code> file, finally introduced.</p>
+        <div class="go" style="color:var(--emerald)">Open guide →</div>
+      </a>
+      <a class="card" href="./js-dom.html" data-card data-kw="dom events document queryselector addeventlistener textContent classList element tree browser click handler why react" style="--ac:var(--emerald)">
+        <div class="top"><span class="cnum" style="color:var(--emerald)">＋</span><span class="ctag">interactive</span></div>
+        <h3>The DOM &amp; Events</h3>
+        <p>Selecting and changing the page by hand — the pre-React model that explains <em>why</em> React exists.</p>
+        <div class="go" style="color:var(--emerald)">Open guide →</div>
+      </a>
+    </div>
+  </section>
+
+  <!-- WORKFLOW -->
+  <section class="unit uw" data-unit>
+    <div class="unithead"><span class="badge">WORKFLOW</span><h2>Working with others</h2><span class="cnt">1 guide</span></div>
+    <div class="prereq stuck"><b>When</b><span>Useful any time you share a codebase — and essential for group project week. Not tied to a unit.</span></div>
+    <div class="grid">
+      <a class="card" href="./git-flow-groups.html" data-card data-kw="git branch push merge conflict pull request group collaboration checkout origin flow team">
+        <div class="top"><span class="cnum">W</span><span class="ctag">interactive</span></div>
+        <h3>Git Flow for Group Projects</h3>
+        <p>Branches, pushes, and resolving conflicts calmly — the moves that keep a shared repo from turning into chaos.</p>
+        <div class="go">Open guide →</div>
+      </a>
+    </div>
+  </section>
+
+  <footer>
+    <p><b>Keep every file in the same folder.</b> The cards link to guides by relative path
+    (<code>./guide-name.html</code>), so they all need to sit side by side for the links to work.</p>
+    <p class="mono">17 guides · Unit 1 ×7 · Unit 2 ×3 · Unit 3 ×3 · Supplementary ×3 · Workflow ×1 · Dev Academy Aotearoa, Ngahuru 2026</p>
+  </footer>
+</div>
+
+<script>
+/* ---------- robust search: cards visible by default, only hide non-matches ---------- */
+(function(){
+  const input=document.getElementById('search');
+  const cards=[...document.querySelectorAll('[data-card]')];
+  const units=[...document.querySelectorAll('[data-unit]')];
+  const countEl=document.getElementById('count');
+  const noresults=document.getElementById('noresults');
+  const total=cards.length;
+
+  function text(card){
+    return ((card.getAttribute('data-kw')||'')+' '+card.querySelector('h3').textContent+' '+card.querySelector('p').textContent).toLowerCase();
+  }
+  function filter(q){
+    q=q.trim().toLowerCase();
+    let visible=0;
+    cards.forEach(c=>{
+      const match = q==='' || text(c).includes(q);
+      c.classList.toggle('hidden',!match);
+      if(match) visible++;
+    });
+    units.forEach(u=>{
+      const any=[...u.querySelectorAll('[data-card]')].some(c=>!c.classList.contains('hidden'));
+      u.classList.toggle('hidden',!any);
+    });
+    noresults.classList.toggle('show',visible===0);
+    countEl.textContent = q==='' ? '' : visible+' of '+total;
+  }
+  input.addEventListener('input',()=>filter(input.value));
+  document.addEventListener('keydown',e=>{
+    if(e.key==='/' && document.activeElement!==input){e.preventDefault();input.focus();}
+    if(e.key==='Escape' && document.activeElement===input){input.value='';filter('');input.blur();}
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Git Flow for Group Projects — interactive guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;450;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F1F1F4;--card:#FBFBFD;--ink:#1B1E26;--muted:#5A5F6B;--line:#E1E1E8;
+    --violet:#6C4CE0;--violet-soft:#EDE8FC;--violet-line:#D8CEF7;
+    --emerald:#12905F;--amber:#B67A08;--rose:#D6455D;
+    --term-bg:#15171E;--term-panel:#1D2029;--term-fg:#E6E8EC;--term-dim:#8A90A0;
+    --t-num:#E7B45A;--t-str:#93D6A0;--t-null:#8A90A0;--t-err:#F0808F;
+    --cur:#2C6FE0;--inc:#12905F;
+    --radius:14px;
+    --mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+    --disp:'Space Grotesk',system-ui,sans-serif;--body:'Inter',system-ui,sans-serif;
+  }
+  *{box-sizing:border-box}html{scroll-behavior:smooth}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);font-size:16.5px;line-height:1.62;-webkit-font-smoothing:antialiased}
+  a{color:var(--violet);text-decoration:none}a:hover{text-decoration:underline}
+  code{font-family:var(--mono);font-size:.88em;background:#E7E7EE;padding:.08em .38em;border-radius:5px;color:#2C2140}
+
+  .wrap{display:grid;grid-template-columns:270px minmax(0,1fr);max-width:1200px;margin:0 auto}
+  nav.side{position:sticky;top:0;align-self:start;height:100vh;overflow-y:auto;padding:30px 22px 40px;border-right:1px solid var(--line)}
+  main{padding:0 clamp(20px,5vw,64px) 120px;min-width:0}
+  .brand{font-family:var(--mono);font-weight:700;font-size:14px;letter-spacing:.04em;color:var(--violet);margin-bottom:4px}
+  .brand small{color:var(--muted);font-weight:400;display:block;letter-spacing:0;margin-top:3px;font-family:var(--body);font-size:12.5px}
+  .navsec{margin-top:26px}
+  .navsec > span{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:9px;padding-left:12px}
+  nav.side a.link{display:flex;gap:10px;align-items:baseline;padding:7px 12px;border-radius:9px;color:var(--ink);font-size:14.5px;line-height:1.35}
+  nav.side a.link:hover{background:#E9E9F0;text-decoration:none}
+  nav.side a.link.active{background:var(--violet-soft);color:#3B2A73;font-weight:500}
+  nav.side a.link b{font-family:var(--mono);font-size:11.5px;color:var(--violet);min-width:20px}
+  .backlink{margin-top:24px;font-size:13px;color:var(--muted)}
+  .backlink a{font-family:var(--mono);font-size:12.5px;display:block;margin-top:6px}
+
+  header.hero{padding:64px 0 30px}
+  .eyebrow{font-family:var(--mono);font-size:12.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--violet);margin-bottom:18px}
+  h1{font-family:var(--disp);font-weight:700;font-size:clamp(34px,5.4vw,54px);line-height:1.04;letter-spacing:-.02em;margin:0 0 20px}
+  h1 .brace{color:var(--violet)}
+  .lede{font-size:19px;color:#3A3E48;max-width:62ch;margin:0}.lede + .lede{margin-top:14px}
+  .runline{font-family:var(--mono);font-size:13.5px;color:var(--muted);margin-top:26px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .runline .kbd{background:var(--term-bg);color:var(--t-str);padding:5px 11px;border-radius:7px;font-size:12.5px}
+
+  section.chapter{padding-top:56px;scroll-margin-top:20px}
+  .chaphead{display:flex;align-items:baseline;gap:16px;border-bottom:2px solid var(--ink);padding-bottom:12px;margin-bottom:8px}
+  .chaphead .num{font-family:var(--mono);font-weight:700;font-size:15px;color:var(--violet)}
+  h2{font-family:var(--disp);font-weight:600;font-size:clamp(25px,3.4vw,34px);letter-spacing:-.015em;margin:0}
+  .chapsub{color:var(--muted);font-size:15px;margin:14px 0 0}
+  h3{font-family:var(--disp);font-weight:600;font-size:21px;letter-spacing:-.01em;margin:40px 0 10px}
+  p{margin:14px 0}main p,main li{color:#24272F}
+
+  /* terminal cell */
+  .term{margin:20px 0;border-radius:var(--radius);overflow:hidden;border:1px solid #2A2E3A;box-shadow:0 10px 30px -18px rgba(20,20,40,.4)}
+  .term .bar{background:var(--term-panel);display:flex;align-items:center;gap:8px;padding:9px 14px;border-bottom:1px solid #2A2E3A}
+  .term .bar .dots{display:flex;gap:6px}.term .bar .dots i{width:11px;height:11px;border-radius:50%;display:block}
+  .dots i:nth-child(1){background:#E06C75}.dots i:nth-child(2){background:#E5C07B}.dots i:nth-child(3){background:#98C379}
+  .term .bar .fname{font-family:var(--mono);font-size:12px;color:var(--term-dim);margin-left:4px}
+  .term pre{margin:0;background:var(--term-bg);color:var(--term-fg);font-family:var(--mono);font-size:13px;line-height:1.75;padding:14px 18px;white-space:pre;overflow-x:auto}
+  .term pre .p{color:#6B7180}.term pre .c{color:#93D6A0}.term pre .o{color:#8A90A0}.term pre .cm{color:#6B7180;font-style:italic}
+
+  /* anatomy */
+  .anatomy{margin:22px 0;border:1px solid #2A2E3A;border-radius:var(--radius);overflow:hidden;box-shadow:0 10px 30px -18px rgba(20,20,40,.4)}
+  .anatomy .ahead{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--term-dim);padding:10px 16px;border-bottom:1px solid #2A2E3A;background:var(--term-panel);display:flex;align-items:center;gap:8px}
+  .anatomy .ahead::before{content:'⌖';color:#C39BF5;font-size:14px}
+  .anacode{padding:18px;background:var(--term-bg);font-family:var(--mono);font-size:14px;line-height:2.1;color:var(--term-fg);overflow-x:auto;white-space:pre-wrap;word-break:break-word}
+  .tok{cursor:pointer;border-radius:5px;padding:2px 3px;transition:.12s;outline:1.5px solid transparent}
+  .tok:hover{outline-color:rgba(255,255,255,.28)}
+  .tok.kw{background:rgba(195,155,245,.16);color:#C9A6F6}
+  .tok.fn{background:rgba(124,183,240,.15);color:#8CC0F5}
+  .tok.pm{background:rgba(231,180,90,.15);color:#E7B45A}
+  .tok.rt{background:rgba(147,214,160,.15);color:#93D6A0}
+  .tok.op{background:rgba(240,128,143,.14);color:#F0909F}
+  .tok.pn{background:rgba(150,156,172,.16);color:#B4BAC8}
+  .tok.st{background:rgba(147,214,160,.13);color:#93D6A0}
+  .tok.active{outline-color:var(--violet)!important;background:rgba(108,76,224,.32)!important;color:#fff}
+  .anapanel{padding:15px 18px;min-height:78px;background:var(--card)}
+  .anahint{font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:.05em}
+  .anahint .legend{color:var(--muted);opacity:.8}
+  .anatitle{font-family:var(--mono);font-weight:700;font-size:14px;color:var(--violet);margin:6px 0 3px}
+  .anatext{font-size:13.5px;color:#2A2D36;line-height:1.55}
+  @media(max-width:640px){.anacode{font-size:13px;line-height:2}}
+
+  /* ---------- REPO MAP ---------- */
+  .repomap{margin:26px 0;border:1px solid var(--line);border-radius:16px;background:var(--card);overflow:hidden}
+  .repomap .rmh{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:11px 18px;border-bottom:1px solid var(--line);background:#F5F5F9}
+  .repomap .places{display:grid;grid-template-columns:1fr 1fr;gap:0}
+  @media(max-width:600px){.repomap .places{grid-template-columns:1fr}}
+  .repomap .zone{padding:16px 18px}
+  .repomap .zone.remote{border-right:1px solid var(--line);background:#FAFAFF}
+  @media(max-width:600px){.repomap .zone.remote{border-right:none;border-bottom:1px solid var(--line)}}
+  .repomap .zt{font-family:var(--mono);font-size:11px;letter-spacing:.05em;text-transform:uppercase;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:7px}
+  .repomap .zone.remote .zt{color:var(--violet)}
+  .repomap .zone.local .zt{color:var(--amber)}
+  .repomap .branch{border:1px solid var(--line);border-radius:10px;padding:10px 13px;margin-bottom:9px;background:#fff;transition:.2s}
+  .repomap .branch.main{border-left:3px solid var(--ink)}
+  .repomap .branch.feat{border-left:3px solid var(--violet)}
+  .repomap .branch .bn{font-family:var(--mono);font-size:12.5px;font-weight:600;display:flex;align-items:center;gap:7px}
+  .repomap .branch .code{font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:5px;line-height:1.4;min-height:15px}
+  .repomap .branch .code.mine{color:var(--violet)}
+  .repomap .branch .code.other{color:var(--inc)}
+  .repomap .branch.hidden{opacity:.25;filter:grayscale(1)}
+  .repomap .branch.flash{background:#FAF8FF;box-shadow:0 4px 16px -6px rgba(108,76,224,.5);transform:translateY(-1px)}
+  .repomap .ctrls{padding:12px 18px;border-top:1px solid var(--line);background:#FAFAFC;display:flex;gap:7px;flex-wrap:wrap;align-items:center}
+  .repomap .ctrls .cmd{font-family:var(--mono);font-size:11.5px;font-weight:600;cursor:pointer;border:1px solid var(--violet);background:var(--violet);color:#fff;border-radius:8px;padding:7px 12px}
+  .repomap .ctrls .cmd:hover{background:#5B3ED1}
+  .repomap .ctrls .cmd:disabled{opacity:.35;cursor:not-allowed;background:#B9B4CC;border-color:#B9B4CC}
+  .repomap .ctrls .reset{background:transparent;color:var(--muted);border-color:var(--line)}
+  .repomap .stepmsg{padding:12px 18px;font-size:13.5px;line-height:1.5;background:var(--card);border-top:1px solid var(--line);min-height:20px}
+  .repomap .stepmsg b{color:var(--violet)}
+  .repomap .stepmsg .term-inline{font-family:var(--mono);font-size:12px;background:var(--term-bg);color:var(--t-str);padding:2px 7px;border-radius:5px}
+
+  /* ---------- CONFLICT RESOLVER ---------- */
+  .conflict{margin:26px 0;border:1px solid var(--line);border-radius:16px;background:var(--card);overflow:hidden}
+  .conflict .cfh{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:11px 18px;border-bottom:1px solid var(--line);background:#F5F5F9;display:flex;align-items:center;gap:8px}
+  .conflict .cfh .file{color:var(--rose);text-transform:none;letter-spacing:0;font-size:12px}
+  .conflict .cfh .file::before{content:'●';margin-right:5px}
+  .conflict .editor{background:#1A1C23;padding:0;font-family:var(--mono);font-size:13px;line-height:1.9;overflow-x:auto}
+  .conflict .ln{display:flex;white-space:pre}
+  .conflict .ln .gutter{width:34px;flex:none;text-align:right;padding-right:10px;color:#4A5060;user-select:none}
+  .conflict .ln .txt{color:#D3D7E0;padding-right:16px}
+  .conflict .ln.ctx .txt{color:#8A90A0}
+  .conflict .actionbar{display:flex;gap:0;font-family:var(--mono);font-size:11px}
+  .conflict .actionbar button{flex:none;cursor:pointer;border:none;padding:3px 9px;background:transparent}
+  .conflict .actionbar .a-cur{color:#6FA8FF}.conflict .actionbar .a-inc{color:#7DDB9A}
+  .conflict .actionbar .a-both{color:#C9A6F6}.conflict .actionbar .a-none{color:#8A90A0}
+  .conflict .actionbar button:hover{text-decoration:underline}
+  .conflict .marker{background:rgba(0,0,0,.25)}
+  .conflict .marker.cur{color:#6FA8FF}
+  .conflict .marker.mid{color:#8A90A0}
+  .conflict .marker.inc{color:#7DDB9A}
+  .conflict .cur-block{background:rgba(44,111,224,.14)}
+  .conflict .cur-block .txt{color:#BBD4FF}
+  .conflict .inc-block{background:rgba(18,144,95,.14)}
+  .conflict .inc-block .txt{color:#A6E7C0}
+  .conflict .resolved .txt{color:#93D6A0}
+  .conflict .choices{padding:14px 18px;border-top:1px solid var(--line);background:#FAFAFC}
+  .conflict .choices .lab{font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-bottom:10px}
+  .conflict .choices .btns{display:flex;gap:8px;flex-wrap:wrap}
+  .conflict .choices button{font-family:var(--mono);font-size:12px;font-weight:600;cursor:pointer;border-radius:8px;padding:8px 13px;border:1px solid var(--line);background:#fff;transition:.12s}
+  .conflict .choices .accept-cur{color:var(--cur);border-color:#A9C7F5}
+  .conflict .choices .accept-cur:hover{background:#EAF1FD}
+  .conflict .choices .accept-inc{color:var(--inc);border-color:#A9E0C4}
+  .conflict .choices .accept-inc:hover{background:#E7F6EE}
+  .conflict .choices .accept-both{color:var(--violet);border-color:var(--violet-line)}
+  .conflict .choices .accept-both:hover{background:#F4F0FE}
+  .conflict .choices .reset{color:var(--muted)}
+  .conflict .choices .reset:hover{background:#EEE}
+  .conflict .steps{padding:0 18px 16px;background:#FAFAFC}
+  .conflict .steps .stepline{font-family:var(--mono);font-size:12.5px;color:var(--muted);padding:4px 0;display:flex;gap:9px;align-items:baseline}
+  .conflict .steps .stepline.done{color:var(--emerald)}
+  .conflict .steps .stepline .st{width:16px}
+  .conflict .resultmsg{margin:0 18px 18px;padding:12px 15px;border-radius:10px;font-size:13.5px;line-height:1.5;display:none}
+  .conflict .resultmsg.show{display:block;background:#EAF7F0;border:1px solid #BEE6D2;color:#0C6B45}
+
+  .insight{margin:24px 0;background:var(--card);border:1px solid var(--line);border-left:3px solid var(--violet);border-radius:12px;padding:16px 20px}
+  .insight .htag{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--violet);font-weight:700;display:flex;align-items:center;gap:8px;margin-bottom:6px}
+  .insight.warn{border-left-color:var(--amber)}.insight.warn .htag{color:var(--amber)}
+  .insight.gotcha{border-left-color:var(--rose)}.insight.gotcha .htag{color:var(--rose)}
+  .insight p{margin:6px 0}.insight p:first-of-type{margin-top:0}
+
+  /* step flow list */
+  .flow{margin:24px 0;border:1px solid var(--line);border-radius:14px;background:var(--card);overflow:hidden;counter-reset:step}
+  .flow .fh{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:11px 18px;border-bottom:1px solid var(--line);background:#F5F5F9}
+  .flow .frow{display:flex;gap:14px;padding:13px 18px;border-bottom:1px solid var(--line);align-items:baseline}
+  .flow .frow:last-child{border-bottom:none}
+  .flow .frow::before{counter-increment:step;content:counter(step);font-family:var(--mono);font-size:12px;font-weight:700;color:#fff;background:var(--violet);min-width:22px;height:22px;border-radius:50%;display:grid;place-items:center;flex:none}
+  .flow .frow .ftxt{font-size:14px}
+  .flow .frow .ftxt code{font-size:12.5px}
+  .flow .frow .ftxt b{font-family:var(--disp)}
+
+  /* checkpoint */
+  .check{margin:26px 0;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px}
+  .check .q{font-family:var(--disp);font-weight:600;font-size:16px;margin-bottom:14px}
+  .check .opts{display:flex;flex-direction:column;gap:9px}
+  .check .opt{font-family:var(--mono);font-size:13.5px;text-align:left;cursor:pointer;background:#fff;border:1px solid var(--line);border-radius:9px;padding:11px 14px;transition:.15s}
+  .check .opt:hover{border-color:var(--violet-line);background:#FAF8FF}
+  .check .opt.correct{border-color:var(--emerald);background:#EAF7F0;color:#0C6B45}
+  .check .opt.wrong{border-color:var(--rose);background:#FBECEE;color:#9E2B3B}
+  .check .fb-msg{margin-top:12px;font-size:13.5px;color:var(--muted);display:none}
+  .check .fb-msg.show{display:block}
+
+  .recap{background:var(--term-bg);border-radius:16px;padding:26px 28px;margin:26px 0;color:var(--term-fg)}
+  .recap h3{color:#fff;margin-top:0}
+  .recap ul{list-style:none;padding:0;margin:0;display:grid;gap:10px}
+  .recap li{font-family:var(--mono);font-size:13px;line-height:1.55;padding-left:22px;position:relative;color:#D3D7E0}
+  .recap li::before{content:'›';position:absolute;left:0;color:var(--violet);font-weight:700}
+  .recap li b{color:var(--t-num);font-weight:500}
+
+  footer{border-top:1px solid var(--line);margin-top:70px;padding-top:24px;color:var(--muted);font-size:13.5px}
+  footer .mono{font-family:var(--mono);font-size:12px}
+
+  .mobtop{display:none}
+  @media(max-width:860px){
+    .wrap{grid-template-columns:1fr}nav.side{display:none}
+    .mobtop{display:flex;position:sticky;top:0;z-index:20;background:rgba(241,241,244,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);padding:12px 18px;gap:10px;align-items:center;overflow-x:auto}
+    .mobtop .brand{margin:0;white-space:nowrap}
+    .mobtop a{font-family:var(--mono);font-size:12px;white-space:nowrap;color:var(--muted);padding:5px 10px;border-radius:7px}
+    .mobtop a.active{background:var(--violet-soft);color:#3B2A73}
+    main{padding-left:20px;padding-right:20px}
+  }
+  @media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important;scroll-behavior:auto}}
+</style>
+</head>
+<body>
+
+<div class="mobtop">
+  <span class="brand">Git Flow</span>
+  <a href="#c1" class="mlink active">The 4 places</a>
+  <a href="#c2" class="mlink">The loop</a>
+  <a href="#c3" class="mlink">Walkthrough</a>
+  <a href="#c4" class="mlink">Conflicts</a>
+  <a href="#c5" class="mlink">Resolve one</a>
+  <a href="#recap" class="mlink">Recap</a>
+</div>
+
+<div class="wrap">
+  <nav class="side">
+    <div class="brand">Git flow · group projects<small>Unit 2 — interactive guide</small></div>
+    <div class="navsec">
+      <span>Sections</span>
+      <a href="#c1" class="link" data-sec><b>01</b> The four places code lives</a>
+      <a href="#c2" class="link" data-sec><b>02</b> The whole loop</a>
+      <a href="#c3" class="link" data-sec><b>03</b> Walkthrough, step by step</a>
+      <a href="#c4" class="link" data-sec><b>04</b> What a merge conflict is</a>
+      <a href="#c5" class="link" data-sec><b>05</b> Resolve one yourself</a>
+      <a href="#recap" class="link" data-sec><b>★</b> Recap &amp; cheat sheet</a>
+    </div>
+    <div class="navsec">
+      <span>The one habit</span>
+      <p style="font-size:13px;color:var(--muted);line-height:1.5;margin:0 12px">
+        Never work on <b>main</b>. Branch per feature, pull main often, merge main <em>into your branch</em> before
+        you merge <em>up</em>. Fewer surprises, fewer conflicts.</p>
+    </div>
+    <div class="backlink">
+      Related guides:
+      <a href="./index.html">⌂ All guides</a>
+      <a href="./react-and-testing.html">← React intro</a>
+      <a href="./js-npm.html">← npm basics</a>
+    </div>
+  </nav>
+
+  <main>
+    <header class="hero">
+      <div class="eyebrow">Unit 2 — Git Flow for Group Projects</div>
+      <h1>Four people, <span class="brace">one codebase</span>, no chaos</h1>
+      <p class="lede">Your first group project means several people writing code on the same repo at once. Git keeps
+      that from turning into a mess — <b>if</b> you follow a shared flow. This guide walks the exact branch-per-feature
+      loop Dev Academy recommends, and lets you resolve a real merge conflict by hand.</p>
+      <p class="lede">The scary bit is merge conflicts. They're far less scary once you've done one — so you'll do
+      one here, safely.</p>
+      <div class="runline"><span class="kbd">branch → code → pull main → merge → push</span> the loop you'll repeat for every feature.</div>
+    </header>
+
+    <!-- ===== 1 ===== -->
+    <section class="chapter" id="c1">
+      <div class="chaphead"><span class="num">01</span><h2>The four places code lives</h2></div>
+      <p class="chapsub">Before commands, get this map straight — most git confusion is really confusion about which of these four spots you're looking at.</p>
+
+      <p>Your project's code exists in up to four places at once, and they can all hold <em>different</em> versions.
+      Git's whole job is moving code between them on purpose:</p>
+
+      <div class="repomap" id="repomap">
+        <div class="rmh">Where does the code live? — run the commands and watch it move</div>
+        <div class="places">
+          <div class="zone remote">
+            <div class="zt">☁ GitHub (remote)</div>
+            <div class="branch main" id="r-main"><div class="bn">◆ main</div><div class="code" id="r-main-code">original code</div></div>
+            <div class="branch feat hidden" id="r-feat"><div class="bn">⑂ greetings</div><div class="code mine" id="r-feat-code">—</div></div>
+          </div>
+          <div class="zone local">
+            <div class="zt">💻 Your computer (local)</div>
+            <div class="branch main" id="l-main"><div class="bn">◆ main</div><div class="code" id="l-main-code">—</div></div>
+            <div class="branch feat hidden" id="l-feat"><div class="bn">⑂ greetings</div><div class="code mine" id="l-feat-code">—</div></div>
+          </div>
+        </div>
+        <div class="ctrls" id="repoCtrls"></div>
+        <div class="stepmsg" id="repoMsg">The code starts life only on GitHub's main branch. Step through the flow and watch it spread.</div>
+      </div>
+
+      <div class="insight">
+        <div class="htag">◆ Insight — "which main?" is the question to always ask</div>
+        <p>There are <b>two mains</b> — one on GitHub, one on your computer — and they drift apart constantly as
+        teammates push work. Half of all git confusion is forgetting which one you're looking at. When something
+        seems wrong ("where's Sarah's navbar?"), the first question is always: <em>is this my local main, or
+        GitHub's main, and are they in sync?</em> The map above is worth keeping in your head.</p>
+      </div>
+    </section>
+
+    <!-- ===== 2 ===== -->
+    <section class="chapter" id="c2">
+      <div class="chaphead"><span class="num">02</span><h2>The whole loop</h2></div>
+      <p class="chapsub">Every feature you build follows the same nine steps. Learn the shape once and repeat it.</p>
+
+      <p>Here's the entire recommended flow at a glance. It looks like a lot, but it's really just: <b>get the
+      latest, branch off, work, catch up with main, then merge up.</b></p>
+
+      <div class="flow">
+        <div class="fh">The branch-per-feature loop</div>
+        <div class="frow"><div class="ftxt"><b>Pull main</b> — <code>git checkout main</code> then <code>git pull</code>. Start from the newest code.</div></div>
+        <div class="frow"><div class="ftxt"><b>Branch off</b> — <code>git checkout -b navbar</code>. Name it for the <em>feature</em>, not yourself.</div></div>
+        <div class="frow"><div class="ftxt"><b>Write your code</b> on that branch. Never on main.</div></div>
+        <div class="frow"><div class="ftxt"><b>Stage &amp; commit</b> — <code>git add .</code> then <code>git commit -m "..."</code>.</div></div>
+        <div class="frow"><div class="ftxt"><b>Push your branch</b> — <code>git push</code> (first time sets upstream). Now it's on GitHub too.</div></div>
+        <div class="frow"><div class="ftxt"><b>Catch up</b> — <code>git checkout main</code>, <code>git pull</code> to grab teammates' merged work.</div></div>
+        <div class="frow"><div class="ftxt"><b>Merge main into your branch</b> — back on your branch, <code>git merge main</code>. Resolve conflicts <em>here</em>, on your branch.</div></div>
+        <div class="frow"><div class="ftxt"><b>Push again</b> — <code>git push</code> your now-updated branch.</div></div>
+        <div class="frow"><div class="ftxt"><b>Merge up to main</b> — <code>git checkout main</code>, <code>git merge navbar</code>, <code>git push</code>. Tell the team main moved.</div></div>
+      </div>
+
+      <div class="insight warn">
+        <div class="htag">▲ The order that saves you: merge main into your branch FIRST</div>
+        <p>The single most important habit here: before you merge your work <em>up</em> into main, first pull main
+        and merge it <em>down</em> into your branch. That way any conflicts get sorted out safely on <b>your</b>
+        branch — where breaking things doesn't hurt anyone — instead of on the shared main that the whole team
+        depends on. Keep main clean and always-working; do the messy resolving on your own branch.</p>
+      </div>
+
+      <div class="check" data-check
+        data-correct="1"
+        data-fb="Right — you resolve conflicts on your own feature branch by merging main into it first. That keeps the shared main branch clean and working for everyone else.">
+        <div class="q">Checkpoint: where should you resolve merge conflicts?</div>
+        <div class="opts">
+          <button class="opt" data-opt="0">Directly on the main branch</button>
+          <button class="opt" data-opt="1">On your feature branch, after merging main into it</button>
+          <button class="opt" data-opt="2">On GitHub's website only</button>
+          <button class="opt" data-opt="3">You can't — you have to start over</button>
+        </div>
+        <div class="fb-msg" data-fbbox></div>
+      </div>
+    </section>
+
+    <!-- ===== 3 ===== -->
+    <section class="chapter" id="c3">
+      <div class="chaphead"><span class="num">03</span><h2>Walkthrough, step by step</h2></div>
+      <p class="chapsub">The same loop, now with the real commands and what each one does. Scroll the repo map back up as you read — every command moves code between those four boxes.</p>
+
+      <h3>Start clean, then branch</h3>
+      <p>Naming matters in a team. A branch called <code>john</code> tells your teammates nothing; a branch called
+      <code>navbar</code> tells them exactly what you're building:</p>
+
+      <div class="anatomy">
+        <div class="ahead">Code anatomy — branch off from fresh main</div>
+        <div class="anacode"><span class="tok fn" data-exp="git checkout main|Switch to your local main branch first, so you branch off the right starting point.">git checkout main</span>
+<span class="tok fn" data-exp="git pull|Pull the newest main from GitHub. Always start a feature from up-to-date code — this alone prevents many conflicts.">git pull</span>
+
+<span class="tok fn" data-exp="git checkout -b navbar|Create a new branch AND switch to it. The -b means 'make it'. Everything you do now happens on this branch, safely away from main.">git checkout -b navbar</span>
+<span class="tok pm" data-exp="navbar|Name it for the FEATURE, not yourself. 'navbar', 'about-page', 'css' — so teammates can see who's building what at a glance.">     ↑ name = the feature</span></div>
+        <div class="anapanel"><div class="anahint">Hover or tap a highlighted token above <span class="legend">· -b creates + switches in one go</span></div><div class="anatitle">—</div><div class="anatext">Every part explains its own job.</div></div>
+      </div>
+
+      <h3>Work, then save it up to GitHub</h3>
+      <p>Write your code, then the add → commit → push chain moves it from your files, to a saved snapshot, to
+      GitHub:</p>
+
+      <div class="term">
+        <div class="bar"><span class="dots"><i></i><i></i><i></i></span><span class="fname">terminal — on branch: navbar</span></div>
+        <pre><span class="p">$</span> <span class="c">git add .</span>              <span class="cm"># stage all your changes</span>
+<span class="p">$</span> <span class="c">git commit -m "add navbar"</span>   <span class="cm"># save a snapshot on this branch</span>
+<span class="p">$</span> <span class="c">git push</span>               <span class="cm"># first push? it prints a --set-upstream line — copy &amp; run it</span>
+<span class="o">branch 'navbar' set up to track 'origin/navbar'</span></pre>
+      </div>
+
+      <div class="insight">
+        <div class="htag">◆ Insight — add, commit, push are three different moves</div>
+        <p>They're easy to blur together, but each hands your code to a different place. <b>add</b> stages which
+        changes to include; <b>commit</b> saves them as a snapshot <em>on your local branch</em>; <b>push</b> sends
+        that branch up to GitHub. Until you push, your work exists only on your computer — a teammate can't see it,
+        and a dead laptop loses it. Push regularly, not just at the end.</p>
+      </div>
+
+      <h3>Catch up with main, then merge it into your branch</h3>
+      <p>While you worked, a teammate merged their feature into main. Grab it, then bring it into your branch:</p>
+
+      <div class="term">
+        <div class="bar"><span class="dots"><i></i><i></i><i></i></span><span class="fname">terminal</span></div>
+        <pre><span class="p">$</span> <span class="c">git checkout main</span>      <span class="cm"># hop to local main</span>
+<span class="p">$</span> <span class="c">git pull</span>               <span class="cm"># grab the teammate's merged work from GitHub</span>
+<span class="p">$</span> <span class="c">git checkout navbar</span>    <span class="cm"># back to your branch</span>
+<span class="p">$</span> <span class="c">git merge main</span>         <span class="cm"># pull main's new code INTO your branch</span></pre>
+      </div>
+
+      <p>If you and the teammate touched <b>different</b> files, this merge just works. If you touched the
+      <b>same lines</b> of the same file — that's a merge conflict, and it's the next section.</p>
+
+      <h3>Finish: merge up to main and push</h3>
+      <p>Once your branch is clean and working, send it up so the team gets it:</p>
+      <div class="term">
+        <div class="bar"><span class="dots"><i></i><i></i><i></i></span><span class="fname">terminal</span></div>
+        <pre><span class="p">$</span> <span class="c">git push</span>               <span class="cm"># push your updated branch first</span>
+<span class="p">$</span> <span class="c">git checkout main</span>      <span class="cm"># hop to main</span>
+<span class="p">$</span> <span class="c">git merge navbar</span>       <span class="cm"># bring your feature into main</span>
+<span class="p">$</span> <span class="c">git push</span>               <span class="cm"># push main up — then tell the team it moved</span></pre>
+      </div>
+    </section>
+
+    <!-- ===== 4 ===== -->
+    <section class="chapter" id="c4">
+      <div class="chaphead"><span class="num">04</span><h2>What a merge conflict is</h2></div>
+      <p class="chapsub">Two people changed the same line. Git won't guess which to keep — it hands the decision to a human. That's you.</p>
+
+      <p>A conflict happens when two branches changed the <b>same line of the same file</b> in different ways. Git
+      merges everything it safely can, but when it hits that clash, it stops and says: <em>you both changed this —
+      I'm not going to pick for you.</em> It marks the spot and waits for a human.</p>
+
+      <p>The markers look alarming the first time. They're just three lines wrapping the two versions:</p>
+
+      <div class="anatomy">
+        <div class="ahead">Code anatomy — the conflict markers</div>
+        <div class="anacode"><span class="tok op" data-exp="<<<<<<< HEAD|The start marker. Everything between here and the ======= is YOUR version — the branch you're on. 'Current change' in VS Code.">&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD</span>
+<span class="tok pm" data-exp="your version|Your line(s) — the 'current change'. What was already on your branch.">  &lt;h1&gt;Hello, I hope you have a good day&lt;/h1&gt;</span>
+<span class="tok op" data-exp="=======|The divider. Above it = yours; below it = theirs. It's not code, just a separator.">=======</span>
+<span class="tok pm" data-exp="their version|Their line(s) — the 'incoming change', coming from the branch you're merging in (here, main).">  &lt;h1&gt;Hello {name}&lt;/h1&gt;</span>
+<span class="tok op" data-exp=">>>>>>>> main|The end marker, naming where the incoming change came from — the main branch. Everything from ======= to here is theirs.">&gt;&gt;&gt;&gt;&gt;&gt;&gt; main</span></div>
+        <div class="anapanel"><div class="anahint">Hover or tap a highlighted token above <span class="legend">· yours on top, theirs below, markers to delete</span></div><div class="anatitle">—</div><div class="anatext">Every part explains its own job.</div></div>
+      </div>
+
+      <div class="insight">
+        <div class="htag">◆ Insight — the two words VS Code uses</div>
+        <p>VS Code shows clickable options above the conflict: <b>Accept Current Change</b> (keep yours),
+        <b>Accept Incoming Change</b> (take theirs), <b>Accept Both</b>, or Compare. "Current" = the branch you're
+        on; "Incoming" = the branch flowing in. Whichever you pick, VS Code deletes the markers and leaves clean
+        code. You can also just edit by hand — delete the markers and the versions you don't want, keep what you do.
+        There's no wrong tool; the <em>decision</em> is the human part.</p>
+      </div>
+
+      <div class="insight warn">
+        <div class="htag">▲ Resolving is a team conversation, not a solo guess</div>
+        <p>When both versions matter, don't just silently pick yours. This is exactly the moment to message the
+        teammate whose code you're merging: "we both changed the greeting heading — want to hop on a call?" Often
+        the answer is "keep both" or a blend. Conflicts aren't a git problem to hide; they're a signal that two
+        people's work met, and a two-minute chat resolves them better than a guess.</p>
+      </div>
+    </section>
+
+    <!-- ===== 5 ===== -->
+    <section class="chapter" id="c5">
+      <div class="chaphead"><span class="num">05</span><h2>Resolve one yourself</h2></div>
+      <p class="chapsub">Here's a real conflict, exactly as it'd appear in VS Code. Pick an option and watch the markers disappear into clean code — then finish the merge.</p>
+
+      <p>You merged main into your <code>greetings</code> branch and hit a conflict: you both edited the heading.
+      Click one of the resolution options — just like the buttons VS Code floats above the conflict:</p>
+
+      <div class="conflict" id="conflict">
+        <div class="cfh">merge conflict <span class="file">Greetings.tsx</span></div>
+        <div class="editor" id="cfEditor"></div>
+        <div class="choices">
+          <div class="lab">resolve the conflict</div>
+          <div class="btns">
+            <button class="accept-cur" data-resolve="cur">Accept Current (yours)</button>
+            <button class="accept-inc" data-resolve="inc">Accept Incoming (theirs)</button>
+            <button class="accept-both" data-resolve="both">Accept Both</button>
+            <button class="reset" data-resolve="reset">↺ Reset conflict</button>
+          </div>
+        </div>
+        <div class="steps" id="cfSteps">
+          <div class="stepline" id="cfs1"><span class="st">☐</span> 1 · Resolve the conflict (pick an option above)</div>
+          <div class="stepline" id="cfs2"><span class="st">☐</span> 2 · <span style="font-family:var(--mono)">git add .</span></div>
+          <div class="stepline" id="cfs3"><span class="st">☐</span> 3 · <span style="font-family:var(--mono)">git commit -m "resolve merge conflict"</span></div>
+          <div class="stepline" id="cfs4"><span class="st">☐</span> 4 · <span style="font-family:var(--mono)">git push</span></div>
+        </div>
+        <div class="resultmsg" id="cfResult"></div>
+      </div>
+
+      <div class="insight gotcha">
+        <div class="htag">✖ After resolving, it's still a normal commit</div>
+        <p>People forget the conflict isn't "done" the moment the markers vanish. Resolving edits the file — you
+        still have to <code>git add</code>, <code>git commit</code>, and <code>git push</code> like any change, or
+        the merge stays half-finished. And <b>always double-check no markers are left behind</b>: a stray
+        <code>&lt;&lt;&lt;&lt;&lt;&lt;&lt;</code> or <code>=======</code> in your code will break the app. Search
+        the file for them before you commit.</p>
+      </div>
+    </section>
+
+    <!-- ===== RECAP ===== -->
+    <section class="chapter" id="recap">
+      <div class="chaphead"><span class="num">★</span><h2>Recap &amp; cheat sheet</h2></div>
+      <div class="recap">
+        <h3>The mental model</h3>
+        <ul>
+          <li>Code lives in up to <b>4 places</b>: GitHub main, GitHub your-branch, local main, local your-branch.</li>
+          <li>They drift apart as the team works. Always ask <b>"which one am I looking at?"</b></li>
+          <li><b>Never work on main.</b> Branch per feature; keep main clean and always-working.</li>
+          <li>Name branches for the <b>feature</b> (navbar, about-page), not yourself.</li>
+        </ul>
+      </div>
+      <div class="recap">
+        <h3>The loop (copy this)</h3>
+        <ul>
+          <li><b>git checkout main</b> · <b>git pull</b> — start fresh</li>
+          <li><b>git checkout -b feature</b> — branch off (-b = create + switch)</li>
+          <li>write code · <b>git add .</b> · <b>git commit -m "..."</b> · <b>git push</b></li>
+          <li><b>git checkout main</b> · <b>git pull</b> — catch up with teammates</li>
+          <li><b>git checkout feature</b> · <b>git merge main</b> — resolve conflicts HERE</li>
+          <li><b>git push</b> · <b>git checkout main</b> · <b>git merge feature</b> · <b>git push</b></li>
+        </ul>
+      </div>
+      <div class="recap">
+        <h3>Conflicts</h3>
+        <ul>
+          <li>Happen when two branches change the <b>same line</b> of the same file.</li>
+          <li>Markers: <b>&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD</b> (yours) · <b>=======</b> (divider) · <b>&gt;&gt;&gt;&gt;&gt;&gt;&gt; main</b> (theirs).</li>
+          <li>VS Code: <b>Accept Current</b> (yours) / <b>Incoming</b> (theirs) / <b>Both</b> — or edit by hand.</li>
+          <li>Resolve on your <b>branch</b>, talk to the teammate, then <b>add · commit · push</b>.</li>
+          <li>Check <b>no markers left behind</b> before committing — they break the code.</li>
+          <li>Merge main into your branch <b>often</b> → smaller, rarer conflicts.</li>
+        </ul>
+      </div>
+
+      <footer>
+        <p>Built from your Git Flow for Group Projects demo — Dev Academy Aotearoa. The repo map and conflict
+        resolver are simulations of real git/VS Code behaviour. This is the recommended flow for your first project;
+        later projects may vary.</p>
+        <p class="mono">reference:
+          <a href="https://docs.github.com/en/get-started/using-git/about-git" target="_blank" rel="noopener">GitHub — about git</a> ·
+          <a href="https://git-scm.com/docs/git-merge" target="_blank" rel="noopener">git merge docs</a></p>
+      </footer>
+    </section>
+  </main>
+</div>
+
+<script>
+/* ---------- anatomy ---------- */
+document.querySelectorAll('.anatomy').forEach(an=>{
+  const title=an.querySelector('.anatitle'), text=an.querySelector('.anatext'), hint=an.querySelector('.anahint');
+  const toks=an.querySelectorAll('.tok');
+  function show(tok){
+    const raw=tok.getAttribute('data-exp')||''; const i=raw.indexOf('|');
+    title.textContent=i>=0?raw.slice(0,i):tok.textContent.trim();
+    text.textContent=i>=0?raw.slice(i+1):raw;
+    hint.textContent='what this part does';
+    toks.forEach(x=>x.classList.remove('active')); tok.classList.add('active');
+  }
+  toks.forEach(tok=>{tok.setAttribute('tabindex','0');
+    tok.addEventListener('mouseenter',()=>show(tok));
+    tok.addEventListener('click',()=>show(tok));
+    tok.addEventListener('focus',()=>show(tok));});
+});
+
+/* ---------- REPO MAP ---------- */
+(function(){
+  // states of each box across the flow
+  const el={
+    rMain:document.getElementById('r-main'), rMainCode:document.getElementById('r-main-code'),
+    rFeat:document.getElementById('r-feat'), rFeatCode:document.getElementById('r-feat-code'),
+    lMain:document.getElementById('l-main'), lMainCode:document.getElementById('l-main-code'),
+    lFeat:document.getElementById('l-feat'), lFeatCode:document.getElementById('l-feat-code')
+  };
+  const msg=document.getElementById('repoMsg');
+  const ctrls=document.getElementById('repoCtrls');
+
+  // each step: sets code text + visibility + which boxes flash + message
+  const STEPS=[
+    {label:'start', msg:'The project code starts life <b>only on GitHub\'s main</b>. Nothing on your computer yet.',
+     set:s=>{ s.rMain='original code'; s.rFeat=null; s.lMain=null; s.lFeat=null; }, flash:['rMain']},
+    {cmd:'git pull', msg:'<span class="term-inline">git pull</span> copies GitHub\'s main down to <b>your local main</b>. Both mains now match.',
+     set:s=>{ s.lMain='original code'; }, flash:['lMain']},
+    {cmd:'git checkout -b greetings', msg:'<span class="term-inline">git checkout -b greetings</span> creates your <b>feature branch locally</b> — a copy of main to work on. main stays untouched.',
+     set:s=>{ s.lFeat='original code'; }, flash:['lFeat']},
+    {cmd:'git commit', msg:'You wrote code, then <span class="term-inline">git add .</span> + <span class="term-inline">commit</span>. Your new code is saved — but <b>only on your local branch</b>. Nowhere else has it yet.',
+     set:s=>{ s.lFeat='original + YOUR code'; }, flash:['lFeat']},
+    {cmd:'git push', msg:'<span class="term-inline">git push</span> sends your branch up. Now <b>your branch exists on GitHub too</b>. main (both) still doesn\'t have your code.',
+     set:s=>{ s.rFeat='original + YOUR code'; }, flash:['rFeat']},
+    {cmd:'(teammate merges)', msg:'Meanwhile a <b>teammate merged their work into GitHub\'s main</b>. Now GitHub main is ahead of everything you have.',
+     set:s=>{ s.rMain='original + THEIR code'; }, flash:['rMain'], other:true},
+    {cmd:'git checkout main && git pull', msg:'You hop to main and <span class="term-inline">git pull</span>. Your <b>local main catches up</b> with the teammate\'s code.',
+     set:s=>{ s.lMain='original + THEIR code'; }, flash:['lMain'], other:true},
+    {cmd:'git merge main', msg:'Back on your branch, <span class="term-inline">git merge main</span> brings the teammate\'s code <b>into your branch</b> — now it has everything. (Conflicts, if any, get resolved here.)',
+     set:s=>{ s.lFeat='YOUR + THEIR code'; }, flash:['lFeat'], both:true},
+    {cmd:'git push && merge to main', msg:'Push your branch, then <span class="term-inline">git checkout main</span>, <span class="term-inline">git merge greetings</span>, <span class="term-inline">git push</span>. <b>Everything is in sync</b> — all four boxes match.',
+     set:s=>{ s.rFeat='YOUR + THEIR code'; s.lMain='everything'; s.rMain='everything'; s.lFeat='everything'; }, flash:['rMain','lMain','rFeat','lFeat'], both:true}
+  ];
+
+  let idx=0;
+  const state={rMain:'original code',rFeat:null,lMain:null,lFeat:null};
+
+  function apply(upto){
+    // reset then replay to `upto`
+    state.rMain='original code'; state.rFeat=null; state.lMain=null; state.lFeat=null;
+    for(let i=0;i<=upto;i++){ STEPS[i].set(state); }
+  }
+  function codeClass(txt){
+    if(!txt) return 'code';
+    if(txt.indexOf('YOUR')>=0 && txt.indexOf('THEIR')>=0) return 'code';
+    if(txt.indexOf('YOUR')>=0) return 'code mine';
+    if(txt.indexOf('THEIR')>=0 || txt==='everything') return 'code other';
+    return 'code';
+  }
+  function paint(step){
+    apply(step);
+    const setBox=(box,codeEl,txt)=>{
+      if(txt==null){ box.classList.add('hidden'); codeEl.textContent='—'; codeEl.className='code'; }
+      else{ box.classList.remove('hidden'); codeEl.textContent=txt; codeEl.className=codeClass(txt); }
+    };
+    setBox(el.rMain,el.rMainCode,state.rMain);
+    setBox(el.rFeat,el.rFeatCode,state.rFeat);
+    setBox(el.lMain,el.lMainCode,state.lMain);
+    setBox(el.lFeat,el.lFeatCode,state.lFeat);
+    // flash
+    document.querySelectorAll('#repomap .branch').forEach(b=>b.classList.remove('flash'));
+    (STEPS[step].flash||[]).forEach(k=>{ const map={rMain:el.rMain,rFeat:el.rFeat,lMain:el.lMain,lFeat:el.lFeat}; if(map[k]) map[k].classList.add('flash'); });
+    msg.innerHTML=STEPS[step].msg;
+    renderCtrls();
+  }
+  function renderCtrls(){
+    ctrls.innerHTML='';
+    const prev=document.createElement('button'); prev.className='cmd reset'; prev.textContent='← back';
+    prev.disabled=idx<=0; prev.onclick=()=>{ if(idx>0){idx--;paint(idx);} };
+    const next=document.createElement('button'); next.className='cmd';
+    next.textContent = idx<STEPS.length-1 ? (STEPS[idx+1].cmd ? '▶ '+STEPS[idx+1].cmd : '▶ next') : '✓ done';
+    next.disabled=idx>=STEPS.length-1; next.onclick=()=>{ if(idx<STEPS.length-1){idx++;paint(idx);} };
+    const reset=document.createElement('button'); reset.className='cmd reset'; reset.textContent='↺ restart';
+    reset.onclick=()=>{ idx=0; paint(0); };
+    ctrls.append(prev,next,reset);
+  }
+  paint(0);
+})();
+
+/* ---------- CONFLICT RESOLVER ---------- */
+(function(){
+  const editor=document.getElementById('cfEditor');
+  const CUR='  <h1>Hello, I hope you have a good day!</h1>';
+  const INC='  <h1>Hello {name}</h1>\n  <p>Welcome to the cohort</p>';
+  const ctxTop=['function Greetings({ name }) {','  return ('];
+  const ctxBot=['  )','}'];
+  let resolved=false;
+
+  function line(n,txt,cls){ return '<div class="ln '+(cls||'')+'"><span class="gutter">'+(n||'')+'</span><span class="txt">'+txt.replace(/</g,'&lt;')+'</span></div>'; }
+
+  function renderConflict(){
+    let n=1, h='';
+    ctxTop.forEach(t=>{ h+=line(n++,t,'ctx'); });
+    // action bar (like VS Code codelens)
+    h+='<div class="actionbar"><span class="gutter"></span>'
+      +'<button class="a-cur" data-resolve="cur">Accept Current</button>'
+      +'<button class="a-inc" data-resolve="inc">Accept Incoming</button>'
+      +'<button class="a-both" data-resolve="both">Accept Both</button></div>';
+    h+=line(n++,'<<<<<<< HEAD (Current Change)','marker cur');
+    h+=line(n++,CUR,'cur-block');
+    h+=line(n++,'=======','marker mid');
+    INC.split('\n').forEach(t=>{ h+=line(n++,t,'inc-block'); });
+    h+=line(n++,'>>>>>>> main (Incoming Change)','marker inc');
+    ctxBot.forEach(t=>{ h+=line(n++,t,'ctx'); });
+    editor.innerHTML=h;
+    editor.querySelectorAll('[data-resolve]').forEach(b=>b.addEventListener('click',()=>resolve(b.dataset.resolve)));
+    resolved=false; updateSteps(); hideResult();
+  }
+
+  function renderResolved(keep){
+    let n=1, h='';
+    ctxTop.forEach(t=>{ h+=line(n++,t,'ctx'); });
+    keep.forEach(t=>{ h+=line(n++,t,'resolved'); });
+    ctxBot.forEach(t=>{ h+=line(n++,t,'ctx'); });
+    editor.innerHTML=h;
+    resolved=true; updateSteps();
+  }
+
+  function resolve(kind){
+    if(kind==='reset'){ renderConflict(); return; }
+    let keep, label;
+    if(kind==='cur'){ keep=CUR.split('\n'); label='Kept <b>your</b> version (Accept Current) — the incoming line and all markers are gone.'; }
+    else if(kind==='inc'){ keep=INC.split('\n'); label='Took <b>their</b> version (Accept Incoming) — your line and all markers are gone.'; }
+    else { keep=CUR.split('\n').concat(INC.split('\n')); label='Kept <b>both</b> versions stacked (Accept Both) — you\'d then tidy them into what you actually want.'; }
+    renderResolved(keep);
+    showResult('✓ Conflict resolved. '+label+' Now finish it: <span style="font-family:var(--mono)">git add .</span> → <span style="font-family:var(--mono)">commit</span> → <span style="font-family:var(--mono)">push</span>. Notice every &lt;&lt;&lt;&lt;&lt;&lt;&lt; and ======= marker is gone — always check for stragglers.');
+  }
+
+  const steps=[document.getElementById('cfs1'),document.getElementById('cfs2'),document.getElementById('cfs3'),document.getElementById('cfs4')];
+  function updateSteps(){
+    steps.forEach((s,i)=>{
+      const done = resolved && i===0;   // only step 1 auto-completes on resolve
+      s.classList.toggle('done', done);
+      s.querySelector('.st').textContent = done ? '☑' : '☐';
+    });
+  }
+  const result=document.getElementById('cfResult');
+  function showResult(html){ result.innerHTML=html; result.classList.add('show'); }
+  function hideResult(){ result.classList.remove('show'); }
+
+  document.querySelectorAll('#conflict .choices [data-resolve]').forEach(b=>{
+    b.addEventListener('click',()=>resolve(b.dataset.resolve));
+  });
+  renderConflict();
+})();
+
+/* ---------- checkpoints ---------- */
+document.querySelectorAll('[data-check]').forEach(chk=>{
+  const correct=parseInt(chk.dataset.correct,10);
+  const fbbox=chk.querySelector('[data-fbbox]');
+  chk.querySelectorAll('.opt').forEach(opt=>{
+    opt.addEventListener('click',()=>{
+      const pick=parseInt(opt.dataset.opt,10);
+      if(pick===correct){opt.classList.add('correct');fbbox.textContent=chk.dataset.fb;fbbox.classList.add('show');chk.querySelectorAll('.opt').forEach(o=>o.style.pointerEvents='none');}
+      else{opt.classList.add('wrong');opt.style.pointerEvents='none';}
+    });
+  });
+});
+
+/* ---------- scrollspy ---------- */
+const sections=[...document.querySelectorAll('section.chapter')];
+const links=[...document.querySelectorAll('nav.side a[data-sec]')];
+const mlinks=[...document.querySelectorAll('.mobtop .mlink')];
+function spy(){
+  const y=window.scrollY+120;let cur=sections[0].id;
+  for(const s of sections){if(s.offsetTop<=y)cur=s.id;}
+  links.forEach(l=>l.classList.toggle('active',l.getAttribute('href')==='#'+cur));
+  mlinks.forEach(l=>l.classList.toggle('active',l.getAttribute('href')==='#'+cur));
+}
+window.addEventListener('scroll',spy,{passive:true});spy();
+</script>
+</body>
+</html>

@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Arrays — interactive guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;450;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F1F1F4;--card:#FBFBFD;--ink:#1B1E26;--muted:#5A5F6B;--line:#E1E1E8;
+    --violet:#6C4CE0;--violet-soft:#EDE8FC;--violet-line:#D8CEF7;
+    --emerald:#12905F;--amber:#B67A08;--rose:#D6455D;
+    --term-bg:#15171E;--term-panel:#1D2029;--term-fg:#E6E8EC;--term-dim:#8A90A0;
+    --t-num:#E7B45A;--t-str:#93D6A0;--t-bool:#E7B45A;--t-null:#8A90A0;--t-err:#F0808F;
+    --radius:14px;
+    --mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+    --disp:'Space Grotesk',system-ui,sans-serif;--body:'Inter',system-ui,sans-serif;
+  }
+  *{box-sizing:border-box}html{scroll-behavior:smooth}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);font-size:16.5px;line-height:1.62;-webkit-font-smoothing:antialiased}
+  a{color:var(--violet);text-decoration:none}a:hover{text-decoration:underline}
+  code{font-family:var(--mono);font-size:.88em;background:#E7E7EE;padding:.08em .38em;border-radius:5px;color:#2C2140}
+
+  .wrap{display:grid;grid-template-columns:270px minmax(0,1fr);max-width:1200px;margin:0 auto}
+  nav.side{position:sticky;top:0;align-self:start;height:100vh;overflow-y:auto;padding:30px 22px 40px;border-right:1px solid var(--line)}
+  main{padding:0 clamp(20px,5vw,64px) 120px;min-width:0}
+  .brand{font-family:var(--mono);font-weight:700;font-size:14px;letter-spacing:.04em;color:var(--violet);margin-bottom:4px}
+  .brand small{color:var(--muted);font-weight:400;display:block;letter-spacing:0;margin-top:3px;font-family:var(--body);font-size:12.5px}
+  .navsec{margin-top:26px}
+  .navsec > span{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:9px;padding-left:12px}
+  nav.side a.link{display:flex;gap:10px;align-items:baseline;padding:7px 12px;border-radius:9px;color:var(--ink);font-size:14.5px;line-height:1.35}
+  nav.side a.link:hover{background:#E9E9F0;text-decoration:none}
+  nav.side a.link.active{background:var(--violet-soft);color:#3B2A73;font-weight:500}
+  nav.side a.link b{font-family:var(--mono);font-size:11.5px;color:var(--violet);min-width:20px}
+  nav.side a.link.kata{background:#FFF4E8;color:#8A5A00}
+  nav.side a.link.kata b{color:var(--amber)}
+  nav.side a.link.kata.active{background:#FBE6C8}
+  .backlink{margin-top:24px;font-size:13px;color:var(--muted)}
+  .backlink a{font-family:var(--mono);font-size:12.5px;display:block;margin-top:6px}
+
+  header.hero{padding:64px 0 30px}
+  .eyebrow{font-family:var(--mono);font-size:12.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--violet);margin-bottom:18px}
+  h1{font-family:var(--disp);font-weight:700;font-size:clamp(34px,5.4vw,54px);line-height:1.04;letter-spacing:-.02em;margin:0 0 20px}
+  h1 .brace{color:var(--violet)}
+  .lede{font-size:19px;color:#3A3E48;max-width:60ch;margin:0}.lede + .lede{margin-top:14px}
+  .runline{font-family:var(--mono);font-size:13.5px;color:var(--muted);margin-top:26px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .runline .kbd{background:var(--term-bg);color:var(--t-str);padding:5px 11px;border-radius:7px;font-size:12.5px}
+
+  section.chapter{padding-top:56px;scroll-margin-top:20px}
+  .chaphead{display:flex;align-items:baseline;gap:16px;border-bottom:2px solid var(--ink);padding-bottom:12px;margin-bottom:8px}
+  .chaphead .num{font-family:var(--mono);font-weight:700;font-size:15px;color:var(--violet)}
+  h2{font-family:var(--disp);font-weight:600;font-size:clamp(26px,3.6vw,36px);letter-spacing:-.015em;margin:0}
+  .chapsub{color:var(--muted);font-size:15px;margin:14px 0 0}
+  h3{font-family:var(--disp);font-weight:600;font-size:22px;letter-spacing:-.01em;margin:44px 0 10px}
+  h4{font-family:var(--disp);font-weight:600;font-size:17px;margin:28px 0 6px}
+  p{margin:14px 0}main p,main li{color:#24272F}
+
+  /* code cell */
+  .cell{margin:22px 0;border-radius:var(--radius);overflow:hidden;border:1px solid #2A2E3A;box-shadow:0 10px 30px -18px rgba(20,20,40,.4)}
+  .cell .bar{background:var(--term-panel);display:flex;align-items:center;gap:8px;padding:9px 14px;border-bottom:1px solid #2A2E3A}
+  .cell .bar .dots{display:flex;gap:6px}
+  .cell .bar .dots i{width:11px;height:11px;border-radius:50%;display:block}
+  .dots i:nth-child(1){background:#E06C75}.dots i:nth-child(2){background:#E5C07B}.dots i:nth-child(3){background:#98C379}
+  .cell .bar .fname{font-family:var(--mono);font-size:12px;color:var(--term-dim);margin-left:4px}
+  .cell .bar .spacer{flex:1}
+  .cell .bar button{font-family:var(--mono);font-size:12px;font-weight:500;cursor:pointer;border:1px solid #3A4152;background:#2A3040;color:#CBD3E1;border-radius:7px;padding:5px 13px;transition:.15s}
+  .cell .bar button:hover{background:#343C4E;border-color:#4A5264}
+  .cell .bar button.run{background:var(--violet);border-color:var(--violet);color:#fff}
+  .cell .bar button.run:hover{background:#5B3ED1}
+  .cell pre.code{margin:0;background:var(--term-bg);color:var(--term-fg);font-family:var(--mono);font-size:13.5px;line-height:1.65;padding:16px 18px;white-space:pre;overflow-x:auto;outline:none;tab-size:2}
+  .cell pre.code:focus{box-shadow:inset 3px 0 0 var(--violet)}
+  .console{background:#0F1116;border-top:1px solid #2A2E3A;padding:0 18px;max-height:0;overflow:hidden;transition:max-height .35s ease,padding .35s ease}
+  .console.show{max-height:420px;overflow-y:auto;padding:13px 18px}
+  .console .cline{font-family:var(--mono);font-size:13px;line-height:1.7;white-space:pre-wrap;word-break:break-word}
+  .console .prompt{color:#4A5060}.console .empty{color:var(--term-dim);font-style:italic}
+  .tok-num{color:var(--t-num)}.tok-str{color:var(--t-str)}.tok-bool{color:var(--t-bool)}.tok-null{color:var(--t-null)}.tok-err{color:var(--t-err)}.tok-fn{color:#C39BF5}
+
+  /* code anatomy */
+  .anatomy{margin:22px 0;border:1px solid #2A2E3A;border-radius:var(--radius);overflow:hidden;box-shadow:0 10px 30px -18px rgba(20,20,40,.4)}
+  .anatomy .ahead{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--term-dim);padding:10px 16px;border-bottom:1px solid #2A2E3A;background:var(--term-panel);display:flex;align-items:center;gap:8px}
+  .anatomy .ahead::before{content:'⌖';color:#C39BF5;font-size:14px}
+  .anacode{padding:18px;background:var(--term-bg);font-family:var(--mono);font-size:14.5px;line-height:2.15;color:var(--term-fg);overflow-x:auto;white-space:pre-wrap;word-break:break-word}
+  .tok{cursor:pointer;border-radius:5px;padding:2px 3px;transition:.12s;outline:1.5px solid transparent}
+  .tok:hover{outline-color:rgba(255,255,255,.28)}
+  .tok.kw{background:rgba(195,155,245,.16);color:#C9A6F6}
+  .tok.fn{background:rgba(124,183,240,.15);color:#8CC0F5}
+  .tok.pm{background:rgba(231,180,90,.15);color:#E7B45A}
+  .tok.rt{background:rgba(147,214,160,.15);color:#93D6A0}
+  .tok.op{background:rgba(240,128,143,.14);color:#F0909F}
+  .tok.pn{background:rgba(150,156,172,.16);color:#B4BAC8}
+  .tok.st{background:rgba(147,214,160,.13);color:#93D6A0}
+  .tok.nm{background:rgba(231,180,90,.14);color:#E7B45A}
+  .tok.active{outline-color:var(--violet)!important;background:rgba(108,76,224,.32)!important;color:#fff}
+  .anapanel{padding:15px 18px;min-height:78px;background:var(--card)}
+  .anahint{font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:.05em}
+  .anahint .legend{color:var(--muted);opacity:.8}
+  .anatitle{font-family:var(--mono);font-weight:700;font-size:14px;color:var(--violet);margin:6px 0 3px}
+  .anatext{font-size:13.5px;color:#2A2D36;line-height:1.55}
+  @media(max-width:640px){.anacode{font-size:13px;line-height:2}}
+
+  /* ---------- ARRAY LAB ---------- */
+  .lab{margin:26px 0;border:1px solid var(--line);border-radius:16px;background:var(--card);overflow:hidden}
+  .lab .lh{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:11px 18px;border-bottom:1px solid var(--line);background:#F5F5F9}
+  .lab .btns{display:flex;flex-wrap:wrap;gap:8px;padding:16px 18px 8px}
+  .lab .btns button{font-family:var(--mono);font-size:12.5px;cursor:pointer;border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:8px;padding:8px 12px;transition:.15s}
+  .lab .btns button:hover{border-color:var(--violet-line);background:#FAF8FF}
+  .lab .btns button.reset{color:var(--muted);margin-left:auto}
+  .lab .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:8px 18px 18px}
+  @media(max-width:600px){.lab .grid{grid-template-columns:1fr}}
+  .lab .pane{background:#FAFAFC;border:1px solid var(--line);border-radius:12px;padding:14px}
+  .lab .pane .plab{font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+  .lab .arr{font-family:var(--mono);font-size:15px;color:var(--ink);word-break:break-word;min-height:22px}
+  .lab .arr .b{color:var(--t-num)}
+  .lab .verdict{margin:0 18px 18px;border-radius:10px;padding:12px 14px;font-family:var(--mono);font-size:13px;line-height:1.5;display:none}
+  .lab .verdict.show{display:block}
+  .lab .verdict.mut{background:#FBECEE;color:#9E2B3B;border:1px solid #F0C4CB}
+  .lab .verdict.safe{background:#EAF7F0;color:#0C6B45;border:1px solid #BEE6D2}
+  .lab .verdict b{font-weight:700}
+
+  .insight{margin:24px 0;background:var(--card);border:1px solid var(--line);border-left:3px solid var(--violet);border-radius:12px;padding:16px 20px}
+  .insight .htag{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--violet);font-weight:700;display:flex;align-items:center;gap:8px;margin-bottom:6px}
+  .insight.warn{border-left-color:var(--amber)}.insight.warn .htag{color:var(--amber)}
+  .insight.gotcha{border-left-color:var(--rose)}.insight.gotcha .htag{color:var(--rose)}
+  .insight p{margin:6px 0}.insight p:first-of-type{margin-top:0}
+
+  /* method table */
+  .mtable{width:100%;border-collapse:collapse;margin:22px 0;font-size:14px;background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  .mtable th,.mtable td{padding:11px 14px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}
+  .mtable th{background:#EEEDF4;font-family:var(--mono);font-size:12px;letter-spacing:.03em;color:#3B3F4A}
+  .mtable td code{background:transparent;padding:0;color:var(--violet);font-weight:500}
+  .mtable tr:last-child td{border-bottom:none}
+  .mtable .mut{color:var(--rose);font-family:var(--mono);font-size:12px;font-weight:600}
+  .mtable .safe{color:var(--emerald);font-family:var(--mono);font-size:12px;font-weight:600}
+
+  /* predict */
+  .predict{margin:22px 0;border:1px solid var(--violet-line);border-radius:var(--radius);background:linear-gradient(180deg,#FAF8FF,#F4F0FE);overflow:hidden}
+  .predict .phead{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--violet-line)}
+  .predict .phead .icon{width:22px;height:22px;border-radius:6px;background:var(--violet);color:#fff;display:grid;place-items:center;font-size:13px;font-weight:700;font-family:var(--mono)}
+  .predict .phead b{font-family:var(--disp);font-size:15px}
+  .predict .pbody{padding:16px}
+  .predict pre.psrc{margin:0 0 14px;background:var(--term-bg);color:var(--term-fg);border-radius:10px;font-family:var(--mono);font-size:13px;line-height:1.6;padding:14px 16px;overflow-x:auto;white-space:pre-wrap}
+  .predict .reveal-btn{font-family:var(--mono);font-size:12.5px;font-weight:600;cursor:pointer;background:var(--violet);color:#fff;border:none;border-radius:8px;padding:8px 16px}
+  .predict .reveal-btn:hover{background:#5B3ED1}
+  .predict .answer{display:none;margin-top:14px;background:#0F1116;border-radius:10px;padding:13px 16px}
+  .predict .answer.show{display:block}
+  .predict .answer .cline{font-family:var(--mono);font-size:13px;line-height:1.7;color:var(--term-fg)}
+  .predict .answer .why{color:var(--term-dim);font-size:12.5px;margin-top:9px;font-family:var(--body);line-height:1.55}
+
+  /* ---------- CHALLENGE (kata) ---------- */
+  .kintro{background:#FFF7EC;border:1px solid #F0DCBE;border-radius:14px;padding:18px 20px;margin:22px 0}
+  .kintro .htag{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--amber);font-weight:700;margin-bottom:6px}
+  .kintro p{margin:6px 0;font-size:14.5px}
+  .challenge{margin:18px 0;border:1px solid var(--line);border-radius:14px;background:var(--card);overflow:hidden}
+  .challenge .csig{background:var(--term-bg);color:var(--term-fg);font-family:var(--mono);font-size:13px;line-height:1.6;padding:14px 16px;white-space:pre-wrap;border-bottom:1px solid #2A2E3A}
+  .challenge .csig .cm{color:#6B7180}
+  .challenge .csig .fn{color:#8CC0F5}
+  .challenge .csig .kw{color:#C9A6F6}
+  .challenge .chints{padding:14px 16px}
+  .challenge .hintbtn{font-family:var(--mono);font-size:12.5px;font-weight:600;cursor:pointer;border:1px solid var(--violet-line);background:var(--violet-soft);color:#4A3B85;border-radius:8px;padding:8px 14px;transition:.15s}
+  .challenge .hintbtn:hover{background:#E4DBFA}
+  .challenge .hintbtn:disabled{opacity:.5;cursor:default}
+  .challenge .hint{display:none;margin-top:12px;padding:12px 15px;border-radius:10px;background:#FAF8FF;border:1px solid var(--violet-line);font-size:14px;line-height:1.55}
+  .challenge .hint.show{display:block}
+  .challenge .hint .htier{font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--violet);font-weight:700;margin-bottom:5px}
+  .challenge .hint code{font-size:12.5px}
+  .challenge .hint.deep{background:#FFF7EC;border-color:#F0DCBE}
+  .challenge .hint.deep .htier{color:var(--amber)}
+  .challenge.solved{border-color:#BEE6D2}
+  .challenge .solvedtag{font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--emerald);font-weight:700;padding:10px 16px 0}
+  .challenge .solvednote{padding:6px 16px 14px;font-size:13.5px;color:var(--muted)}
+
+  .recap{background:var(--term-bg);border-radius:16px;padding:26px 28px;margin:26px 0;color:var(--term-fg)}
+  .recap h3{color:#fff;margin-top:0}
+  .recap ul{list-style:none;padding:0;margin:0;display:grid;gap:10px}
+  .recap li{font-family:var(--mono);font-size:13px;line-height:1.55;padding-left:22px;position:relative;color:#D3D7E0}
+  .recap li::before{content:'›';position:absolute;left:0;color:var(--violet);font-weight:700}
+  .recap li b{color:var(--t-num);font-weight:500}
+
+  footer{border-top:1px solid var(--line);margin-top:70px;padding-top:24px;color:var(--muted);font-size:13.5px}
+  footer .mono{font-family:var(--mono);font-size:12px}
+
+  .mobtop{display:none}
+  @media(max-width:860px){
+    .wrap{grid-template-columns:1fr}nav.side{display:none}
+    .mobtop{display:flex;position:sticky;top:0;z-index:20;background:rgba(241,241,244,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);padding:12px 18px;gap:10px;align-items:center;overflow-x:auto}
+    .mobtop .brand{margin:0;white-space:nowrap}
+    .mobtop a{font-family:var(--mono);font-size:12px;white-space:nowrap;color:var(--muted);padding:5px 10px;border-radius:7px}
+    .mobtop a.active{background:var(--violet-soft);color:#3B2A73}
+    main{padding-left:20px;padding-right:20px}
+  }
+  @media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important;scroll-behavior:auto}}
+</style>
+</head>
+<body>
+
+<div class="mobtop">
+  <span class="brand">arrays</span>
+  <a href="#c1" class="mlink active">Make &amp; read</a>
+  <a href="#c2" class="mlink">Rest &amp; spread</a>
+  <a href="#c3" class="mlink">Mutate vs copy</a>
+  <a href="#c4" class="mlink">Searching</a>
+  <a href="#c5" class="mlink">Transforming</a>
+  <a href="#c6" class="mlink">Arrays ↔ objects</a>
+  <a href="#kata" class="mlink">Your kata</a>
+</div>
+
+<div class="wrap">
+  <nav class="side">
+    <div class="brand">arrays<small>Unit 1 — interactive guide</small></div>
+    <div class="navsec">
+      <span>Sections</span>
+      <a href="#c1" class="link" data-sec><b>01</b> Making &amp; reading</a>
+      <a href="#c2" class="link" data-sec><b>02</b> Rest &amp; spread</a>
+      <a href="#c3" class="link" data-sec><b>03</b> Mutate vs copy</a>
+      <a href="#c4" class="link" data-sec><b>04</b> Searching</a>
+      <a href="#c5" class="link" data-sec><b>05</b> Transforming</a>
+      <a href="#c6" class="link" data-sec><b>06</b> Arrays ↔ objects</a>
+      <a href="#kata" class="link kata" data-sec><b>✦</b> Your kata (12 challenges)</a>
+      <a href="#recap" class="link" data-sec><b>★</b> Recap</a>
+    </div>
+    <div class="navsec">
+      <span>How to use</span>
+      <p style="font-size:13px;color:var(--muted);line-height:1.5;margin:0 12px">
+        Code panels <b>run</b> — edit and hit Run. Hover tokens in a <b>code anatomy</b>. The
+        <b>kata challenges</b> give nudges one at a time — try between each. No full solutions; that part's yours.</p>
+    </div>
+    <div class="backlink">
+      Related guides:
+      <a href="./index.html">⌂ All guides</a>
+      <a href="./js-foundations.html">← Types, Functions &amp; Modules</a>
+      <a href="./js-mutability.html">← Mutability</a>
+      <a href="./js-npm.html">← npm &amp; package.json</a>
+    </div>
+  </nav>
+
+  <main>
+    <header class="hero">
+      <div class="eyebrow">Types · Methods · Your kata</div>
+      <h1>Arrays, and the one question <span class="brace">that decides everything</span></h1>
+      <p class="lede">Most array bugs come down to a single fork: did that method <em>change my original array</em>,
+      or hand me back a <em>new one</em>? Get that straight and arrays stop fighting you.</p>
+      <p class="lede">This guide runs live, and it ends with your actual kata — all 12 functions, each with nudges
+      you unlock step by step. The concepts above are ordered so that by the time you reach a challenge, you've
+      already met the tool it needs.</p>
+      <div class="runline"><span class="kbd">$ npm test</span> everything here maps to a function you're being asked to write.</div>
+    </header>
+
+    <!-- ===== 1 ===== -->
+    <section class="chapter" id="c1">
+      <div class="chaphead"><span class="num">01</span><h2>Making &amp; reading</h2></div>
+      <p class="chapsub">Create an array, reach into it by index, and know what happens when you reach past the end.</p>
+
+      <p>The everyday way to make an array is a literal — square brackets with items inside. You read a single
+      item by its <b>index</b>, counting from <b>0</b>. Reaching for an index that doesn't exist doesn't crash —
+      you just get <code>undefined</code>.</p>
+
+      <div class="cell" data-cell>
+        <div class="bar"><span class="dots"><i></i><i></i><i></i></span><span class="fname">reading.js</span><span class="spacer"></span><button class="run" data-run>▶ Run</button></div>
+        <pre class="code" contenteditable="true" spellcheck="false">const arr = ['a', 'b', 'c']
+
+console.log(arr[0])       // first item — index starts at 0
+console.log(arr[2])       // 'c'
+console.log(arr.length)   // 3 — how many items
+console.log(arr[10])      // undefined — NOT an error</pre>
+        <div class="console" data-console></div>
+      </div>
+
+      <p>There's also a constructor form, <code>Array(n)</code>, that makes room for <code>n</code> slots. On its
+      own that's just empty holes — but paired with <code>.fill()</code> it becomes a clean way to build an array
+      of repeated values. Hover the pieces:</p>
+
+      <div class="anatomy">
+        <div class="ahead">Code anatomy — build an array of repeats</div>
+        <div class="anacode"><span class="tok fn" data-exp="Array|A constructor that builds a new array. Given a single number, it makes an array with that many empty slots.">Array</span><span class="tok pn" data-exp="( )|Wraps the argument passed to Array.">(</span><span class="tok pm" data-exp="length|How many slots you want. Array(3) makes room for 3 items — but they're empty until you fill them.">length</span><span class="tok pn" data-exp=")|Closes the call to Array.">)</span><span class="tok pn" data-exp=". (dot access)|Reaches for a method to run on the array you just made.">.</span><span class="tok fn" data-exp="fill|Fills EVERY slot of the array with the value you give it. Array(3).fill('x') → ['x','x','x'].">fill</span><span class="tok pn" data-exp="( )|Wraps the value to fill with.">(</span><span class="tok pm" data-exp="item|The value dropped into every slot. Whatever you pass becomes each element.">item</span><span class="tok pn" data-exp=")|Closes fill.">)</span></div>
+        <div class="anapanel"><div class="anahint">Hover or tap a highlighted token above <span class="legend">· this exact pattern is challenge #1</span></div><div class="anatitle">—</div><div class="anatext">Every part explains its own job.</div></div>
+      </div>
+
+      <div class="cell" data-cell>
+        <div class="bar"><span class="dots"><i></i><i></i><i></i></span><span class="fname">fill.js</span><span class="spacer"></span><button class="run" data-run>▶ Run</button></div>
+        <pre class="code" contenteditable="true" spellcheck="false">console.log(Array(2).fill('foo'))   // ['foo', 'foo']
+console.log(Array(4).fill(0))       // [0, 0, 0, 0]</pre>
+        <div class="console" data-console></div>
+      </div>
+    </section>
+
+    <!-- ===== 2 ===== -->
+    <section class="chapter" id="c2">
+      <div class="chaphead"><span class="num">02</span><h2>Rest &amp; spread</h2></div>
+      <p class="chapsub">Same three dots <code>...</code>, two opposite jobs. This trips people up — so let's split them cleanly.</p>
+
+      <div class="split" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:22px 0">
+        <div class="insight" style="margin:0"><div class="htag">◆ Rest — gathers</div><p style="margin:0;font-size:14px">In a
+        function's parameters, <code>...</code> <b>collects</b> all the arguments into a single array. Many things
+        in → one array.</p></div>
+        <div class="insight" style="margin:0;border-left-color:var(--emerald)"><div class="htag" style="color:var(--emerald)">◆ Spread — unpacks</div><p style="margin:0;font-size:14px">In an array
+        literal or call, <code>...</code> <b>unpacks</b> an existing array's items. One array out → many things.</p></div>
+      </div>
+
+      <div class="anatomy">
+        <div class="ahead">Code anatomy — rest parameters (gathering)</div>
+        <div class="anacode"><span class="tok kw" data-exp="function|Declares a function.">function</span> <span class="tok fn" data-exp="collect|The function name.">collect</span><span class="tok pn" data-exp="( )|Wraps the parameter list.">(</span><span class="tok op" data-exp="... (rest)|The rest operator. Here in the parameters, it GATHERS however many arguments were passed into a single real array.">...</span><span class="tok pm" data-exp="args|The array that all the passed-in arguments get collected into. Call collect(1,2,3) and args becomes [1,2,3]. The name is yours to choose.">args</span><span class="tok pn" data-exp=")|Closes the parameter list.">)</span> <span class="tok pn" data-exp="{ }|The function body.">{</span> <span class="tok kw" data-exp="return|Hands a value back.">return</span> <span class="tok rt" data-exp="args|Returns the gathered array as-is. Since args is already an array of every argument, returning it gives you all of them.">args</span> <span class="tok pn" data-exp="}|Closes the body.">}</span></div>
+        <div class="anapanel"><div class="anahint">Hover or tap a highlighted token above <span class="legend">· this is challenge #2</span></div><div class="anatitle">—</div><div class="anatext">Every part explains its own job.</div></div>
+      </div>
+
+      <div class="cell" data-cell>
+        <div class="bar"><span class="dots"><i></i><i></i><i></i></span><span class="fname">rest-spread.js</span><span class="spacer"></span><button class="run" data-run>▶ Run</button></div>
+        <pre class="code" contenteditable="true" spellcheck="false">// REST — gathers arguments into an array
+function collect(...args) {
+  return args
+}
+console.log(collect(1, 2, 3))     // [1, 2, 3]
+
+// SPREAD — unpacks an array's items
+const nums = [1, 2, 3]
+console.log([...nums, 4])         // [1, 2, 3, 4]  (unpacked, then added 4)
+console.log([0, ...nums])         // [0, 1, 2, 3]  (added 0, then unpacked)
+console.log(Math.max(...nums))    // 3  (unpacked as separate arguments)</pre>
+        <div class="console" data-console></div>
+      </div>
+
+      <div class="insight">
+        <div class="htag">◆ Insight — spread is your copy tool</div>
+        <p><code>[...arr]</code> makes a brand-new array with the same items — a copy at a new address. This is the
+        move behind half your kata: whenever an exercise says "return a <em>copy</em>," spread is how you get one
+        without touching the original. Straight out of the mutability guide.</p>
+      </div>
+    </section>
+
+    <!-- ===== 3 ===== -->
+    <section class="chapter" id="c3">
+      <div class="chaphead"><span class="num">03</span><h2>Mutate vs copy</h2></div>
+      <p class="chapsub">The spine of the whole topic. Some methods change the original array; others leave it alone and return a new one.</p>
+
+      <p>Fire methods at this array and watch two things: what the original looks like <em>afterwards</em>, and
+      whether the method changed it or handed back something new.</p>
+
+      <div class="lab" id="arrlab">
+        <div class="lh">Array Lab — does this method mutate, or return new?</div>
+        <div class="btns" id="labBtns"></div>
+        <div class="grid">
+          <div class="pane"><div class="plab">The original array, now</div><div class="arr" id="labOrig"></div></div>
+          <div class="pane"><div class="plab">What the method returned</div><div class="arr" id="labRet"></div></div>
+        </div>
+        <div class="verdict" id="labVerdict"></div>
+      </div>
+
+      <table class="mtable">
+        <thead><tr><th>Method</th><th>Effect</th><th>Returns</th></tr></thead>
+        <tbody>
+          <tr><td><code>push</code> / <code>pop</code></td><td class="mut">MUTATES</td><td>new length / removed item</td></tr>
+          <tr><td><code>splice</code></td><td class="mut">MUTATES</td><td>removed items</td></tr>
+          <tr><td><code>sort</code> / <code>reverse</code></td><td class="mut">MUTATES</td><td>the same array</td></tr>
+          <tr><td><code>map</code></td><td class="safe">copies</td><td>new array, same length</td></tr>
+          <tr><td><code>filter</code></td><td class="safe">copies</td><td>new array, maybe shorter</td></tr>
+          <tr><td><code>slice</code></td><td class="safe">copies</td><td>new array (a chosen range)</td></tr>
+          <tr><td><code>concat</code> / <code>[...spread]</code></td><td class="safe">copies</td><td>new combined array</td></tr>
+        </tbody>
+      </table>
+
+      <div class="insight gotcha">
+        <div class="htag">✖ Why this matters for your kata</div>
+        <p>Nearly every kata function says "return a <b>copy</b>." That's a direct instruction to stay on the
+        <span style="color:var(--emerald);font-weight:600">copies</span> side of this table — <code>map</code>,
+        <code>filter</code>, <code>slice</code>, spread. If you reach for <code>push</code> or <code>splice</code>
+        on the array you were handed, you'll mutate the caller's original and (often) fail the test. When in
+        doubt, build a new array.</p>
+      </div>
+
+      <div class="predict" data-predict>
+        <div class="phead"><span class="icon">?</span><b>Predict the output</b></div>
+        <div class="pbody">
+          <pre class="psrc">const a = [3, 1, 2]
+const b = a.map(n => n + 10)
+const c = a.filter(n => n > 1)
+a.push(99)
+
+console.log(b)
+console.log(c)
+console.log(a)</pre>
+          <button class="reveal-btn" data-reveal>Reveal answer</button>
+          <div class="answer" data-answer>
+            <div class="cline"><span class="tok-null">[</span> <span class="tok-num">13</span>, <span class="tok-num">11</span>, <span class="tok-num">12</span> <span class="tok-null">]</span></div>
+            <div class="cline"><span class="tok-null">[</span> <span class="tok-num">3</span>, <span class="tok-num">2</span> <span class="tok-null">]</span></div>
+            <div class="cline"><span class="tok-null">[</span> <span class="tok-num">3</span>, <span class="tok-num">1</span>, <span class="tok-num">2</span>, <span class="tok-num">99</span> <span class="tok-null">]</span></div>
+            <div class="why">map and filter read <code>a</code> without changing it — so <code>b</code> and
+            <code>c</code> are new arrays and <code>a</code> stayed <code>[3,1,2]</code> the whole time. Only
+            <code>push</code> mutated it, adding 99 at the end.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== 4 ===== -->
+    <section class="chapter" id="c4">
+      <div class="chaphead"><span class="num">04</span><h2>Searching</h2></div>
+      <p class="chapsub">Four methods that answer "is it in here?" and "which one(s)?" — and cover four of your kata functions.</p>
+
+      <table class="mtable">
+        <thead><tr><th>Method</th><th>Question it answers</th><th>Gives back</th></tr></thead>
+        <tbody>
+          <tr><td><code>includes(x)</code></td><td>Is <code>x</code> in the array at all?</td><td><code>true</code> / <code>false</code></td></tr>
+          <tr><td><code>indexOf(x)</code></td><td>Where is <code>x</code>?</td><td>its index, or <code>-1</code> if absent</td></tr>
+          <tr><td><code>find(fn)</code></td><td>The first item passing a test?</td><td>that one item (or <code>undefined</code>)</td></tr>
+          <tr><td><code>filter(fn)</code></td><td>Every item passing a test?</td><td>a new array of matches</td></tr>
+        </tbody>
+      </table>
+
+      <div class="cell" data-cell>
+        <div class="bar"><span class="dots"><i></i><i></i><i></i></span><span class="fname">searching.js</span><span class="spacer"></span><button class="run" data-run>▶ Run</button></div>
+        <pre class="code" contenteditable="true" spellcheck="false">const fruit = ['apple', 'pear', 'plum']
+
+console.log(fruit.includes('pear'))   // true — clean yes/no
+console.log(fruit.includes('kiwi'))   // false
+console.log(fruit.indexOf('plum'))    // 2
+
+const people = [{ name: 'Jo', age: 30 }, { name: 'Sam', age: 25 }]
+
+console.log(people.find(p => p.age < 28))     // first match: { name: 'Sam', age: 25 }
+console.log(people.filter(p => p.age >= 28))  // all matches: [{ name: 'Jo', age: 30 }]</pre>
+        <div class="console" data-console></div>
+      </div>
+
+      <div class="insight">
+        <div class="htag">◆ Insight — find vs filter is the same predicate</div>
+        <p>Notice <code>find</code> and <code>filter</code> take the <em>identical</em> test function — the only
+        difference is find stops at the first match and hands back one item, while filter collects them all into a
+        new array. That's the exact relationship between two of your kata functions (<code>findOneByProperty</code>
+        vs <code>findAll</code>): write one, and the other is the same idea with the method swapped.</p>
+      </div>
+    </section>
+
+    <!-- ===== 5 ===== -->
+    <section class="chapter" id="c5">
+      <div class="chaphead"><span class="num">05</span><h2>Transforming</h2></div>
+      <p class="chapsub">Building a changed copy: <code>map</code> to swap items, <code>filter</code> to drop them, <code>slice</code> + spread to cut and rejoin.</p>
+
+      <p>These three cover the "return a copy with X changed" family of your kata. The trick most people miss:
+      <code>map</code> and <code>filter</code> can hand your function the <b>index</b> as a second argument — which
+      is how you target a specific position without mutating anything.</p>
+
+      <div class="cell" data-cell>
+        <div class="bar"><span class="dots"><i></i><i></i><i></i></span><span class="fname">transforming.js</span><span class="spacer"></span><button class="run" data-run>▶ Run</button></div>
+        <pre class="code" contenteditable="true" spellcheck="false">const arr = ['a', 'b', 'c', 'd']
+
+// slice — copy a range [start, end)
+console.log(arr.slice(1, 3))    // ['b', 'c']
+console.log(arr.slice(2))       // ['c', 'd']  (from index 2 to the end)
+
+// map with INDEX — swap the item at position 2, copy the rest
+console.log(arr.map((el, i) => i === 2 ? 'X' : el))   // ['a','b','X','d']
+
+// filter with INDEX — drop the item at position 1
+console.log(arr.filter((el, i) => i !== 1))           // ['a','c','d']</pre>
+        <div class="console" data-console></div>
+      </div>
+
+      <p>For <em>inserting</em> (making the array longer), the classic idiom is to slice the array into two halves
+      and spread them back around the new item. Hover it — this is the densest bit of syntax in the kata:</p>
+
+      <div class="anatomy">
+        <div class="ahead">Code anatomy — insert without overwriting (slice + spread)</div>
+        <div class="anacode"><span class="tok pn" data-exp="[ ]|A new array literal — you're building a fresh array, not touching the original.">[</span><span class="tok op" data-exp="... (spread)|Unpacks the front slice's items into the new array.">...</span><span class="tok fn" data-exp="arr.slice(0, idx)|The FRONT part: a copy of everything before position idx. slice(0, idx) stops just before idx.">arr.slice(0, idx)</span>, <span class="tok pm" data-exp="item|The new value, dropped in between the two halves. Nothing gets overwritten — it's inserted.">item</span>, <span class="tok op" data-exp="... (spread)|Unpacks the back slice's items after the inserted item.">...</span><span class="tok fn" data-exp="arr.slice(idx)|The BACK part: a copy of everything from position idx onward. Together with the front slice, no original item is lost.">arr.slice(idx)</span><span class="tok pn" data-exp="]|Closes the new array. Result: front + item + back, one element longer than the original.">]</span></div>
+        <div class="anapanel"><div class="anahint">Hover or tap a highlighted token above <span class="legend">· the pattern behind insertItemAtIndex</span></div><div class="anatitle">—</div><div class="anatext">Every part explains its own job.</div></div>
+      </div>
+    </section>
+
+    <!-- ===== 6 ===== -->
+    <section class="chapter" id="c6">
+      <div class="chaphead"><span class="num">06</span><h2>Arrays ↔ objects</h2></div>
+      <p class="chapsub">Two built-ins turn objects into arrays-of-pairs and back — which is exactly what the zip/unzip challenges want.</p>
+
+      <div class="cell" data-cell>
+        <div class="bar"><span class="dots"><i></i><i></i><i></i></span><span class="fname">arrays-objects.js</span><span class="spacer"></span><button class="run" data-run>▶ Run</button></div>
+        <pre class="code" contenteditable="true" spellcheck="false">const obj = { foo: 1, bar: 2 }
+
+console.log(Object.keys(obj))      // ['foo', 'bar']
+console.log(Object.values(obj))    // [1, 2]
+console.log(Object.entries(obj))   // [['foo', 1], ['bar', 2]]  — pairs!
+
+// and back the other way:
+console.log(Object.fromEntries([['x', 9], ['y', 8]]))   // { x: 9, y: 8 }</pre>
+        <div class="console" data-console></div>
+      </div>
+
+      <div class="insight">
+        <div class="htag">◆ Insight — pairs are the bridge</div>
+        <p><code>Object.entries</code> gives you an array of <code>[key, value]</code> pairs;
+        <code>Object.fromEntries</code> takes that shape and rebuilds an object. So "object → array of pairs" is
+        one built-in, and "two arrays / pairs → object" is the reverse. Your <code>unzipObject</code> is almost
+        literally one of these; <code>zipObject</code> is building pairs first, then either rebuilding with
+        <code>fromEntries</code> or assembling with <code>reduce</code>.</p>
+      </div>
+
+      <div class="insight warn">
+        <div class="htag">▲ Handy — destructuring a pair</div>
+        <p>When you loop over pairs, you can unpack each one inline: <code>arr.map(([key, value]) => …)</code>.
+        The <code>[key, value]</code> on the left pulls the two slots out of each pair into named variables. Cleaner
+        than <code>pair[0]</code> / <code>pair[1]</code>, and it reads well in the zip/unzip functions.</p>
+      </div>
+    </section>
+
+    <!-- ===== KATA ===== -->
+    <section class="chapter" id="kata">
+      <div class="chaphead"><span class="num">✦</span><h2>Your kata — 12 challenges</h2></div>
+      <p class="chapsub">Every function you're stuck on, mapped to what you just learned. Nudges reveal one at a time.</p>
+
+      <div class="kintro">
+        <div class="htag">How these work</div>
+        <p>Each challenge gives up to three nudges: <b>concept</b> → <b>the method</b> → <b>the shape</b>. They
+        unlock one at a time <em>on purpose</em> — after each nudge, go back and try before opening the next. The
+        final nudge points at the structure but stops short of the finished line: writing it is where the learning
+        actually happens, so that part stays yours.</p>
+        <p style="color:var(--amber)"><b>The two you flagged</b> — <code>hasItem</code> and
+        <code>getItemAtIndex</code> — get a firmer push since you're mid-fight with them.</p>
+      </div>
+
+      <!-- 1 SOLVED -->
+      <div class="challenge solved">
+        <div class="solvedtag">✓ You've solved this — reference pattern</div>
+        <div class="csig"><span class="cm">// makeArrayOfItem → an array `length` long, all `item`</span>
+<span class="kw">function</span> <span class="fn">makeArrayOfItem</span>(item, length) {
+  <span class="kw">return</span> Array(length).fill(item)
+}</div>
+        <div class="solvednote">This is your model. <code>Array(length)</code> makes the slots, <code>.fill(item)</code>
+        drops the value into all of them. Clean and correct — keep it in mind for the fill-style problems.</div>
+      </div>
+
+      <!-- 2 SOLVED -->
+      <div class="challenge solved">
+        <div class="solvedtag">✓ You've solved this — reference pattern</div>
+        <div class="csig"><span class="cm">// makeArrayOfItems → an array of every argument passed in</span>
+<span class="kw">function</span> <span class="fn">makeArrayOfItems</span>(...args) {
+  <span class="kw">return</span> args
+}</div>
+        <div class="solvednote">Rest parameters in action — <code>...args</code> gathers all arguments into one
+        array, and you just return it. This is the gathering side of the <code>...</code> from section 2.</div>
+      </div>
+
+      <!-- 3 hasItem (flagged) -->
+      <div class="challenge" data-challenge>
+        <div class="csig"><span class="cm">// hasItem → true if `item` is in `arr` at least once, else false</span>
+<span class="kw">function</span> <span class="fn">hasItem</span>(arr, item) {}</div>
+        <div class="chints">
+          <button class="hintbtn" data-hint>Nudge 1 · concept</button>
+          <div class="hint"><div class="htier">Concept</div>You want a straight yes/no. There's one array method
+          whose entire job is to return <code>true</code> or <code>false</code> for "is this value in here?" —
+          the kata's tip is pointing right at it. You met it in section 4.</div>
+          <button class="hintbtn" data-hint>Nudge 2 · the method</button>
+          <div class="hint"><div class="htier">The method</div>It's <code>.includes()</code>.
+          <code>arr.includes(item)</code> already evaluates to exactly the boolean you need — no comparison or loop
+          required.</div>
+          <button class="hintbtn" data-hint>Nudge 3 · the shape</button>
+          <div class="hint deep"><div class="htier">The shape</div>The whole body is a single <code>return</code>
+          of that expression. You're handing back the result of asking <code>arr</code> whether it includes
+          <code>item</code>. One line. Write it and run <code>npm test hasItem</code>.</div>
+        </div>
+      </div>
+
+      <!-- 4 getItemAtIndex (flagged) -->
+      <div class="challenge" data-challenge>
+        <div class="csig"><span class="cm">// getItemAtIndex → arr[idx] IF that index exists,</span>
+<span class="cm">// otherwise return a JavaScript Error object</span>
+<span class="kw">function</span> <span class="fn">getItemAtIndex</span>(arr, idx) {}</div>
+        <div class="chints">
+          <button class="hintbtn" data-hint>Nudge 1 · concept</button>
+          <div class="hint"><div class="htier">Concept</div>Two possible outcomes means you need a condition first.
+          Ask: "does this index actually exist in the array?" If yes, return the value; if no, return an Error.
+          Remember from section 1 that a missing index gives <code>undefined</code>, and the array's
+          <code>.length</code> tells you the valid range.</div>
+          <button class="hintbtn" data-hint>Nudge 2 · the tools</button>
+          <div class="hint"><div class="htier">The tools</div>A valid index sits in <code>0 … arr.length - 1</code>.
+          So <code>idx</code> is out of range when <code>idx &gt;= arr.length</code> (or <code>idx &lt; 0</code>).
+          To make an Error object, you use <code>new Error('some message')</code> — that's the JavaScript Error the
+          exercise asks for.</div>
+          <button class="hintbtn" data-hint>Nudge 3 · the shape</button>
+          <div class="hint deep"><div class="htier">The shape</div>Structure it as: <em>if the index is out of
+          range</em> → <code>return new Error(...)</code>; <em>otherwise</em> → <code>return arr[idx]</code>. You
+          decide the exact condition and the message. Both branches must <code>return</code>. Test with
+          <code>npm test getItemAtIndex</code>.</div>
+        </div>
+      </div>
+
+      <!-- 5 replaceItemAtIndex -->
+      <div class="challenge" data-challenge>
+        <div class="csig"><span class="cm">// replaceItemAtIndex → a COPY of `arr` with the element</span>
+<span class="cm">// at `idx` replaced with `item`</span>
+<span class="kw">function</span> <span class="fn">replaceItemAtIndex</span>(arr, idx, item) {}</div>
+        <div class="chints">
+          <button class="hintbtn" data-hint>Nudge 1 · concept</button>
+          <div class="hint"><div class="htier">Concept</div>The word "copy" is the instruction — don't mutate
+          <code>arr</code>. You're transforming one position and keeping the rest. Which section-3 method returns a
+          new array the same length, and can see each item's index?</div>
+          <button class="hintbtn" data-hint>Nudge 2 · the method</button>
+          <div class="hint"><div class="htier">The method</div><code>map((el, i) => …)</code>. It hands you each
+          element <em>and</em> its index, and returns a new array — so nothing gets mutated. You want to return
+          <code>item</code> when the index matches, and the original <code>el</code> otherwise.</div>
+          <button class="hintbtn" data-hint>Nudge 3 · the shape</button>
+          <div class="hint deep"><div class="htier">The shape</div>Inside the map, a ternary decides per element:
+          <em>is this index the target?</em> → <code>item</code> : <code>el</code>. Assemble that into the map
+          yourself. (Spread + assignment is a valid alternative route if you prefer.)</div>
+        </div>
+      </div>
+
+      <!-- 6 insertItemAtIndex -->
+      <div class="challenge" data-challenge>
+        <div class="csig"><span class="cm">// insertItemAtIndex → a COPY of `arr` with `item` inserted</span>
+<span class="cm">// at `idx`, overwriting nothing (array gets LONGER)</span>
+<span class="kw">function</span> <span class="fn">insertItemAtIndex</span>(arr, item, idx) {}</div>
+        <div class="chints">
+          <button class="hintbtn" data-hint>Nudge 1 · concept</button>
+          <div class="hint"><div class="htier">Concept</div>Longer, not replaced — so you're wedging <code>item</code>
+          into a gap. Picture the array split in two at <code>idx</code>: everything before, then the new item, then
+          everything from <code>idx</code> onward.</div>
+          <button class="hintbtn" data-hint>Nudge 2 · the method</button>
+          <div class="hint"><div class="htier">The method</div><code>slice</code> gives you the two halves without
+          mutating: <code>arr.slice(0, idx)</code> is the front, <code>arr.slice(idx)</code> is the back. Spread both
+          into a new array literal with <code>item</code> between them. (This is the anatomy block in section 5.)</div>
+          <button class="hintbtn" data-hint>Nudge 3 · the shape</button>
+          <div class="hint deep"><div class="htier">The shape</div>You have three pieces to combine in a new
+          <code>[ ]</code>: the front slice (spread), the <code>item</code>, the back slice (spread). Your job is the
+          order and where <code>item</code> sits. Look back at the section-5 anatomy if you want to check your
+          assembly.</div>
+        </div>
+      </div>
+
+      <!-- 7 deleteItemAtIndex -->
+      <div class="challenge" data-challenge>
+        <div class="csig"><span class="cm">// deleteItemAtIndex → a COPY of `arr` without the element</span>
+<span class="cm">// at `idx` (array gets SHORTER)</span>
+<span class="kw">function</span> <span class="fn">deleteItemAtIndex</span>(arr, idx) {}</div>
+        <div class="chints">
+          <button class="hintbtn" data-hint>Nudge 1 · concept</button>
+          <div class="hint"><div class="htier">Concept</div>Shorter by one, at a specific position. You want to keep
+          every element <em>except</em> the one whose index is <code>idx</code>. "Keep everything that passes a
+          test" should ring a bell.</div>
+          <button class="hintbtn" data-hint>Nudge 2 · the method</button>
+          <div class="hint"><div class="htier">The method</div><code>filter((el, i) => …)</code> — filter also gives
+          you the index. Keep the elements where the index is <em>not</em> the one you're deleting.</div>
+          <button class="hintbtn" data-hint>Nudge 3 · the shape</button>
+          <div class="hint deep"><div class="htier">The shape</div>The test is a comparison on the index:
+          keep when <code>i !== idx</code>. Drop that into a filter and return the result. (A slice + spread of the
+          two halves also works if you'd rather.)</div>
+        </div>
+      </div>
+
+      <!-- 8 deleteItem -->
+      <div class="challenge" data-challenge>
+        <div class="csig"><span class="cm">// deleteItem → an array with EVERY instance of `item` removed</span>
+<span class="kw">function</span> <span class="fn">deleteItem</span>(arr, item) {}</div>
+        <div class="chints">
+          <button class="hintbtn" data-hint>Nudge 1 · concept</button>
+          <div class="hint"><div class="htier">Concept</div>Remove every copy of a value = keep everything that
+          <em>isn't</em> that value. Same "keep what passes a test" tool as the last one — but now the test is about
+          the value, not the index.</div>
+          <button class="hintbtn" data-hint>Nudge 2 · the method</button>
+          <div class="hint"><div class="htier">The method</div><code>filter</code>. Keep each element where it is
+          not equal to <code>item</code>.</div>
+          <button class="hintbtn" data-hint>Nudge 3 · the shape</button>
+          <div class="hint deep"><div class="htier">The shape</div>The predicate is <code>el !== item</code>. One
+          filter, returned. Notice how deleteItemAtIndex and deleteItem are the same method with a different test —
+          index vs value.</div>
+        </div>
+      </div>
+
+      <!-- 9 zipObject -->
+      <div class="challenge" data-challenge>
+        <div class="csig"><span class="cm">// zipObject → an object from two arrays</span>
+<span class="cm">// ['foo','bar'], [1,2]  →  { foo: 1, bar: 2 }</span>
+<span class="kw">function</span> <span class="fn">zipObject</span>(keys, values) {}</div>
+        <div class="chints">
+          <button class="hintbtn" data-hint>Nudge 1 · concept</button>
+          <div class="hint"><div class="htier">Concept</div>Each <code>keys[i]</code> pairs with the
+          <code>values[i]</code> at the same position. So you're walking the indices and building up an object one
+          key/value at a time.</div>
+          <button class="hintbtn" data-hint>Nudge 2 · the routes</button>
+          <div class="hint"><div class="htier">Two routes</div><b>A)</b> <code>reduce</code> over <code>keys</code>,
+          using the index to grab the matching value, adding each pair onto an object you build up (start from
+          <code>{}</code>). <b>B)</b> build the <code>[key, value]</code> pairs first with <code>map</code>, then hand
+          them to <code>Object.fromEntries</code> (section 6).</div>
+          <button class="hintbtn" data-hint>Nudge 3 · the shape</button>
+          <div class="hint deep"><div class="htier">The shape</div>Route B is shortest:
+          <code>keys.map((key, i) =&gt; [key, values[i]])</code> gives you the pairs — then wrap that in
+          <code>Object.fromEntries(...)</code>. Assemble it and confirm you see why the index lines the two arrays
+          up.</div>
+        </div>
+      </div>
+
+      <!-- 10 unzipObject -->
+      <div class="challenge" data-challenge>
+        <div class="csig"><span class="cm">// unzipObject → array of [key, value] pairs</span>
+<span class="cm">// { foo: 1, bar: 2 }  →  [['foo', 1], ['bar', 2]]</span>
+<span class="kw">function</span> <span class="fn">unzipObject</span>(obj) {}</div>
+        <div class="chints">
+          <button class="hintbtn" data-hint>Nudge 1 · concept</button>
+          <div class="hint"><div class="htier">Concept</div>Object in, array-of-pairs out. That exact shape —
+          <code>[[key, value], …]</code> — is what one specific built-in produces. You saw it in section 6.</div>
+          <button class="hintbtn" data-hint>Nudge 2 · the method</button>
+          <div class="hint deep"><div class="htier">The method</div><code>Object.entries(obj)</code> returns
+          precisely <code>[['foo', 1], ['bar', 2]]</code>. This one really is nearly a one-liner — return that. (If
+          you want to earn it the long way, a loop over <code>Object.keys</code> building pairs also works.)</div>
+        </div>
+      </div>
+
+      <!-- 11 findOneByProperty -->
+      <div class="challenge" data-challenge>
+        <div class="csig"><span class="cm">// findOneByProperty → the object in `arr` that has the</span>
+<span class="cm">// property AND value of `search`</span>
+<span class="cm">// [{a:1},{b:2,c:3}], {b:2}  →  {b:2,c:3}</span>
+<span class="kw">function</span> <span class="fn">findOneByProperty</span>(arr, search) {}</div>
+        <div class="chints">
+          <button class="hintbtn" data-hint>Nudge 1 · concept</button>
+          <div class="hint"><div class="htier">Concept</div>"The object that has…" = the first match. Which
+          section-4 method returns the first element passing a test? Your test per object: does it contain the same
+          key/value that <code>search</code> holds?</div>
+          <button class="hintbtn" data-hint>Nudge 2 · the tools</button>
+          <div class="hint"><div class="htier">The tools</div><code>find</code> is the method. To write the test you
+          need to know the key inside <code>search</code>. Since <code>search</code> is an object like
+          <code>{b: 2}</code>, pull its key/value out — e.g. <code>Object.entries(search)[0]</code> gives you
+          <code>['b', 2]</code>, which you can destructure into <code>[key, value]</code>.</div>
+          <button class="hintbtn" data-hint>Nudge 3 · the shape</button>
+          <div class="hint deep"><div class="htier">The shape</div>Get <code>[key, value]</code> from
+          <code>search</code>, then <code>arr.find(obj =&gt; obj[key] === value)</code>. That's the skeleton —
+          decide how you extract the key/value and handle the comparison. (This assumes one property in
+          <code>search</code>, which the examples use.)</div>
+        </div>
+      </div>
+
+      <!-- 12 findAll -->
+      <div class="challenge" data-challenge>
+        <div class="csig"><span class="cm">// findAll → ALL objects in `arr` with the property</span>
+<span class="cm">// and value of `search`</span>
+<span class="kw">function</span> <span class="fn">findAll</span>(arr, search) {}</div>
+        <div class="chints">
+          <button class="hintbtn" data-hint>Nudge 1 · concept</button>
+          <div class="hint"><div class="htier">Concept</div>This is <code>findOneByProperty</code>'s twin — "all"
+          instead of "the first." Same test, sibling method. If you cracked the last one, this is a one-word change.</div>
+          <button class="hintbtn" data-hint>Nudge 2 · the method</button>
+          <div class="hint deep"><div class="htier">The method</div>Swap <code>find</code> for <code>filter</code>.
+          Identical <code>[key, value]</code> extraction, identical predicate <code>obj[key] === value</code> —
+          filter just collects every match into a new array instead of stopping at the first.</div>
+        </div>
+      </div>
+
+      <div class="insight" style="margin-top:30px">
+        <div class="htag">◆ Before you refactor</div>
+        <p>Once they're green, the kata asks you to read your code back and clean it up — drop stray
+        <code>console.log</code>s, remove duplication. Watch for the repeated <code>[key, value]</code> extraction
+        in the last two functions; that's a natural spot to notice a shared pattern. Understanding <em>why</em> each
+        one works is the actual goal here, not just the passing tests.</p>
+      </div>
+    </section>
+
+    <!-- ===== RECAP ===== -->
+    <section class="chapter" id="recap">
+      <div class="chaphead"><span class="num">★</span><h2>Recap</h2></div>
+      <div class="recap">
+        <h3>The array toolkit</h3>
+        <ul>
+          <li>Index from <b>0</b>; a missing index is <b>undefined</b>, not an error. <b>.length</b> = count.</li>
+          <li><b>Array(n).fill(x)</b> builds an array of repeats.</li>
+          <li><b>...</b> = rest (gathers args → array) in params, spread (unpacks array) in literals/calls.</li>
+          <li>Copy an array with <b>[...arr]</b> or <b>slice()</b>.</li>
+          <li>MUTATE: <b>push, pop, splice, sort, reverse</b>. COPY: <b>map, filter, slice, concat, spread</b>.</li>
+          <li>"Return a copy" = stay on the copy side. Never push/splice the array you were handed.</li>
+          <li>Search: <b>includes</b> (yes/no), <b>indexOf</b> (where), <b>find</b> (first match), <b>filter</b> (all).</li>
+          <li><b>map/filter</b> can take the <b>index</b> as a 2nd arg — that's how you target a position safely.</li>
+          <li>Objects ↔ arrays: <b>Object.entries</b> / <b>Object.fromEntries</b>; destructure pairs with <b>[k, v]</b>.</li>
+          <li><b>find</b> and <b>filter</b> = same test, one match vs all. So do <b>findOneByProperty</b> / <b>findAll</b>.</li>
+        </ul>
+      </div>
+
+      <footer>
+        <p>Built to map onto your Types/Functions/Modules arrays kata — Dev Academy Aotearoa. Runs in your browser;
+        nothing's saved. Solutions deliberately left for you to write.</p>
+        <p class="mono">reference:
+          <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array" target="_blank" rel="noopener">MDN Array</a> ·
+          <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/entries" target="_blank" rel="noopener">Object.entries</a> ·
+          <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Spread_syntax" target="_blank" rel="noopener">Spread syntax</a></p>
+      </footer>
+    </section>
+  </main>
+</div>
+
+<script>
+/* ---------- console runner ---------- */
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function fmt(v){
+  if(v===null) return '<span class="tok-null">null</span>';
+  if(v===undefined) return '<span class="tok-null">undefined</span>';
+  const t=typeof v;
+  if(t==='number') return '<span class="tok-num">'+(Object.is(v,-0)?'-0':String(v))+'</span>';
+  if(t==='boolean') return '<span class="tok-bool">'+v+'</span>';
+  if(t==='string') return '<span class="tok-str">\''+esc(v)+'\'</span>';
+  if(t==='function') return '<span class="tok-fn">[Function: '+esc(v.name||'anonymous')+']</span>';
+  if(t==='bigint') return '<span class="tok-num">'+v+'n</span>';
+  if(v instanceof Error) return '<span class="tok-err">'+esc(v.name)+': '+esc(v.message)+'</span>';
+  if(Array.isArray(v)) return '<span class="tok-null">[</span> '+v.map(fmt).join('<span class="tok-null">, </span>')+' <span class="tok-null">]</span>';
+  if(t==='object'){return '<span class="tok-null">{</span> '+Object.keys(v).map(k=>esc(k)+': '+fmt(v[k])).join('<span class="tok-null">, </span>')+' <span class="tok-null">}</span>';}
+  return esc(String(v));
+}
+function fmtArgs(a){return a.map(x=>typeof x==='string'?'<span class="tok-str">'+esc(x)+'</span>':fmt(x)).join(' ');}
+function runCell(cell){
+  const code=cell.querySelector('pre.code').textContent;
+  const box=cell.querySelector('[data-console]');const logs=[];
+  const fc={log:(...a)=>logs.push({t:'log',a}),error:(...a)=>logs.push({t:'log',a}),warn:(...a)=>logs.push({t:'log',a}),info:(...a)=>logs.push({t:'log',a})};
+  try{ new Function('console','"use strict";\n'+code)(fc); }
+  catch(e){ logs.push({t:'err',m:(e&&e.message)?e.message:String(e)}); }
+  box.classList.add('show');
+  box.innerHTML = logs.length
+    ? logs.map(l=>l.t==='err'?'<div class="cline"><span class="tok-err">✖ '+esc(l.m)+'</span></div>':'<div class="cline"><span class="prompt">› </span>'+fmtArgs(l.a)+'</div>').join('')
+    : '<div class="cline empty">// no output — nothing was logged</div>';
+}
+document.querySelectorAll('[data-cell]').forEach(cell=>{
+  cell.querySelector('[data-run]').addEventListener('click',()=>runCell(cell));
+  cell.querySelector('pre.code').addEventListener('keydown',e=>{if((e.metaKey||e.ctrlKey)&&e.key==='Enter'){e.preventDefault();runCell(cell);}});
+});
+
+/* ---------- code anatomy ---------- */
+document.querySelectorAll('.anatomy').forEach(an=>{
+  const title=an.querySelector('.anatitle'), text=an.querySelector('.anatext'), hint=an.querySelector('.anahint');
+  const toks=an.querySelectorAll('.tok');
+  function show(tok){
+    const raw=tok.getAttribute('data-exp')||''; const i=raw.indexOf('|');
+    title.textContent=i>=0?raw.slice(0,i):tok.textContent.trim();
+    text.textContent=i>=0?raw.slice(i+1):raw;
+    hint.textContent='what this part does';
+    toks.forEach(x=>x.classList.remove('active')); tok.classList.add('active');
+  }
+  toks.forEach(tok=>{tok.setAttribute('tabindex','0');
+    tok.addEventListener('mouseenter',()=>show(tok));
+    tok.addEventListener('click',()=>show(tok));
+    tok.addEventListener('focus',()=>show(tok));});
+});
+
+/* ---------- ARRAY LAB ---------- */
+(function(){
+  const START=[3,1,2];
+  let orig=[...START];
+  const btnWrap=document.getElementById('labBtns');
+  const origEl=document.getElementById('labOrig');
+  const retEl=document.getElementById('labRet');
+  const verdict=document.getElementById('labVerdict');
+  const ops=[
+    {label:'.push(4)', mut:true,  run:a=>{const r=a.push(4); return {v:r,l:'the new length'};}},
+    {label:'.pop()',   mut:true,  run:a=>{const r=a.pop();  return {v:r,l:'the removed item'};}},
+    {label:'.sort()',  mut:true,  run:a=>{a.sort(); return {v:a,l:'the same (now sorted) array'};}},
+    {label:'.reverse()',mut:true, run:a=>{a.reverse(); return {v:a,l:'the same (now reversed) array'};}},
+    {label:'.map(n=>n*10)', mut:false, run:a=>({v:a.map(n=>n*10), l:'a NEW array'})},
+    {label:'.filter(n=>n>1)',mut:false,run:a=>({v:a.filter(n=>n>1), l:'a NEW array'})},
+    {label:'.slice(0,2)', mut:false, run:a=>({v:a.slice(0,2), l:'a NEW array (a range)'})},
+  ];
+  function fmtArr(a){
+    if(!Array.isArray(a)) return '<span class="b">'+(typeof a==='string'?"'"+a+"'":a)+'</span>';
+    return '[ '+a.map(x=>'<span class="b">'+x+'</span>').join(', ')+' ]';
+  }
+  function drawState(){ origEl.innerHTML=fmtArr(orig); }
+  function run(op){
+    const before=JSON.stringify(orig);
+    const out=op.run(orig);           // mutating ops change `orig` directly
+    const after=JSON.stringify(orig);
+    drawState();
+    retEl.innerHTML=fmtArr(out.v)+' <span style="color:var(--muted);font-size:12px">('+out.l+')</span>';
+    const changed = before!==after;
+    verdict.className='verdict show '+(changed?'mut':'safe');
+    verdict.innerHTML = changed
+      ? '<b>MUTATED.</b> The original array changed. Methods like this edit in place — dangerous when you were handed someone else\'s array.'
+      : '<b>Left the original alone.</b> It returned a new value instead. This is the safe side — what "return a copy" wants.';
+  }
+  ops.forEach(op=>{
+    const b=document.createElement('button');
+    b.textContent=op.label; b.addEventListener('click',()=>run(op));
+    btnWrap.appendChild(b);
+  });
+  const reset=document.createElement('button');
+  reset.textContent='⟲ Reset'; reset.className='reset';
+  reset.addEventListener('click',()=>{orig=[...START];drawState();retEl.innerHTML='';verdict.className='verdict';});
+  btnWrap.appendChild(reset);
+  drawState(); retEl.innerHTML='<span style="color:var(--muted);font-size:13px">click a method →</span>';
+})();
+
+/* ---------- predict reveals ---------- */
+document.querySelectorAll('[data-predict]').forEach(p=>{
+  p.querySelector('[data-reveal]').addEventListener('click',function(){
+    p.querySelector('[data-answer]').classList.add('show');
+    this.textContent='Answer shown ↓';this.disabled=true;this.style.opacity=.55;
+  });
+});
+
+/* ---------- challenge nudges (progressive) ---------- */
+document.querySelectorAll('[data-challenge]').forEach(ch=>{
+  const btns=[...ch.querySelectorAll('[data-hint]')];
+  const hints=[...ch.querySelectorAll('.hint')];
+  // hide all but the first button
+  btns.forEach((b,i)=>{ if(i>0) b.style.display='none'; });
+  btns.forEach((b,i)=>{
+    b.addEventListener('click',()=>{
+      hints[i].classList.add('show');
+      b.disabled=true; b.textContent=b.textContent.replace('Nudge','✓ Nudge');
+      if(btns[i+1]) btns[i+1].style.display='';
+    });
+  });
+});
+
+/* ---------- scrollspy ---------- */
+const sections=[...document.querySelectorAll('section.chapter')];
+const links=[...document.querySelectorAll('nav.side a[data-sec]')];
+const mlinks=[...document.querySelectorAll('.mobtop .mlink')];
+function spy(){
+  const y=window.scrollY+120;let cur=sections[0].id;
+  for(const s of sections){if(s.offsetTop<=y)cur=s.id;}
+  links.forEach(l=>l.classList.toggle('active',l.getAttribute('href')==='#'+cur));
+  mlinks.forEach(l=>l.classList.toggle('active',l.getAttribute('href')==='#'+cur));
+}
+window.addEventListener('scroll',spy,{passive:true});spy();
+</script>
+</body>
+</html>

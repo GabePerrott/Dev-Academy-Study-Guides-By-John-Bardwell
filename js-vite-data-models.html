@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vite &amp; Data Models — interactive guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;450;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F1F1F4;--card:#FBFBFD;--ink:#1B1E26;--muted:#5A5F6B;--line:#E1E1E8;
+    --violet:#6C4CE0;--violet-soft:#EDE8FC;--violet-line:#D8CEF7;
+    --emerald:#12905F;--amber:#B67A08;--rose:#D6455D;
+    --term-bg:#15171E;--term-panel:#1D2029;--term-fg:#E6E8EC;--term-dim:#8A90A0;
+    --t-num:#E7B45A;--t-str:#93D6A0;--t-null:#8A90A0;--t-err:#F0808F;
+    --radius:14px;
+    --mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+    --disp:'Space Grotesk',system-ui,sans-serif;--body:'Inter',system-ui,sans-serif;
+  }
+  *{box-sizing:border-box}html{scroll-behavior:smooth}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);font-size:16.5px;line-height:1.62;-webkit-font-smoothing:antialiased}
+  a{color:var(--violet);text-decoration:none}a:hover{text-decoration:underline}
+  code{font-family:var(--mono);font-size:.88em;background:#E7E7EE;padding:.08em .38em;border-radius:5px;color:#2C2140}
+
+  .wrap{display:grid;grid-template-columns:270px minmax(0,1fr);max-width:1200px;margin:0 auto}
+  nav.side{position:sticky;top:0;align-self:start;height:100vh;overflow-y:auto;padding:30px 22px 40px;border-right:1px solid var(--line)}
+  main{padding:0 clamp(20px,5vw,64px) 120px;min-width:0}
+  .brand{font-family:var(--mono);font-weight:700;font-size:14px;letter-spacing:.04em;color:var(--violet);margin-bottom:4px}
+  .brand small{color:var(--muted);font-weight:400;display:block;letter-spacing:0;margin-top:3px;font-family:var(--body);font-size:12.5px}
+  .navsec{margin-top:26px}
+  .navsec > span{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:9px;padding-left:12px}
+  nav.side a.link{display:flex;gap:10px;align-items:baseline;padding:7px 12px;border-radius:9px;color:var(--ink);font-size:14.5px;line-height:1.35}
+  nav.side a.link:hover{background:#E9E9F0;text-decoration:none}
+  nav.side a.link.active{background:var(--violet-soft);color:#3B2A73;font-weight:500}
+  nav.side a.link b{font-family:var(--mono);font-size:11.5px;color:var(--violet);min-width:20px}
+  .backlink{margin-top:24px;font-size:13px;color:var(--muted)}
+  .backlink a{font-family:var(--mono);font-size:12.5px;display:block;margin-top:6px}
+
+  header.hero{padding:64px 0 30px}
+  .eyebrow{font-family:var(--mono);font-size:12.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--violet);margin-bottom:18px}
+  h1{font-family:var(--disp);font-weight:700;font-size:clamp(34px,5.4vw,54px);line-height:1.04;letter-spacing:-.02em;margin:0 0 20px}
+  h1 .brace{color:var(--violet)}
+  .lede{font-size:19px;color:#3A3E48;max-width:60ch;margin:0}.lede + .lede{margin-top:14px}
+  .runline{font-family:var(--mono);font-size:13.5px;color:var(--muted);margin-top:26px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .runline .kbd{background:var(--term-bg);color:var(--t-str);padding:5px 11px;border-radius:7px;font-size:12.5px}
+
+  section.chapter{padding-top:56px;scroll-margin-top:20px}
+  .chaphead{display:flex;align-items:baseline;gap:16px;border-bottom:2px solid var(--ink);padding-bottom:12px;margin-bottom:8px}
+  .chaphead .num{font-family:var(--mono);font-weight:700;font-size:15px;color:var(--violet)}
+  h2{font-family:var(--disp);font-weight:600;font-size:clamp(26px,3.6vw,36px);letter-spacing:-.015em;margin:0}
+  .chapsub{color:var(--muted);font-size:15px;margin:14px 0 0}
+  h3{font-family:var(--disp);font-weight:600;font-size:22px;letter-spacing:-.01em;margin:44px 0 10px}
+  p{margin:14px 0}main p,main li{color:#24272F}
+
+  /* code cell */
+  .cell{margin:22px 0;border-radius:var(--radius);overflow:hidden;border:1px solid #2A2E3A;box-shadow:0 10px 30px -18px rgba(20,20,40,.4)}
+  .cell .bar{background:var(--term-panel);display:flex;align-items:center;gap:8px;padding:9px 14px;border-bottom:1px solid #2A2E3A}
+  .cell .bar .dots{display:flex;gap:6px}.cell .bar .dots i{width:11px;height:11px;border-radius:50%;display:block}
+  .dots i:nth-child(1){background:#E06C75}.dots i:nth-child(2){background:#E5C07B}.dots i:nth-child(3){background:#98C379}
+  .cell .bar .fname{font-family:var(--mono);font-size:12px;color:var(--term-dim);margin-left:4px}
+  .cell .bar .spacer{flex:1}
+  .cell .bar button{font-family:var(--mono);font-size:12px;font-weight:500;cursor:pointer;border:1px solid #3A4152;background:#2A3040;color:#CBD3E1;border-radius:7px;padding:5px 13px;transition:.15s}
+  .cell .bar button:hover{background:#343C4E;border-color:#4A5264}
+  .cell .bar button.run{background:var(--violet);border-color:var(--violet);color:#fff}
+  .cell .bar button.run:hover{background:#5B3ED1}
+  .cell pre.code{margin:0;background:var(--term-bg);color:var(--term-fg);font-family:var(--mono);font-size:13.5px;line-height:1.65;padding:16px 18px;white-space:pre;overflow-x:auto;outline:none;tab-size:2}
+  .cell pre.code:focus{box-shadow:inset 3px 0 0 var(--violet)}
+  .console{background:#0F1116;border-top:1px solid #2A2E3A;padding:0 18px;max-height:0;overflow:hidden;transition:max-height .35s ease,padding .35s ease}
+  .console.show{max-height:420px;overflow-y:auto;padding:13px 18px}
+  .console .cline{font-family:var(--mono);font-size:13px;line-height:1.7;white-space:pre-wrap;word-break:break-word}
+  .console .prompt{color:#4A5060}.console .empty{color:var(--term-dim);font-style:italic}
+  .tok-num{color:var(--t-num)}.tok-str{color:var(--t-str)}.tok-null{color:var(--t-null)}.tok-err{color:var(--t-err)}.tok-fn{color:#C39BF5}
+
+  /* anatomy */
+  .anatomy{margin:22px 0;border:1px solid #2A2E3A;border-radius:var(--radius);overflow:hidden;box-shadow:0 10px 30px -18px rgba(20,20,40,.4)}
+  .anatomy .ahead{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--term-dim);padding:10px 16px;border-bottom:1px solid #2A2E3A;background:var(--term-panel);display:flex;align-items:center;gap:8px}
+  .anatomy .ahead::before{content:'⌖';color:#C39BF5;font-size:14px}
+  .anacode{padding:18px;background:var(--term-bg);font-family:var(--mono);font-size:14px;line-height:2.1;color:var(--term-fg);overflow-x:auto;white-space:pre-wrap;word-break:break-word}
+  .tok{cursor:pointer;border-radius:5px;padding:2px 3px;transition:.12s;outline:1.5px solid transparent}
+  .tok:hover{outline-color:rgba(255,255,255,.28)}
+  .tok.kw{background:rgba(195,155,245,.16);color:#C9A6F6}
+  .tok.fn{background:rgba(124,183,240,.15);color:#8CC0F5}
+  .tok.pm{background:rgba(231,180,90,.15);color:#E7B45A}
+  .tok.rt{background:rgba(147,214,160,.15);color:#93D6A0}
+  .tok.op{background:rgba(240,128,143,.14);color:#F0909F}
+  .tok.pn{background:rgba(150,156,172,.16);color:#B4BAC8}
+  .tok.st{background:rgba(147,214,160,.13);color:#93D6A0}
+  .tok.active{outline-color:var(--violet)!important;background:rgba(108,76,224,.32)!important;color:#fff}
+  .anapanel{padding:15px 18px;min-height:78px;background:var(--card)}
+  .anahint{font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:.05em}
+  .anahint .legend{color:var(--muted);opacity:.8}
+  .anatitle{font-family:var(--mono);font-weight:700;font-size:14px;color:var(--violet);margin:6px 0 3px}
+  .anatext{font-size:13.5px;color:#2A2D36;line-height:1.55}
+  @media(max-width:640px){.anacode{font-size:13px;line-height:2}}
+
+  /* ---------- MODULE SHIPPING VISUAL ---------- */
+  .ship{margin:26px 0;border:1px solid var(--line);border-radius:16px;background:var(--card);overflow:hidden}
+  .ship .tabs{display:flex;border-bottom:1px solid var(--line);background:#F5F5F9}
+  .ship .tab{flex:1;font-family:var(--mono);font-size:13px;font-weight:500;cursor:pointer;background:none;border:none;padding:13px 10px;color:var(--muted);border-bottom:2px solid transparent;transition:.15s}
+  .ship .tab:hover{background:#EEEDF4}
+  .ship .tab.active{color:var(--violet);border-bottom-color:var(--violet);background:var(--card)}
+  .ship .pages{display:flex;gap:8px;flex-wrap:wrap;padding:16px 18px 6px}
+  .ship .pages button{font-family:var(--mono);font-size:12.5px;font-weight:600;cursor:pointer;border:1px solid var(--violet);background:var(--violet);color:#fff;border-radius:9px;padding:9px 14px}
+  .ship .pages button:hover{background:#5B3ED1}
+  .ship .modwrap{padding:12px 18px 6px}
+  .ship .modlab{font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
+  .ship .mods{display:flex;gap:8px;flex-wrap:wrap}
+  .ship .mod{font-family:var(--mono);font-size:12.5px;border:1px solid var(--line);background:#FAFAFC;border-radius:9px;padding:9px 13px;color:#8A90A0;transition:.25s;opacity:.5}
+  .ship .mod.sent{opacity:1;color:#fff;background:var(--violet);border-color:var(--violet);box-shadow:0 4px 14px -4px rgba(108,76,224,.5)}
+  .ship .mod.waste{background:var(--rose);border-color:var(--rose)}
+  .ship .stat{margin:8px 18px 6px;font-family:var(--mono);font-size:13px;color:var(--ink)}
+  .ship .stat b{color:var(--violet)}
+  .ship .msg{margin:0 18px 18px;padding:12px 15px;border-radius:10px;background:#FAFAFC;border:1px solid var(--line);font-size:13.5px;line-height:1.5;min-height:20px}
+  .ship .msg.bad{background:#FBECEE;border-color:#F0C4CB;color:#9E2B3B}
+  .ship .msg.good{background:#EAF7F0;border-color:#BEE6D2;color:#0C6B45}
+
+  /* ---------- CONTRACT CHECKER ---------- */
+  .contract{margin:26px 0;border:1px solid var(--line);border-radius:16px;background:var(--card);overflow:hidden}
+  .contract .cch{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:11px 18px;border-bottom:1px solid var(--line);background:#F5F5F9}
+  .contract .iface{background:var(--term-bg);color:var(--term-fg);font-family:var(--mono);font-size:13px;line-height:1.7;padding:14px 18px;border-bottom:1px solid #2A2E3A;white-space:pre}
+  .contract .iface .kw{color:#C9A6F6}.contract .iface .ty{color:#93D6A0}.contract .iface .nm{color:#8CC0F5}.contract .iface .key{color:#E7B45A}
+  .contract .cands{display:flex;gap:8px;flex-wrap:wrap;padding:14px 18px 8px}
+  .contract .cand{font-family:var(--mono);font-size:12px;cursor:pointer;border:1px solid var(--line);background:#fff;border-radius:8px;padding:8px 12px;color:var(--ink);transition:.12s}
+  .contract .cand:hover{border-color:var(--violet-line);background:#FAF8FF}
+  .contract .cand.active{border-color:var(--violet);background:var(--violet-soft);color:#3B2A73}
+  .contract .grid{padding:6px 18px 10px}
+  .contract .frow{display:grid;grid-template-columns:1.1fr 1fr 1fr auto;gap:8px;align-items:center;font-family:var(--mono);font-size:12.5px;padding:8px 10px;border-radius:8px;margin-top:6px;background:#FAFAFC;border:1px solid var(--line)}
+  .contract .frow .k{color:var(--violet);font-weight:600}
+  .contract .frow .want{color:var(--muted)}
+  .contract .frow .got{color:var(--ink)}
+  .contract .frow .mark{text-align:right;font-weight:700}
+  .contract .frow.ok .mark{color:var(--emerald)}
+  .contract .frow.no{background:#FBECEE;border-color:#F0C4CB}
+  .contract .frow.no .mark{color:var(--rose)}
+  .contract .frow.extra{background:#FBF3E4;border-color:#F0DCBE}
+  .contract .frow.extra .mark{color:var(--amber)}
+  .contract .verdict{margin:8px 18px 18px;padding:12px 15px;border-radius:10px;font-family:var(--mono);font-size:13.5px;font-weight:600}
+  .contract .verdict.pass{background:#EAF7F0;color:#0C6B45;border:1px solid #BEE6D2}
+  .contract .verdict.fail{background:#FBECEE;color:#9E2B3B;border:1px solid #F0C4CB}
+  .contract .verdict .sub{font-weight:400;font-family:var(--body);font-size:13px;margin-top:5px;line-height:1.5}
+
+  .insight{margin:24px 0;background:var(--card);border:1px solid var(--line);border-left:3px solid var(--violet);border-radius:12px;padding:16px 20px}
+  .insight .htag{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--violet);font-weight:700;display:flex;align-items:center;gap:8px;margin-bottom:6px}
+  .insight.warn{border-left-color:var(--amber)}.insight.warn .htag{color:var(--amber)}
+  .insight.gotcha{border-left-color:var(--rose)}.insight.gotcha .htag{color:var(--rose)}
+  .insight p{margin:6px 0}.insight p:first-of-type{margin-top:0}
+
+  /* three-concept cards */
+  .triad{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:22px 0}
+  @media(max-width:680px){.triad{grid-template-columns:1fr}}
+  .tri{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px;border-top:3px solid var(--violet)}
+  .tri .tn{font-family:var(--mono);font-size:12px;letter-spacing:.05em;text-transform:uppercase;font-weight:700;color:var(--violet);margin-bottom:6px}
+  .tri p{font-size:13.5px;margin:0}
+
+  /* file tree */
+  .tree{background:var(--term-bg);border-radius:12px;padding:16px 20px;margin:22px 0;font-family:var(--mono);font-size:13.5px;line-height:1.8;color:var(--term-fg)}
+  .tree .dir{color:#8CC0F5}.tree .file{color:var(--term-fg)}.tree .hi{color:#E7B45A}.tree .cm{color:#6B7180}
+
+  /* predict */
+  .predict{margin:22px 0;border:1px solid var(--violet-line);border-radius:var(--radius);background:linear-gradient(180deg,#FAF8FF,#F4F0FE);overflow:hidden}
+  .predict .phead{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--violet-line)}
+  .predict .phead .icon{width:22px;height:22px;border-radius:6px;background:var(--violet);color:#fff;display:grid;place-items:center;font-size:13px;font-weight:700;font-family:var(--mono)}
+  .predict .phead b{font-family:var(--disp);font-size:15px}
+  .predict .pbody{padding:16px}
+  .predict pre.psrc{margin:0 0 14px;background:var(--term-bg);color:var(--term-fg);border-radius:10px;font-family:var(--mono);font-size:13px;line-height:1.6;padding:14px 16px;overflow-x:auto;white-space:pre-wrap}
+  .predict .reveal-btn{font-family:var(--mono);font-size:12.5px;font-weight:600;cursor:pointer;background:var(--violet);color:#fff;border:none;border-radius:8px;padding:8px 16px}
+  .predict .reveal-btn:hover{background:#5B3ED1}
+  .predict .answer{display:none;margin-top:14px;background:#0F1116;border-radius:10px;padding:13px 16px}
+  .predict .answer.show{display:block}
+  .predict .answer .cline{font-family:var(--mono);font-size:13px;line-height:1.7;color:var(--term-fg)}
+  .predict .answer .why{color:var(--term-dim);font-size:12.5px;margin-top:9px;font-family:var(--body);line-height:1.55}
+
+  /* checkpoint */
+  .check{margin:26px 0;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px}
+  .check .q{font-family:var(--disp);font-weight:600;font-size:16px;margin-bottom:14px}
+  .check .opts{display:flex;flex-direction:column;gap:9px}
+  .check .opt{font-family:var(--mono);font-size:13.5px;text-align:left;cursor:pointer;background:#fff;border:1px solid var(--line);border-radius:9px;padding:11px 14px;transition:.15s}
+  .check .opt:hover{border-color:var(--violet-line);background:#FAF8FF}
+  .check .opt.correct{border-color:var(--emerald);background:#EAF7F0;color:#0C6B45}
+  .check .opt.wrong{border-color:var(--rose);background:#FBECEE;color:#9E2B3B}
+  .check .fb{margin-top:12px;font-size:13.5px;color:var(--muted);display:none}
+  .check .fb.show{display:block}
+
+  .recap{background:var(--term-bg);border-radius:16px;padding:26px 28px;margin:26px 0;color:var(--term-fg)}
+  .recap h3{color:#fff;margin-top:0}
+  .recap ul{list-style:none;padding:0;margin:0;display:grid;gap:10px}
+  .recap li{font-family:var(--mono);font-size:13px;line-height:1.55;padding-left:22px;position:relative;color:#D3D7E0}
+  .recap li::before{content:'›';position:absolute;left:0;color:var(--violet);font-weight:700}
+  .recap li b{color:var(--t-num);font-weight:500}
+
+  footer{border-top:1px solid var(--line);margin-top:70px;padding-top:24px;color:var(--muted);font-size:13.5px}
+  footer .mono{font-family:var(--mono);font-size:12px}
+
+  .mobtop{display:none}
+  @media(max-width:860px){
+    .wrap{grid-template-columns:1fr}nav.side{display:none}
+    .mobtop{display:flex;position:sticky;top:0;z-index:20;background:rgba(241,241,244,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);padding:12px 18px;gap:10px;align-items:center;overflow-x:auto}
+    .mobtop .brand{margin:0;white-space:nowrap}
+    .mobtop a{font-family:var(--mono);font-size:12px;white-space:nowrap;color:var(--muted);padding:5px 10px;border-radius:7px}
+    .mobtop a.active{background:var(--violet-soft);color:#3B2A73}
+    main{padding-left:20px;padding-right:20px}
+  }
+  @media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important;scroll-behavior:auto}}
+</style>
+</head>
+<body>
+
+<div class="mobtop">
+  <span class="brand">Vite + models</span>
+  <a href="#c1" class="mlink active">What Vite is</a>
+  <a href="#c2" class="mlink">Bundling</a>
+  <a href="#c3" class="mlink">Dev server</a>
+  <a href="#c4" class="mlink">config</a>
+  <a href="#c5" class="mlink">Data models</a>
+  <a href="#c6" class="mlink">Interfaces</a>
+  <a href="#c7" class="mlink">Shared models</a>
+  <a href="#recap" class="mlink">Recap</a>
+</div>
+
+<div class="wrap">
+  <nav class="side">
+    <div class="brand">Vite &amp; data models<small>Unit 1 · T12 — interactive guide</small></div>
+    <div class="navsec">
+      <span>Vite</span>
+      <a href="#c1" class="link" data-sec><b>01</b> What Vite is</a>
+      <a href="#c2" class="link" data-sec><b>02</b> Bundling vs on-demand</a>
+      <a href="#c3" class="link" data-sec><b>03</b> Dev server, HMR &amp; ports</a>
+      <a href="#c4" class="link" data-sec><b>04</b> vite.config.js</a>
+    </div>
+    <div class="navsec">
+      <span>Data models</span>
+      <a href="#c5" class="link" data-sec><b>05</b> The three concepts</a>
+      <a href="#c6" class="link" data-sec><b>06</b> Interfaces as contracts</a>
+      <a href="#c7" class="link" data-sec><b>07</b> Shared models</a>
+      <a href="#recap" class="link" data-sec><b>★</b> Recap</a>
+    </div>
+    <div class="backlink">
+      Related guides:
+      <a href="./index.html">⌂ All guides</a>
+      <a href="./js-data-structures.html">← Nested data</a>
+      <a href="./js-npm.html">← npm &amp; package.json</a>
+      <a href="./js-ddd-bowling.html">← DDD / bowling</a>
+    </div>
+  </nav>
+
+  <main>
+    <header class="hero">
+      <div class="eyebrow">Unit 1 · T12 — Vite &amp; Data Models</div>
+      <h1>The tool that <span class="brace">serves your site</span>, and the shapes your data keeps</h1>
+      <p class="lede">Two lighter, mostly-conceptual topics. <b>Vite</b> is the build tool that's been quietly
+      running your websites since Foundations — here's what it actually does. <b>Data models</b> are how you keep
+      your data's shape consistent across a whole app.</p>
+      <p class="lede">Less code to grind through than usual — but you'll use both in nearly every challenge from
+      here, so they're worth the half hour.</p>
+      <div class="runline"><span class="kbd">$ npm run dev</span> the command that starts Vite — you've typed it before without knowing what it did.</div>
+    </header>
+
+    <!-- ===== 1 ===== -->
+    <section class="chapter" id="c1">
+      <div class="chaphead"><span class="num">01</span><h2>What Vite is</h2></div>
+      <p class="chapsub">A web development build tool. Its job: take your HTML/CSS/JS and serve it to a browser, fast.</p>
+
+      <p>You've already been using Vite — every time you ran your Foundations blog and saw your pages in the
+      browser, that was Vite. You just didn't have a name for it. It's a <b>build tool</b> (site
+      <a href="https://vitejs.dev" target="_blank" rel="noopener">vitejs.dev</a>), and from now on it runs behind
+      basically every challenge you'll do.</p>
+
+      <p>Two things make it worth understanding rather than treating as magic: <b>how it serves your code</b> (fast,
+      via on-demand loading) and <b>the dev server</b> it gives you (with instant live updates). Those are the next
+      two sections.</p>
+
+      <div class="insight">
+        <div class="htag">◆ Insight — the name is the whole pitch</div>
+        <p>"Vite" is French for <em>quick</em>. Speed is the entire selling point — both how fast your site loads
+        and how fast you see your edits while building. Everything about how it works, below, is in service of not
+        making you wait.</p>
+      </div>
+    </section>
+
+    <!-- ===== 2 ===== -->
+    <section class="chapter" id="c2">
+      <div class="chaphead"><span class="num">02</span><h2>Bundling vs on-demand</h2></div>
+      <p class="chapsub">The old way shipped your whole app at once. Vite ships only the piece the browser is asking for.</p>
+
+      <p><b>Bundling</b> was the old approach: your entry file loads modules, which load more modules, and the whole
+      web of code gets wrapped into <em>one big file</em> that's sent to the browser. It works, but it's slow to
+      assemble and wasteful — the entire bundle ships no matter which page you actually want.</p>
+
+      <p><b>On-demand compilation</b> is Vite's trick. Using ES modules (the <code>import</code>/<code>export</code>
+      you know), it sends only the code needed for what you're doing, when you ask for it. Try both modes — open a
+      page and watch what ships:</p>
+
+      <div class="ship" id="ship">
+        <div class="tabs">
+          <button class="tab active" data-mode="bundle">▸ Bundling (old way)</button>
+          <button class="tab" data-mode="vite">▸ Vite (on-demand)</button>
+        </div>
+        <div class="pages">
+          <button data-page="home">Open Home page</button>
+          <button data-page="about">Open About page</button>
+          <button data-page="dashboard">Open Dashboard</button>
+        </div>
+        <div class="modwrap">
+          <div class="modlab">Your app's modules</div>
+          <div class="mods" id="shipMods"></div>
+        </div>
+        <div class="stat" id="shipStat">Sent this load: <b>—</b></div>
+        <div class="msg" id="shipMsg">Pick a mode, then open a page.</div>
+      </div>
+
+      <div class="insight">
+        <div class="htag">◆ Insight — why on-demand is faster</div>
+        <p>In bundling, visiting the Home page still ships the Dashboard's chart code, the admin panel, everything —
+        because it's all one file. Vite sends just Home's code, so there's less to build and less to download. The
+        bigger your app grows, the more that difference compounds. That's the practical reason Vite feels snappy
+        where old tools dragged.</p>
+      </div>
+
+      <div class="insight warn">
+        <div class="htag">▲ Nuance — bundling isn't dead</div>
+        <p>On-demand is how Vite behaves in <em>development</em> (while you're building). For the final
+        <em>production</em> version that real users load, Vite still bundles — a polished single package is actually
+        better once the code's finished. So it's not "bundling bad, on-demand good"; it's the right tool at each
+        stage. You don't need to configure any of this yet — just know both exist.</p>
+      </div>
+
+      <div class="check" data-check
+        data-correct="1"
+        data-fb="Right — bundling packs everything into one file that ships regardless of what you need. Vite sends only the modules the current page requires, on demand.">
+        <div class="q">Checkpoint: what's the core difference Vite introduces?</div>
+        <div class="opts">
+          <button class="opt" data-opt="0">It writes your CSS for you</button>
+          <button class="opt" data-opt="1">It sends only the code you need, when you need it</button>
+          <button class="opt" data-opt="2">It removes the need for JavaScript</button>
+          <button class="opt" data-opt="3">It makes bundling one giant file mandatory</button>
+        </div>
+        <div class="fb" data-fbbox></div>
+      </div>
+    </section>
+
+    <!-- ===== 3 ===== -->
+    <section class="chapter" id="c3">
+      <div class="chaphead"><span class="num">03</span><h2>Dev server, HMR &amp; ports</h2></div>
+      <p class="chapsub">Vite runs a local server for you, updates the page the instant you save, and lives on predictable ports.</p>
+
+      <p>Run <code>npm run dev</code> (sometimes <code>npm start</code> — the README tells you which) and Vite starts
+      a <b>development server</b>, printing a <code>localhost</code> address you open in the browser. It's the thing
+      that makes your site actually appear.</p>
+
+      <h3>Hot Module Replacement (HMR)</h3>
+      <p>The best part: change a value in VS Code, hit save, and the page updates <em>immediately</em> — no manual
+      refresh. That instant feedback loop is called Hot Module Replacement, and once you're used to it you'll
+      never want to go back.</p>
+
+      <div class="insight">
+        <div class="htag">◆ Insight — HMR often keeps your place</div>
+        <p>HMR doesn't just reload — where it can, it swaps only the changed module and <em>preserves the page's
+        state</em>. Tweaking a button halfway down a long form? The page updates without scrolling you back to the
+        top or wiping what you'd typed. Small thing, but it saves a surprising amount of friction over a day.</p>
+      </div>
+
+      <h3>The two ports</h3>
+      <p>During bootcamp you'll see two localhost ports, and they're not interchangeable:</p>
+      <div class="triad" style="grid-template-columns:1fr 1fr">
+        <div class="tri"><div class="tn">Port 5173</div><p>The <b>front end</b> — the web page the user sees in the browser. Vite's default. This is the one you'll open most.</p></div>
+        <div class="tri" style="border-top-color:var(--emerald)"><div class="tn" style="color:var(--emerald)">Port 3000</div><p>The <b>back end</b> — a server doing the heavier work with databases. Comes in from the next unit onward.</p></div>
+      </div>
+
+      <div class="insight warn">
+        <div class="htag">▲ "Port already in use" is not an error</div>
+        <p>If you've already got a server running in another terminal, Vite won't fight it — it just bumps to the
+        next free port: 5174, then 5175, and so on. So if your site shows up on 5174 instead of 5173, nothing's
+        broken; you probably left an old server running. Check the address Vite actually prints rather than assuming
+        5173.</p>
+      </div>
+
+      <div class="check" data-check
+        data-correct="2"
+        data-fb="Correct — HMR pushes your saved changes to the browser instantly, no manual refresh. That fast feedback loop is one of Vite's best features.">
+        <div class="q">Checkpoint: what does Hot Module Replacement do?</div>
+        <div class="opts">
+          <button class="opt" data-opt="0">Bundles your code for production</button>
+          <button class="opt" data-opt="1">Replaces broken modules with working ones automatically</button>
+          <button class="opt" data-opt="2">Shows your edits in the browser instantly, without refreshing</button>
+          <button class="opt" data-opt="3">Swaps between port 5173 and 3000</button>
+        </div>
+        <div class="fb" data-fbbox></div>
+      </div>
+    </section>
+
+    <!-- ===== 4 ===== -->
+    <section class="chapter" id="c4">
+      <div class="chaphead"><span class="num">04</span><h2>vite.config.js</h2></div>
+      <p class="chapsub">One config file where Vite's settings and plugins live. You'll mostly read it, not write it — for now.</p>
+
+      <p>Vite reads its settings from a <code>vite.config.js</code> file, much like TypeScript has its own config.
+      It's where you change how things behave and add extra tools (called <b>plugins</b>) by importing and
+      registering them. Here's a typical one — the kind you'll meet from the next unit, with the React plugin set
+      up. Hover the parts:</p>
+
+      <div class="anatomy">
+        <div class="ahead">Code anatomy — a vite.config.js</div>
+        <div class="anacode"><span class="tok kw" data-exp="import|Brings in a helper from the vite package. Same ESM import you've used all along.">import</span> <span class="tok pn" data-exp="{ defineConfig }|A named import — Vite gives you this helper function. The braces mean “grab this specific export.”">{ defineConfig }</span> <span class="tok kw" data-exp="from 'vite'|The source: a bare package name (no ./), so it's pulled from node_modules — this is a package import, not one of your files.">from 'vite'</span>
+<span class="tok kw" data-exp="import react|Imports the React plugin from its own package, so Vite can understand React files.">import react</span> <span class="tok kw" data-exp="from '@vitejs/plugin-react'|The React plugin package. Plugins are just packages you install and register here.">from '@vitejs/plugin-react'</span>
+
+<span class="tok kw" data-exp="export default|Makes this config the file's single default export — Vite looks for exactly this when it starts up.">export default</span> <span class="tok fn" data-exp="defineConfig(...)|Wraps your settings object. It doesn't do anything magic — it mainly gives you helpful autocomplete and type-checking while you edit the config.">defineConfig</span><span class="tok pn" data-exp="( { ... } )|The parentheses pass your settings object into defineConfig.">(</span><span class="tok pn" data-exp="{ } settings|The object holding all your Vite settings.">{</span>
+  <span class="tok pm" data-exp="plugins|A setting: the list of plugins Vite should use. The most common thing you'll see configured.">plugins</span>: <span class="tok op" data-exp="[ react() ]|An array of active plugins. react() is called to produce the plugin. Add more tools by importing them and adding them to this array.">[react()]</span>
+<span class="tok pn" data-exp="}|Closes the settings object.">}</span><span class="tok pn" data-exp=")|Closes defineConfig.">)</span></div>
+        <div class="anapanel"><div class="anahint">Hover or tap a highlighted token above <span class="legend">· if a project uses Vite, this file tells you how it's set up</span></div><div class="anatitle">—</div><div class="anatext">Every part explains its own job.</div></div>
+      </div>
+
+      <div class="insight">
+        <div class="htag">◆ Insight — you rarely touch this early on</div>
+        <p>Don't let the config file intimidate you — for most challenges it comes pre-made and you never open it.
+        Its value right now is diagnostic: if you're ever curious how a project is wired, or a README mentions a
+        plugin, <code>vite.config.js</code> is where the answer lives. Reading it is a skill; writing it comes much
+        later.</p>
+      </div>
+    </section>
+
+    <!-- ===== 5 ===== -->
+    <section class="chapter" id="c5">
+      <div class="chaphead"><span class="num">05</span><h2>Data models: the three concepts</h2></div>
+      <p class="chapsub">A data model is a deliberate, consistent shape for the data your app cares about. It rests on three ideas.</p>
+
+      <p>Say your app has users. A data model decides exactly what a "user" looks like in your code — which
+      properties, of which types:</p>
+
+      <div class="cell" data-cell>
+        <div class="bar"><span class="dots"><i></i><i></i><i></i></span><span class="fname">user.js</span><span class="spacer"></span><button class="run" data-run>▶ Run</button></div>
+        <pre class="code" contenteditable="true" spellcheck="false">// a user, modelled: only the fields the app actually uses
+const user = {
+  id: 1,
+  username: "rey",
+  email: "rey@example.dev",
+  age: 28
+}
+
+console.log(user.username)      // 'rey'
+console.log(typeof user.age)    // 'number'
+// note: no cat's name, no grandmother's phone — we don't model what we won't use</pre>
+        <div class="console" data-console></div>
+      </div>
+
+      <div class="triad">
+        <div class="tri"><div class="tn">Structure</div><p>Defines the <b>types</b> of each piece (string, number) and how data relates. Simple here — all top-level. Later a user might hold a nested <code>pet</code> object.</p></div>
+        <div class="tri"><div class="tn">Abstraction</div><p>Include <b>only what you'll use</b>. Real users have endless details; your model keeps the handful the app needs. A simplified, workable view.</p></div>
+        <div class="tri"><div class="tn">Consistency</div><p>Use the <b>same model everywhere</b>, so a user looks identical in every corner of the app. No surprises about what fields exist.</p></div>
+      </div>
+
+      <div class="insight">
+        <div class="htag">◆ Insight — abstraction is the same instinct as the bowling model</div>
+        <p>Deciding to model <code>id, username, email, age</code> and ignore the rest is exactly the move from the
+        bowling challenge — capturing only the relevant parts of a real thing. "What does the app actually need to
+        know?" is the whole question. Modelling too much is as much a mistake as modelling too little; extra fields
+        are clutter you have to keep consistent for no benefit.</p>
+      </div>
+    </section>
+
+    <!-- ===== 6 ===== -->
+    <section class="chapter" id="c6">
+      <div class="chaphead"><span class="num">06</span><h2>Interfaces as contracts</h2></div>
+      <p class="chapsub">A TypeScript interface writes your data model down as an enforceable shape — a promise every object of that type must keep.</p>
+
+      <p>An <b>interface</b> defines the shape of an object: which keys it has and the type of each value. Think of
+      it as a <b>contract</b> — declare an object to be a <code>User</code>, and it must have exactly this shape,
+      or the tooling complains before you ever run the code. Hover the parts:</p>
+
+      <div class="anatomy">
+        <div class="ahead">Code anatomy — a TypeScript interface</div>
+        <div class="anacode"><span class="tok kw" data-exp="interface|The TypeScript keyword that declares a data model — a named shape that objects can promise to match.">interface</span> <span class="tok fn" data-exp="User|The name of the type. Capitalised by convention. You'll write `: User` on objects to say “this matches the contract.”">User</span> <span class="tok pn" data-exp="{ }|Wraps the shape — the list of properties this type requires.">{</span>
+  <span class="tok pm" data-exp="id|A required property name.">id</span><span class="tok pn" data-exp=": (annotation)|The colon introduces the TYPE of this property — not a value. Interfaces describe types, never actual data.">:</span> <span class="tok rt" data-exp="number|The type `id` must be. An object claiming to be a User must have a numeric id, or TypeScript flags it.">number</span>
+  <span class="tok pm" data-exp="username|Another required property.">username</span>: <span class="tok rt" data-exp="string|username must be a string.">string</span>
+  <span class="tok pm" data-exp="email|Another required property.">email</span>: <span class="tok rt" data-exp="string|email must be a string.">string</span>
+  <span class="tok pm" data-exp="age|Another required property.">age</span>: <span class="tok rt" data-exp="number|age must be a number. Together these four lines ARE the contract.">number</span>
+<span class="tok pn" data-exp="}|Closes the interface. Any object typed as User must satisfy every line above.">}</span></div>
+        <div class="anapanel"><div class="anahint">Hover or tap a highlighted token above <span class="legend">· note the values are TYPES (number/string), not data</span></div><div class="anatitle">—</div><div class="anatext">Every part explains its own job.</div></div>
+      </div>
+
+      <p>Now test the contract. Each object below claims to be a <code>User</code> — click one and see, field by
+      field, whether it keeps the promise:</p>
+
+      <div class="contract" id="contract">
+        <div class="cch">Contract checker — does this object satisfy interface User?</div>
+        <div class="iface"><span class="kw">interface</span> <span class="nm">User</span> {  <span class="key">id</span>: <span class="ty">number</span>,  <span class="key">username</span>: <span class="ty">string</span>,  <span class="key">email</span>: <span class="ty">string</span>,  <span class="key">age</span>: <span class="ty">number</span>  }</div>
+        <div class="cands" id="contractCands"></div>
+        <div class="grid" id="contractGrid"></div>
+        <div class="verdict" id="contractVerdict"></div>
+      </div>
+
+      <div class="insight warn">
+        <div class="htag">▲ Insight — interfaces vanish when the code runs</div>
+        <p>Here's the surprising part: interfaces exist only while you're <em>writing</em> code. TypeScript uses
+        them to catch mistakes and power VS Code's autocomplete, then <b>erases them</b> when compiling to the
+        JavaScript that actually runs. So an interface never slows your app down or exists at runtime — it's a
+        dev-time safety net and a piece of documentation, nothing more. That's why the checker above validated a
+        plain JS object: the interface is a description laid <em>over</em> ordinary data.</p>
+      </div>
+
+      <div class="insight">
+        <div class="htag">◆ Insight — documentation that can't lie</div>
+        <p>A comment saying "user has an id, name, email" can drift out of date the moment someone changes the code.
+        An interface can't — if the object stops matching, the compiler complains. So interfaces double as
+        documentation the tooling <em>keeps honest</em>. Someone new can read your <code>models/</code> folder and
+        understand your whole data shape in a minute, and trust that it's current.</p>
+      </div>
+    </section>
+
+    <!-- ===== 7 ===== -->
+    <section class="chapter" id="c7">
+      <div class="chaphead"><span class="num">07</span><h2>Shared models</h2></div>
+      <p class="chapsub">Define each model once, import it everywhere — front end and back end alike. One source of truth.</p>
+
+      <p><b>Unified (or shared) data modeling</b> means using a single set of models across your whole full-stack
+      app — the front end the user sees <em>and</em> the back end talking to the database. Define the
+      <code>User</code> interface once in its own file, then import it wherever you need it. Both sides agree on
+      what a user is because they're literally reading the same definition.</p>
+
+      <p>At Dev Academy the convention is a <code>models/</code> directory at the project root:</p>
+
+      <div class="tree">
+<span class="dir">my-project/</span>
+├── <span class="dir">models/</span>          <span class="cm"># shared data models live here</span>
+│   └── <span class="hi">user.ts</span>       <span class="cm"># exports the User interface</span>
+├── <span class="dir">client/</span>          <span class="cm"># front end — imports User from ../models/user</span>
+├── <span class="dir">server/</span>          <span class="cm"># back end  — imports the SAME User</span>
+└── <span class="file">package.json</span>
+      </div>
+
+      <div class="insight">
+        <div class="htag">◆ Insight — one definition, zero drift</div>
+        <p>The payoff is a single source of truth. Add a <code>phone</code> field to the <code>User</code> in
+        <code>models/user.ts</code>, and both the front end and back end instantly know about it — the type flows
+        everywhere it's imported. Without shared models you'd define "user" twice and they'd quietly disagree the
+        first time someone updated one and forgot the other. This is the DRY principle (don't repeat yourself)
+        applied to the <em>shape</em> of your data.</p>
+      </div>
+
+      <div class="check" data-check
+        data-correct="0"
+        data-fb="Right — a shared interface defined once and imported by both front and back end keeps the whole app agreeing on the data's shape. That single source of truth is the goal of unified data modeling.">
+        <div class="q">Checkpoint: why define a <code>User</code> interface once in <code>models/</code> and import it?</div>
+        <div class="opts">
+          <button class="opt" data-opt="0">So the front end and back end always agree on a user's shape</button>
+          <button class="opt" data-opt="1">Because interfaces can only exist in one file</button>
+          <button class="opt" data-opt="2">To make the app run faster at runtime</button>
+          <button class="opt" data-opt="3">It's required or Vite won't start</button>
+        </div>
+        <div class="fb" data-fbbox></div>
+      </div>
+    </section>
+
+    <!-- ===== RECAP ===== -->
+    <section class="chapter" id="recap">
+      <div class="chaphead"><span class="num">★</span><h2>Recap</h2></div>
+      <div class="recap">
+        <h3>Vite</h3>
+        <ul>
+          <li><b>Vite</b> = a fast web build tool + dev server. You've used it since Foundations.</li>
+          <li><b>Bundling</b> = ship all code as one file. <b>On-demand</b> = ship only what's needed, when needed.</li>
+          <li>Vite uses on-demand in <b>dev</b>, still bundles for <b>production</b>.</li>
+          <li><b>HMR</b> (Hot Module Replacement) = edits show in the browser instantly, no refresh.</li>
+          <li>Run it with <b>npm run dev</b> (sometimes npm start). Front end <b>5173</b>, back end <b>3000</b>.</li>
+          <li>"Port in use" just bumps to 5174/5175 — not an error. Read the address Vite prints.</li>
+          <li><b>vite.config.js</b> holds settings &amp; plugins (defineConfig + a plugins array). Mostly read, not written.</li>
+        </ul>
+      </div>
+      <div class="recap">
+        <h3>Data models</h3>
+        <ul>
+          <li>A <b>data model</b> = a consistent shape for the data your app cares about.</li>
+          <li>Three ideas: <b>structure</b> (types &amp; relationships), <b>abstraction</b> (only what you use), <b>consistency</b> (same shape everywhere).</li>
+          <li>A <b>TypeScript interface</b> writes the model down: keys + their types.</li>
+          <li>An interface is a <b>contract</b> — objects typed as it must match, or the tooling complains.</li>
+          <li>Interfaces are <b>erased at runtime</b> — a dev-time safety net + honest documentation.</li>
+          <li><b>Shared models</b>: define once, import in front <em>and</em> back end. One source of truth (DRY).</li>
+          <li>Convention: keep them in a <b>models/</b> folder at the project root.</li>
+        </ul>
+      </div>
+
+      <footer>
+        <p>Built from your Unit 1 · T12 lectures (Vite + Data Models) — Dev Academy Aotearoa. Interactives run in
+        your browser; nothing's saved.</p>
+        <p class="mono">reference:
+          <a href="https://vitejs.dev/guide/" target="_blank" rel="noopener">Vite guide</a> ·
+          <a href="https://www.typescriptlang.org/docs/handbook/2/objects.html" target="_blank" rel="noopener">TypeScript interfaces</a></p>
+      </footer>
+    </section>
+  </main>
+</div>
+
+<script>
+/* ---------- console runner ---------- */
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function fmt(v){
+  if(v===null) return '<span class="tok-null">null</span>';
+  if(v===undefined) return '<span class="tok-null">undefined</span>';
+  const t=typeof v;
+  if(t==='number') return '<span class="tok-num">'+String(v)+'</span>';
+  if(t==='boolean') return '<span class="tok-num">'+v+'</span>';
+  if(t==='string') return '<span class="tok-str">\''+esc(v)+'\'</span>';
+  if(Array.isArray(v)) return '<span class="tok-null">[</span> '+v.map(fmt).join('<span class="tok-null">, </span>')+' <span class="tok-null">]</span>';
+  if(t==='object'){return '<span class="tok-null">{</span> '+Object.keys(v).map(k=>esc(k)+': '+fmt(v[k])).join('<span class="tok-null">, </span>')+' <span class="tok-null">}</span>';}
+  return esc(String(v));
+}
+function fmtArgs(a){return a.map(x=>typeof x==='string'?'<span class="tok-str">'+esc(x)+'</span>':fmt(x)).join(' ');}
+function runCell(cell){
+  const code=cell.querySelector('pre.code').textContent;
+  const box=cell.querySelector('[data-console]');const logs=[];
+  const fc={log:(...a)=>logs.push({t:'log',a}),error:(...a)=>logs.push({t:'log',a}),warn:(...a)=>logs.push({t:'log',a}),info:(...a)=>logs.push({t:'log',a})};
+  try{ new Function('console','"use strict";\n'+code)(fc); }
+  catch(e){ logs.push({t:'err',m:(e&&e.message)?e.message:String(e)}); }
+  box.classList.add('show');
+  box.innerHTML = logs.length
+    ? logs.map(l=>l.t==='err'?'<div class="cline"><span class="tok-err">✖ '+esc(l.m)+'</span></div>':'<div class="cline"><span class="prompt">› </span>'+fmtArgs(l.a)+'</div>').join('')
+    : '<div class="cline empty">// no output — nothing was logged</div>';
+}
+document.querySelectorAll('[data-cell]').forEach(cell=>{
+  cell.querySelector('[data-run]').addEventListener('click',()=>runCell(cell));
+  cell.querySelector('pre.code').addEventListener('keydown',e=>{if((e.metaKey||e.ctrlKey)&&e.key==='Enter'){e.preventDefault();runCell(cell);}});
+});
+
+/* ---------- anatomy ---------- */
+document.querySelectorAll('.anatomy').forEach(an=>{
+  const title=an.querySelector('.anatitle'), text=an.querySelector('.anatext'), hint=an.querySelector('.anahint');
+  const toks=an.querySelectorAll('.tok');
+  function show(tok){
+    const raw=tok.getAttribute('data-exp')||''; const i=raw.indexOf('|');
+    title.textContent=i>=0?raw.slice(0,i):tok.textContent.trim();
+    text.textContent=i>=0?raw.slice(i+1):raw;
+    hint.textContent='what this part does';
+    toks.forEach(x=>x.classList.remove('active')); tok.classList.add('active');
+  }
+  toks.forEach(tok=>{tok.setAttribute('tabindex','0');
+    tok.addEventListener('mouseenter',()=>show(tok));
+    tok.addEventListener('click',()=>show(tok));
+    tok.addEventListener('focus',()=>show(tok));});
+});
+
+/* ---------- MODULE SHIPPING VISUAL ---------- */
+(function(){
+  const MODS=['shared','home','about','dashboard','chart'];
+  const NEEDS={ home:['shared','home'], about:['shared','about'], dashboard:['shared','dashboard','chart'] };
+  const SIZE={shared:120,home:90,about:80,dashboard:150,chart:210};
+  let mode='bundle';
+  const modsEl=document.getElementById('shipMods');
+  const statEl=document.getElementById('shipStat');
+  const msgEl=document.getElementById('shipMsg');
+  function paintMods(sent, wasted){
+    modsEl.innerHTML=MODS.map(m=>{
+      let cls='mod';
+      if(sent.includes(m)) cls+=' sent';
+      if(wasted&&wasted.includes(m)) cls+=' waste';
+      return '<span class="'+cls+'">'+m+'.js</span>';
+    }).join('');
+  }
+  function open(page){
+    const need=NEEDS[page];
+    if(mode==='bundle'){
+      const wasted=MODS.filter(m=>!need.includes(m));
+      const kb=MODS.reduce((s,m)=>s+SIZE[m],0);
+      paintMods(MODS, wasted);
+      statEl.innerHTML='Sent this load: <b>'+MODS.length+' modules · ~'+kb+'KB</b>';
+      msgEl.className='msg bad';
+      msgEl.innerHTML='Opened <b>'+page+'</b> — but the whole bundle shipped. The '+wasted.length+' red modules ('+wasted.join(', ')+') weren\'t needed for this page, yet they were sent anyway.';
+    }else{
+      const kb=need.reduce((s,m)=>s+SIZE[m],0);
+      paintMods(need, null);
+      statEl.innerHTML='Sent this load: <b>'+need.length+' modules · ~'+kb+'KB</b>';
+      msgEl.className='msg good';
+      msgEl.innerHTML='Opened <b>'+page+'</b> — Vite sent only what this page needs ('+need.join(', ')+') on demand. The rest stayed on the server until something asks for it.';
+    }
+  }
+  document.querySelectorAll('#ship .tab').forEach(t=>{
+    t.addEventListener('click',()=>{
+      document.querySelectorAll('#ship .tab').forEach(x=>x.classList.remove('active'));
+      t.classList.add('active'); mode=t.dataset.mode;
+      paintMods([],null); statEl.innerHTML='Sent this load: <b>—</b>';
+      msgEl.className='msg'; msgEl.textContent=mode==='bundle'?'Bundling mode. Open any page and watch what ships.':'Vite mode. Open any page and watch what ships.';
+    });
+  });
+  document.querySelectorAll('#ship .pages button').forEach(b=>b.addEventListener('click',()=>open(b.dataset.page)));
+  paintMods([],null);
+})();
+
+/* ---------- CONTRACT CHECKER ---------- */
+(function(){
+  const SPEC={id:'number',username:'string',email:'string',age:'number'};
+  const CANDS=[
+    {label:'Valid user', obj:{id:1, username:'rey', email:'rey@x.dev', age:28}},
+    {label:'Wrong type', obj:{id:'1', username:'rey', email:'rey@x.dev', age:28}},
+    {label:'Missing field', obj:{id:2, username:'sam', email:'sam@x.dev'}},
+    {label:'Extra field', obj:{id:3, username:'kit', email:'kit@x.dev', age:40, catName:'Milo'}}
+  ];
+  const candsEl=document.getElementById('contractCands');
+  const gridEl=document.getElementById('contractGrid');
+  const verdictEl=document.getElementById('contractVerdict');
+  function disp(v){ if(v===undefined) return '—'; return typeof v==='string' ? "'"+v+"'" : String(v); }
+  function check(cand){
+    const obj=cand.obj;
+    let rows='', allOk=true;
+    for(const [k,t] of Object.entries(SPEC)){
+      const has=k in obj; const actual=has?typeof obj[k]:'missing'; const ok=has&&actual===t;
+      if(!ok) allOk=false;
+      rows+='<div class="frow '+(ok?'ok':'no')+'"><span class="k">'+k+'</span><span class="want">wants '+t+'</span><span class="got">got '+disp(obj[k])+' <span style="opacity:.6">('+actual+')</span></span><span class="mark">'+(ok?'✓':'✗')+'</span></div>';
+    }
+    const extras=Object.keys(obj).filter(k=>!(k in SPEC));
+    extras.forEach(k=>{
+      rows+='<div class="frow extra"><span class="k">'+k+'</span><span class="want">not in model</span><span class="got">got '+disp(obj[k])+'</span><span class="mark">!</span></div>';
+    });
+    gridEl.innerHTML=rows;
+    if(allOk && extras.length===0){
+      verdictEl.className='verdict pass';
+      verdictEl.innerHTML='✓ Satisfies the User contract.<div class="sub">Every required key is present with the right type. TypeScript would accept this as a User.</div>';
+    }else if(allOk && extras.length){
+      verdictEl.className='verdict pass';
+      verdictEl.innerHTML='✓ Satisfies the contract — with clutter.<div class="sub">All required fields are correct, so it passes. But <b>'+extras.join(', ')+'</b> isn\'t in the model — abstraction says leave out what the app won\'t use.</div>';
+    }else{
+      verdictEl.className='verdict fail';
+      const miss=Object.keys(SPEC).filter(k=>!(k in obj));
+      const wrong=Object.entries(SPEC).filter(([k,t])=>k in obj && typeof obj[k]!==t).map(([k])=>k);
+      let why=[];
+      if(miss.length) why.push('missing '+miss.join(', '));
+      if(wrong.length) why.push(wrong.join(', ')+' has the wrong type');
+      verdictEl.innerHTML='✗ Breaks the User contract.<div class="sub">'+why.join('; ')+'. TypeScript would flag this before the code ever runs.</div>';
+    }
+  }
+  CANDS.forEach((c,i)=>{
+    const b=document.createElement('button'); b.className='cand'; b.textContent=c.label;
+    b.addEventListener('click',()=>{
+      document.querySelectorAll('#contract .cand').forEach(x=>x.classList.remove('active'));
+      b.classList.add('active'); check(c);
+    });
+    candsEl.appendChild(b);
+    if(i===0){ b.classList.add('active'); }
+  });
+  check(CANDS[0]);
+})();
+
+/* ---------- predict reveals ---------- */
+document.querySelectorAll('[data-predict]').forEach(p=>{
+  p.querySelector('[data-reveal]').addEventListener('click',function(){
+    p.querySelector('[data-answer]').classList.add('show');
+    this.textContent='Answer shown ↓';this.disabled=true;this.style.opacity=.55;
+  });
+});
+
+/* ---------- checkpoints ---------- */
+document.querySelectorAll('[data-check]').forEach(chk=>{
+  const correct=parseInt(chk.dataset.correct,10);
+  const fbbox=chk.querySelector('[data-fbbox]');
+  chk.querySelectorAll('.opt').forEach(opt=>{
+    opt.addEventListener('click',()=>{
+      const pick=parseInt(opt.dataset.opt,10);
+      if(pick===correct){opt.classList.add('correct');fbbox.textContent=chk.dataset.fb;fbbox.classList.add('show');chk.querySelectorAll('.opt').forEach(o=>o.style.pointerEvents='none');}
+      else{opt.classList.add('wrong');opt.style.pointerEvents='none';}
+    });
+  });
+});
+
+/* ---------- scrollspy ---------- */
+const sections=[...document.querySelectorAll('section.chapter')];
+const links=[...document.querySelectorAll('nav.side a[data-sec]')];
+const mlinks=[...document.querySelectorAll('.mobtop .mlink')];
+function spy(){
+  const y=window.scrollY+120;let cur=sections[0].id;
+  for(const s of sections){if(s.offsetTop<=y)cur=s.id;}
+  links.forEach(l=>l.classList.toggle('active',l.getAttribute('href')==='#'+cur));
+  mlinks.forEach(l=>l.classList.toggle('active',l.getAttribute('href')==='#'+cur));
+}
+window.addEventListener('scroll',spy,{passive:true});spy();
+</script>
+</body>
+</html>

@@ -1,0 +1,885 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>React Query — interactive guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;450;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F1F1F4;--card:#FBFBFD;--ink:#1B1E26;--muted:#5A5F6B;--line:#E1E1E8;
+    --violet:#6C4CE0;--violet-soft:#EDE8FC;--violet-line:#D8CEF7;
+    --emerald:#12905F;--amber:#B67A08;--rose:#D6455D;--blue:#2C6FE0;
+    --term-bg:#15171E;--term-panel:#1D2029;--term-fg:#E6E8EC;--term-dim:#8A90A0;
+    --t-num:#E7B45A;--t-str:#93D6A0;--t-null:#8A90A0;--t-err:#F0808F;
+    --radius:14px;
+    --mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+    --disp:'Space Grotesk',system-ui,sans-serif;--body:'Inter',system-ui,sans-serif;
+  }
+  *{box-sizing:border-box}html{scroll-behavior:smooth}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);font-size:16.5px;line-height:1.62;-webkit-font-smoothing:antialiased}
+  a{color:var(--violet);text-decoration:none}a:hover{text-decoration:underline}
+  code{font-family:var(--mono);font-size:.88em;background:#E7E7EE;padding:.08em .38em;border-radius:5px;color:#2C2140}
+
+  .wrap{display:grid;grid-template-columns:270px minmax(0,1fr);max-width:1200px;margin:0 auto}
+  nav.side{position:sticky;top:0;align-self:start;height:100vh;overflow-y:auto;padding:30px 22px 40px;border-right:1px solid var(--line)}
+  main{padding:0 clamp(20px,5vw,64px) 120px;min-width:0}
+  .brand{font-family:var(--mono);font-weight:700;font-size:14px;letter-spacing:.04em;color:var(--violet);margin-bottom:4px}
+  .brand small{color:var(--muted);font-weight:400;display:block;letter-spacing:0;margin-top:3px;font-family:var(--body);font-size:12.5px}
+  .navsec{margin-top:26px}
+  .navsec > span{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:9px;padding-left:12px}
+  nav.side a.link{display:flex;gap:10px;align-items:baseline;padding:7px 12px;border-radius:9px;color:var(--ink);font-size:14.5px;line-height:1.35}
+  nav.side a.link:hover{background:#E9E9F0;text-decoration:none}
+  nav.side a.link.active{background:var(--violet-soft);color:#3B2A73;font-weight:500}
+  nav.side a.link b{font-family:var(--mono);font-size:11.5px;color:var(--violet);min-width:20px}
+  .backlink{margin-top:24px;font-size:13px;color:var(--muted)}
+  .backlink a{font-family:var(--mono);font-size:12.5px;display:block;margin-top:6px}
+
+  header.hero{padding:64px 0 30px}
+  .eyebrow{font-family:var(--mono);font-size:12.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--violet);margin-bottom:18px}
+  h1{font-family:var(--disp);font-weight:700;font-size:clamp(34px,5.4vw,54px);line-height:1.04;letter-spacing:-.02em;margin:0 0 20px}
+  h1 .brace{color:var(--violet)}
+  .lede{font-size:19px;color:#3A3E48;max-width:62ch;margin:0}.lede + .lede{margin-top:14px}
+  .runline{font-family:var(--mono);font-size:13.5px;color:var(--muted);margin-top:26px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .runline .kbd{background:var(--term-bg);color:var(--t-str);padding:5px 11px;border-radius:7px;font-size:12.5px}
+
+  section.chapter{padding-top:56px;scroll-margin-top:20px}
+  .chaphead{display:flex;align-items:baseline;gap:16px;border-bottom:2px solid var(--ink);padding-bottom:12px;margin-bottom:8px}
+  .chaphead .num{font-family:var(--mono);font-weight:700;font-size:15px;color:var(--violet)}
+  h2{font-family:var(--disp);font-weight:600;font-size:clamp(25px,3.4vw,34px);letter-spacing:-.015em;margin:0}
+  .chapsub{color:var(--muted);font-size:15px;margin:14px 0 0}
+  h3{font-family:var(--disp);font-weight:600;font-size:21px;letter-spacing:-.01em;margin:40px 0 10px}
+  p{margin:14px 0}main p,main li{color:#24272F}
+
+  /* code cell */
+  .cell{margin:22px 0;border-radius:var(--radius);overflow:hidden;border:1px solid #2A2E3A;box-shadow:0 10px 30px -18px rgba(20,20,40,.4)}
+  .cell .bar{background:var(--term-panel);display:flex;align-items:center;gap:8px;padding:9px 14px;border-bottom:1px solid #2A2E3A}
+  .cell .bar .dots{display:flex;gap:6px}.cell .bar .dots i{width:11px;height:11px;border-radius:50%;display:block}
+  .dots i:nth-child(1){background:#E06C75}.dots i:nth-child(2){background:#E5C07B}.dots i:nth-child(3){background:#98C379}
+  .cell .bar .fname{font-family:var(--mono);font-size:12px;color:var(--term-dim);margin-left:4px}
+  .cell pre.code{margin:0;background:var(--term-bg);color:var(--term-fg);font-family:var(--mono);font-size:13px;line-height:1.7;padding:16px 18px;white-space:pre;overflow-x:auto;tab-size:2}
+  .cell pre.code .cm{color:#6B7180}.cell pre.code .kw{color:#C9A6F6}.cell pre.code .fn{color:#8CC0F5}
+  .cell pre.code .st{color:#93D6A0}.cell pre.code .nm{color:#E7B45A}.cell pre.code .tag{color:#F0909F}.cell pre.code .ty{color:#7DD3C0}
+
+  /* anatomy */
+  .anatomy{margin:22px 0;border:1px solid #2A2E3A;border-radius:var(--radius);overflow:hidden;box-shadow:0 10px 30px -18px rgba(20,20,40,.4)}
+  .anatomy .ahead{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--term-dim);padding:10px 16px;border-bottom:1px solid #2A2E3A;background:var(--term-panel);display:flex;align-items:center;gap:8px}
+  .anatomy .ahead::before{content:'⌖';color:#C39BF5;font-size:14px}
+  .anacode{padding:18px;background:var(--term-bg);font-family:var(--mono);font-size:14px;line-height:2.1;color:var(--term-fg);overflow-x:auto;white-space:pre-wrap;word-break:break-word}
+  .tok{cursor:pointer;border-radius:5px;padding:2px 3px;transition:.12s;outline:1.5px solid transparent}
+  .tok:hover{outline-color:rgba(255,255,255,.28)}
+  .tok.kw{background:rgba(195,155,245,.16);color:#C9A6F6}
+  .tok.fn{background:rgba(124,183,240,.15);color:#8CC0F5}
+  .tok.pm{background:rgba(231,180,90,.15);color:#E7B45A}
+  .tok.rt{background:rgba(147,214,160,.15);color:#93D6A0}
+  .tok.op{background:rgba(240,128,143,.14);color:#F0909F}
+  .tok.pn{background:rgba(150,156,172,.16);color:#B4BAC8}
+  .tok.st{background:rgba(147,214,160,.13);color:#93D6A0}
+  .tok.ty{background:rgba(125,211,192,.15);color:#7DD3C0}
+  .tok.active{outline-color:var(--violet)!important;background:rgba(108,76,224,.32)!important;color:#fff}
+  .anapanel{padding:15px 18px;min-height:78px;background:var(--card)}
+  .anahint{font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:.05em}
+  .anahint .legend{color:var(--muted);opacity:.8}
+  .anatitle{font-family:var(--mono);font-weight:700;font-size:14px;color:var(--violet);margin:6px 0 3px}
+  .anatext{font-size:13.5px;color:#2A2D36;line-height:1.55}
+  @media(max-width:640px){.anacode{font-size:13px;line-height:2}}
+
+  /* ---------- CACHE INSPECTOR ---------- */
+  .qc{margin:26px 0;border:1px solid var(--line);border-radius:16px;background:var(--card);overflow:hidden}
+  .qc .qch{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:11px 18px;border-bottom:1px solid var(--line);background:#F5F5F9;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .qc .qch .net{margin-left:auto;font-size:11px;color:var(--ink);text-transform:none;letter-spacing:0}
+  .qc .qch .net b{color:var(--violet);font-family:var(--mono)}
+  .qc .mountbar{display:flex;gap:7px;flex-wrap:wrap;padding:14px 18px 8px;align-items:center}
+  .qc .mountbar .lbl{font-family:var(--mono);font-size:11px;color:var(--muted);width:100%;margin-bottom:2px}
+  .qc .mountbar button{font-family:var(--mono);font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--violet);background:var(--violet);color:#fff;border-radius:8px;padding:8px 12px}
+  .qc .mountbar button:hover{background:#5B3ED1}
+  .qc .mountbar button.ghost{background:transparent;color:var(--violet)}
+  .qc .mountbar button.warn{border-color:var(--amber);background:transparent;color:var(--amber)}
+  .qc .mountbar button.warn:hover{background:#FBF3E4}
+  .qc .split{display:grid;grid-template-columns:1fr 1fr;gap:0;border-top:1px solid var(--line);margin-top:8px}
+  @media(max-width:680px){.qc .split{grid-template-columns:1fr}}
+  .qc .mounted{padding:14px 18px;border-right:1px solid var(--line);min-height:150px}
+  @media(max-width:680px){.qc .mounted{border-right:none;border-bottom:1px solid var(--line)}}
+  .qc .collab{font-family:var(--mono);font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
+  .qc .comp{border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:8px;background:#FDFDFE;font-family:var(--mono);font-size:12px;animation:pop .2s ease}
+  @keyframes pop{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:none}}
+  .qc .comp .cn{color:var(--ink);font-weight:600;margin-bottom:4px}
+  .qc .comp .flags{display:flex;gap:6px;flex-wrap:wrap}
+  .qc .comp .fl{font-size:10.5px;padding:2px 7px;border-radius:10px;background:#EEEDF2;color:var(--muted)}
+  .qc .comp .fl.on{font-weight:700}
+  .qc .comp .fl.pending.on{background:#FBF3E4;color:#8A5A00}
+  .qc .comp .fl.success.on{background:#EAF7F0;color:#0C6B45}
+  .qc .comp .fl.error.on{background:#FBECEE;color:#9E2B3B}
+  .qc .comp .data{margin-top:6px;color:var(--emerald)}
+  .qc .comp .src{margin-top:5px;font-size:10.5px;color:var(--muted)}
+  .qc .comp .src.hit{color:var(--violet)}
+  .qc .empty{color:var(--muted);font-style:italic;font-size:13px;font-family:var(--body)}
+  .qc .cachepanel{padding:14px 18px;background:#0F1116}
+  .qc .cachepanel .cplab{font-family:var(--mono);font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;color:#6FA8FF;margin-bottom:10px;display:flex;align-items:center;gap:7px}
+  .qc .cachepanel .cplab::before{content:'⚛';color:#FF6FA8}
+  .qc .centry{font-family:var(--mono);font-size:12px;border:1px solid #2A2E3A;border-radius:8px;padding:8px 11px;margin-bottom:7px;background:#15171E;animation:pop .2s ease}
+  .qc .centry .key{color:#E7B45A}
+  .qc .centry .meta{display:flex;gap:8px;margin-top:5px;align-items:center;flex-wrap:wrap}
+  .qc .centry .badge{font-size:10px;padding:2px 7px;border-radius:10px;font-weight:700}
+  .qc .centry .badge.pending{background:#3A2E10;color:#E7B45A}
+  .qc .centry .badge.success{background:#123021;color:#7DDB9A}
+  .qc .centry .badge.stale{background:#2A2E3A;color:#8A90A0}
+  .qc .centry .obs{color:#6B7180;font-size:10.5px}
+  .qc .centry .cdata{color:#8A90A0;font-size:10.5px;margin-top:3px}
+  .qc .cacheEmpty{color:#6B7180;font-style:italic;font-size:12.5px;font-family:var(--body)}
+  .qc .note{padding:11px 18px;font-size:13px;color:var(--muted);line-height:1.5;border-top:1px solid var(--line);background:#FAFAFC}
+  .qc .note b{color:var(--violet)}
+
+  /* reference vs call toggle */
+  .rvc{margin:24px 0;border:1px solid var(--line);border-radius:14px;background:var(--card);overflow:hidden}
+  .rvc .rvch{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:11px 18px;border-bottom:1px solid var(--line);background:#F5F5F9}
+  .rvc .tabs{display:flex;border-bottom:1px solid var(--line)}
+  .rvc .tab{flex:1;font-family:var(--mono);font-size:12.5px;font-weight:600;cursor:pointer;background:#FAFAFC;border:none;padding:12px 10px;color:var(--muted);border-bottom:2px solid transparent}
+  .rvc .tab:hover{background:#F2F2F6}
+  .rvc .tab.active{background:var(--card);color:var(--violet);border-bottom-color:var(--violet)}
+  .rvc .tab.wrong.active{color:var(--rose);border-bottom-color:var(--rose)}
+  .rvc .body{padding:16px 18px}
+  .rvc .cd{font-family:var(--mono);font-size:13px;background:var(--term-bg);color:var(--term-fg);border-radius:9px;padding:13px 15px;line-height:1.6;margin-bottom:12px;white-space:pre-wrap}
+  .rvc .cd .kw{color:#C9A6F6}.rvc .cd .fn{color:#8CC0F5}.rvc .cd .st{color:#93D6A0}.rvc .cd .cm{color:#6B7180}.rvc .cd .bad{background:rgba(214,69,93,.2);border-radius:4px}.rvc .cd .good{background:rgba(18,144,95,.2);border-radius:4px}
+  .rvc .verdict{font-size:13.5px;line-height:1.5;padding:12px 14px;border-radius:9px}
+  .rvc .verdict.bad{background:#FBECEE;border:1px solid #F0C4CB;color:#9E2B3B}
+  .rvc .verdict.good{background:#EAF7F0;border:1px solid #BEE6D2;color:#0C6B45}
+  .rvc .verdict b{font-weight:700}
+  .rvc .passes{font-family:var(--mono);font-size:11.5px;margin-top:9px;color:var(--muted)}
+
+  .insight{margin:24px 0;background:var(--card);border:1px solid var(--line);border-left:3px solid var(--violet);border-radius:12px;padding:16px 20px}
+  .insight .htag{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--violet);font-weight:700;display:flex;align-items:center;gap:8px;margin-bottom:6px}
+  .insight.warn{border-left-color:var(--amber)}.insight.warn .htag{color:var(--amber)}
+  .insight.gotcha{border-left-color:var(--rose)}.insight.gotcha .htag{color:var(--rose)}
+  .insight p{margin:6px 0}.insight p:first-of-type{margin-top:0}
+
+  /* vs comparison */
+  .versus{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:22px 0}
+  @media(max-width:680px){.versus{grid-template-columns:1fr}}
+  .vs{border:1px solid var(--line);border-radius:14px;overflow:hidden;background:var(--card)}
+  .vs .vh{font-family:var(--mono);font-size:11px;letter-spacing:.05em;text-transform:uppercase;font-weight:700;padding:10px 14px;border-bottom:1px solid var(--line)}
+  .vs.old .vh{background:#FBECEE;color:#9E2B3B}
+  .vs.new .vh{background:#EAF7F0;color:#0C6B45}
+  .vs pre{margin:0;font-family:var(--mono);font-size:12px;line-height:1.65;padding:14px;white-space:pre;overflow-x:auto;background:var(--term-bg);color:var(--term-fg)}
+  .vs pre .cm{color:#6B7180}.vs pre .kw{color:#C9A6F6}.vs pre .fn{color:#8CC0F5}.vs pre .st{color:#93D6A0}.vs pre .nm{color:#E7B45A}
+  .vs .tally{padding:9px 14px;font-family:var(--mono);font-size:11.5px;color:var(--muted);border-top:1px solid var(--line)}
+
+  /* predict */
+  .predict{margin:22px 0;border:1px solid var(--violet-line);border-radius:var(--radius);background:linear-gradient(180deg,#FAF8FF,#F4F0FE);overflow:hidden}
+  .predict .phead{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--violet-line)}
+  .predict .phead .icon{width:22px;height:22px;border-radius:6px;background:var(--violet);color:#fff;display:grid;place-items:center;font-size:13px;font-weight:700;font-family:var(--mono)}
+  .predict .phead b{font-family:var(--disp);font-size:15px}
+  .predict .pbody{padding:16px}
+  .predict pre.psrc{margin:0 0 14px;background:var(--term-bg);color:var(--term-fg);border-radius:10px;font-family:var(--mono);font-size:13px;line-height:1.6;padding:14px 16px;overflow-x:auto;white-space:pre-wrap}
+  .predict pre.psrc .cm{color:#6B7180}.predict pre.psrc .kw{color:#C9A6F6}.predict pre.psrc .fn{color:#8CC0F5}.predict pre.psrc .st{color:#93D6A0}.predict pre.psrc .nm{color:#E7B45A}
+  .predict .reveal-btn{font-family:var(--mono);font-size:12.5px;font-weight:600;cursor:pointer;background:var(--violet);color:#fff;border:none;border-radius:8px;padding:8px 16px}
+  .predict .reveal-btn:hover{background:#5B3ED1}
+  .predict .answer{display:none;margin-top:14px;background:#0F1116;border-radius:10px;padding:13px 16px}
+  .predict .answer.show{display:block}
+  .predict .answer .out{font-family:var(--mono);font-size:13px;color:#fff;background:#20232C;border-radius:8px;padding:10px 12px;margin-bottom:9px;line-height:1.6}
+  .predict .answer .out .n{color:#E7B45A}.predict .answer .out .s{color:#93D6A0}
+  .predict .answer .why{color:var(--term-dim);font-size:12.5px;line-height:1.55}
+
+  /* checkpoint */
+  .check{margin:26px 0;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px}
+  .check .q{font-family:var(--disp);font-weight:600;font-size:16px;margin-bottom:14px}
+  .check .opts{display:flex;flex-direction:column;gap:9px}
+  .check .opt{font-family:var(--mono);font-size:13.5px;text-align:left;cursor:pointer;background:#fff;border:1px solid var(--line);border-radius:9px;padding:11px 14px;transition:.15s}
+  .check .opt:hover{border-color:var(--violet-line);background:#FAF8FF}
+  .check .opt.correct{border-color:var(--emerald);background:#EAF7F0;color:#0C6B45}
+  .check .opt.wrong{border-color:var(--rose);background:#FBECEE;color:#9E2B3B}
+  .check .fb-msg{margin-top:12px;font-size:13.5px;color:var(--muted);display:none}
+  .check .fb-msg.show{display:block}
+
+  /* challenge */
+  .kintro{background:#FFF7EC;border:1px solid #F0DCBE;border-radius:14px;padding:18px 20px;margin:22px 0}
+  .kintro .htag{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--amber);font-weight:700;margin-bottom:6px}
+  .kintro p{margin:6px 0;font-size:14.5px}
+  .challenge{margin:18px 0;border:1px solid var(--line);border-radius:14px;background:var(--card);overflow:hidden}
+  .challenge .csig{background:var(--term-bg);color:var(--term-fg);font-family:var(--mono);font-size:13px;line-height:1.6;padding:14px 16px;white-space:pre-wrap;border-bottom:1px solid #2A2E3A}
+  .challenge .csig .cm{color:#6B7180}.challenge .csig .fn{color:#8CC0F5}.challenge .csig .kw{color:#C9A6F6}.challenge .csig .st{color:#93D6A0}
+  .challenge .chints{padding:14px 16px}
+  .challenge .hintbtn{font-family:var(--mono);font-size:12.5px;font-weight:600;cursor:pointer;border:1px solid var(--violet-line);background:var(--violet-soft);color:#4A3B85;border-radius:8px;padding:8px 14px;transition:.15s}
+  .challenge .hintbtn:hover{background:#E4DBFA}
+  .challenge .hintbtn:disabled{opacity:.5;cursor:default}
+  .challenge .hint{display:none;margin-top:12px;padding:12px 15px;border-radius:10px;background:#FAF8FF;border:1px solid var(--violet-line);font-size:14px;line-height:1.55}
+  .challenge .hint.show{display:block}
+  .challenge .hint .htier{font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--violet);font-weight:700;margin-bottom:5px}
+  .challenge .hint code{font-size:12.5px}
+  .challenge .hint.deep{background:#FFF7EC;border-color:#F0DCBE}
+  .challenge .hint.deep .htier{color:var(--amber)}
+  .challenge .cq{font-family:var(--disp);font-weight:600;font-size:16px;padding:14px 16px 0}
+
+  .recap{background:var(--term-bg);border-radius:16px;padding:26px 28px;margin:26px 0;color:var(--term-fg)}
+  .recap h3{color:#fff;margin-top:0}
+  .recap ul{list-style:none;padding:0;margin:0;display:grid;gap:10px}
+  .recap li{font-family:var(--mono);font-size:13px;line-height:1.55;padding-left:22px;position:relative;color:#D3D7E0}
+  .recap li::before{content:'›';position:absolute;left:0;color:var(--violet);font-weight:700}
+  .recap li b{color:var(--t-num);font-weight:500}
+
+  footer{border-top:1px solid var(--line);margin-top:70px;padding-top:24px;color:var(--muted);font-size:13.5px}
+  footer .mono{font-family:var(--mono);font-size:12px}
+
+  .mobtop{display:none}
+  @media(max-width:860px){
+    .wrap{grid-template-columns:1fr}nav.side{display:none}
+    .mobtop{display:flex;position:sticky;top:0;z-index:20;background:rgba(241,241,244,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);padding:12px 18px;gap:10px;align-items:center;overflow-x:auto}
+    .mobtop .brand{margin:0;white-space:nowrap}
+    .mobtop a{font-family:var(--mono);font-size:12px;white-space:nowrap;color:var(--muted);padding:5px 10px;border-radius:7px}
+    .mobtop a.active{background:var(--violet-soft);color:#3B2A73}
+    main{padding-left:20px;padding-right:20px}
+  }
+  @media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important;scroll-behavior:auto}}
+</style>
+</head>
+<body>
+
+<div class="mobtop">
+  <span class="brand">React Query</span>
+  <a href="#c1" class="mlink active">Mental model</a>
+  <a href="#c2" class="mlink">useQuery</a>
+  <a href="#c3" class="mlink">Setup</a>
+  <a href="#c4" class="mlink">Mistakes</a>
+  <a href="#c5" class="mlink">Loading/error</a>
+  <a href="#c6" class="mlink">Try this</a>
+  <a href="#recap" class="mlink">Recap</a>
+</div>
+
+<div class="wrap">
+  <nav class="side">
+    <div class="brand">React Query<small>@tanstack/react-query · guide</small></div>
+    <div class="navsec">
+      <span>Sections</span>
+      <a href="#c1" class="link" data-sec><b>01</b> Mental model</a>
+      <a href="#c2" class="link" data-sec><b>02</b> Anatomy of useQuery</a>
+      <a href="#c3" class="link" data-sec><b>03</b> Setup at the root</a>
+      <a href="#c4" class="link" data-sec><b>04</b> Common mistakes</a>
+      <a href="#c5" class="link" data-sec><b>05</b> Loading &amp; error patterns</a>
+      <a href="#c6" class="link" data-sec><b>06</b> Try this yourself</a>
+      <a href="#recap" class="link" data-sec><b>★</b> Recap</a>
+    </div>
+    <div class="navsec">
+      <span>The one idea</span>
+      <p style="font-size:13px;color:var(--muted);line-height:1.5;margin:0 12px">
+        React Query is a <b>cache with a lifecycle</b>. You describe data by a <b>key</b>; it fetches once, caches
+        it, and hands every component the status + data. You stop writing fetch plumbing.</p>
+    </div>
+    <div class="backlink">
+      Related guides:
+      <a href="./consuming-apis.html">← Consuming APIs</a>
+      <a href="./react-and-testing.html">← React intro</a>
+      <a href="./index.html">⌂ All guides</a>
+    </div>
+  </nav>
+
+  <main>
+    <header class="hero">
+      <div class="eyebrow">@tanstack/react-query · React + TypeScript</div>
+      <h1>Fetching, <span class="brace">without the plumbing</span></h1>
+      <p class="lede">You already know how to <code>fetch</code> and juggle loading/error state by hand. React Query
+      does that juggling for you — it's a <b>cache with a request lifecycle</b>. You describe <em>what</em> data you
+      want by a key; it handles fetching, caching, deduping, and status, and hands your component
+      <code>{ data, isPending, isError }</code>.</p>
+      <p class="lede">This guide is concepts, not answers — enough to write your own <code>useQuery</code> calls for
+      the Pokémon workshop, without me writing them for you.</p>
+      <div class="runline"><span class="kbd">queryKey + queryFn → { data, isPending, isError }</span> the whole API surface you need to start.</div>
+    </header>
+
+    <!-- ===== 1 ===== -->
+    <section class="chapter" id="c1">
+      <div class="chaphead"><span class="num">01</span><h2>Mental model</h2></div>
+      <p class="chapsub">React Query manages a cache of server data, keyed by an identifier you choose. That's the whole thing — everything else follows.</p>
+
+      <p>With plain <code>useState</code> + <code>useEffect</code>, <em>you</em> own every step: a state for data, a
+      state for loading, a state for errors, an effect to fetch, a dependency array, and cleanup so you don't set
+      state on an unmounted component. Every fetch, repeated. Here's the same fetch, both ways:</p>
+
+      <div class="versus">
+        <div class="vs old">
+          <div class="vh">✖ by hand — useState + useEffect</div>
+          <pre><span class="kw">const</span> [data, setData] = <span class="fn">useState</span>()
+<span class="kw">const</span> [loading, setLoading] = <span class="fn">useState</span>(<span class="kw">true</span>)
+<span class="kw">const</span> [error, setError] = <span class="fn">useState</span>()
+
+<span class="fn">useEffect</span>(() => {
+  <span class="fn">fetchPokemon</span>(name)
+    .<span class="fn">then</span>(setData)
+    .<span class="fn">catch</span>(setError)
+    .<span class="fn">finally</span>(() => <span class="fn">setLoading</span>(<span class="kw">false</span>))
+}, [name])</pre>
+          <div class="tally">3 states · 1 effect · no caching · refetches every mount</div>
+        </div>
+        <div class="vs new">
+          <div class="vh">✓ react-query — useQuery</div>
+          <pre><span class="kw">const</span> { data, isPending, isError } =
+  <span class="fn">useQuery</span>({
+    queryKey: [<span class="st">'pokemon'</span>, name],
+    queryFn: () => <span class="fn">fetchPokemon</span>(name),
+  })</pre>
+          <div class="tally">1 call · cached by key · deduped · refetch built in</div>
+        </div>
+      </div>
+
+      <p>The difference isn't just fewer lines — it's the <b>cache</b>. React Query keeps a store of query results
+      keyed by your <code>queryKey</code>. Mount a component that asks for <code>['pokemon', 'pikachu']</code> and it
+      fetches; mount another asking for the same key while it's cached, and it reuses the result instead of
+      refetching. Watch it happen — mount some components and observe the cache (right) and the network counter:</p>
+
+      <div class="qc" id="qc">
+        <div class="qch">Query cache inspector
+          <span class="net">network requests: <b id="qcNet">0</b> · components mounted: <b id="qcMounts">0</b></span>
+        </div>
+        <div class="mountbar" id="qcBar">
+          <span class="lbl">mount a component (each calls useQuery with the shown key):</span>
+          <button data-mount="pikachu">＋ &lt;Pokemon name="pikachu"&gt;</button>
+          <button data-mount="bulbasaur">＋ &lt;Pokemon name="bulbasaur"&gt;</button>
+          <button class="warn" data-invalidate>↻ invalidate 'pikachu'</button>
+          <button class="ghost" data-clear>clear all</button>
+        </div>
+        <div class="split">
+          <div class="mounted">
+            <div class="collab">mounted components</div>
+            <div id="qcComps"><div class="empty">Nothing mounted yet. Add a component above.</div></div>
+          </div>
+          <div class="cachepanel">
+            <div class="cplab">Query cache (like the Devtools panel)</div>
+            <div id="qcCache"><div class="cacheEmpty">cache is empty</div></div>
+          </div>
+        </div>
+        <div class="note" id="qcNote">Mount a pikachu, then mount another pikachu — watch the network counter. The second one reads from cache instead of firing a request.</div>
+      </div>
+
+      <div class="insight">
+        <div class="htag">◆ Insight — the cache is the whole point</div>
+        <p>Notice that a second <code>['pokemon', 'pikachu']</code> didn't add a network request — it read the
+        cached entry. That's what you're really buying: one source of truth for each piece of server data, shared
+        across every component that asks for it, fetched once. The Devtools panel (which you'll add with
+        <code>&lt;ReactQueryDevtools /&gt;</code>) shows this exact cache live — get in the habit of watching it.</p>
+      </div>
+
+      <div class="insight warn">
+        <div class="htag">▲ "Cached" doesn't mean "never refetches"</div>
+        <p>By default a cached result is considered <b>stale</b> immediately, so react-query may refetch it in the
+        background next time it's used (on a new mount, window refocus, reconnect) to keep it fresh — showing the
+        cached data instantly meanwhile. You tune this with <code>staleTime</code>. For now, just hold two ideas:
+        <em>cached data appears instantly</em>, and <em>react-query keeps it fresh for you</em>. You rarely manage
+        that by hand.</p>
+      </div>
+    </section>
+
+    <!-- ===== 2 ===== -->
+    <section class="chapter" id="c2">
+      <div class="chaphead"><span class="num">02</span><h2>Anatomy of useQuery</h2></div>
+      <p class="chapsub">Two things go in — a key and a fetch function. A bundle of status comes out. That's the contract.</p>
+
+      <div class="anatomy">
+        <div class="ahead">Code anatomy — a useQuery call</div>
+        <div class="anacode"><span class="tok kw" data-exp="const { ... }|Destructure the fields you need off the object useQuery returns. Take only what you use — there are many more available.">const</span> { <span class="tok pm" data-exp="data|The fetched result once it arrives. IMPORTANT: undefined until the query succeeds — so you must guard before using it.">data</span>, <span class="tok pm" data-exp="isPending|true while there is no data yet and the first fetch is in flight. Your 'loading' flag. (v5 name — replaces the old isLoading.)">isPending</span>, <span class="tok pm" data-exp="isError|true if the queryFn threw / rejected. Pair it with `error` for the message.">isError</span> } = <span class="tok fn" data-exp="useQuery|The hook. Takes ONE options object. Returns the query's current state + data.">useQuery</span>({
+  <span class="tok rt" data-exp="queryKey|A unique ID for this data, as an ARRAY. React-query caches by this. Same key = same cache entry, shared everywhere. Include every variable the data depends on.">queryKey</span>: [<span class="tok st" data-exp="'pokemon'|A string label for the KIND of data — groups related queries. You'll invalidate by prefixes like this later.">'pokemon'</span>, <span class="tok pm" data-exp="name|The variable this query depends on. ['pokemon', 'pikachu'] and ['pokemon', 'ditto'] are DIFFERENT cache entries — exactly what you want.">name</span>],
+  <span class="tok rt" data-exp="queryFn|A FUNCTION that returns a promise of the data. React-query calls it when it needs to fetch. It must RETURN the promise.">queryFn</span>: <span class="tok op" data-exp="() => fetchPokemonByName(name)|An arrow function WRAPPING your fetch. The wrapper matters: you're handing react-query something to call later, not calling it now. (More in Common Mistakes.)">() =&gt; fetchPokemonByName(name)</span>,
+})</div>
+        <div class="anapanel"><div class="anahint">Hover or tap a highlighted token above <span class="legend">· key identifies · fn fetches · flags describe</span></div><div class="anatitle">—</div><div class="anatext">Every part explains its own job.</div></div>
+      </div>
+
+      <p>The returned object has more than three fields — here are the ones you'll actually reach for:</p>
+      <div class="cell">
+        <div class="bar"><span class="dots"><i></i><i></i><i></i></span><span class="fname">the useQuery result</span></div>
+        <pre class="code"><span class="nm">data</span>       <span class="cm">// the result — undefined until it resolves</span>
+<span class="nm">isPending</span>  <span class="cm">// true: no data yet, first fetch in flight  (your spinner)</span>
+<span class="nm">isError</span>    <span class="cm">// true: the queryFn threw</span>
+<span class="nm">error</span>      <span class="cm">// the thrown error object (for the message)</span>
+<span class="nm">isSuccess</span>  <span class="cm">// true: data is here and valid</span>
+<span class="nm">isFetching</span> <span class="cm">// true during ANY fetch, incl. background refetch of cached data</span></pre>
+      </div>
+
+      <div class="insight">
+        <div class="htag">◆ Insight — isPending vs isFetching</div>
+        <p>Two "is it loading?" flags, and the difference matters. <code>isPending</code> means <em>no data at
+        all yet</em> — the very first load, when you show a spinner. <code>isFetching</code> is true during
+        <em>any</em> request, including a background refetch when you already have cached data to show. So: spinner
+        on <code>isPending</code>; a subtle "refreshing…" indicator (if you want one) on <code>isFetching</code>.
+        For your workshop, <code>isPending</code> is the one you'll branch on.</p>
+      </div>
+    </section>
+
+    <!-- ===== 3 ===== -->
+    <section class="chapter" id="c3">
+      <div class="chaphead"><span class="num">03</span><h2>Setup at the root</h2></div>
+      <p class="chapsub">One QueryClient, one provider wrapping your app. Do it once; every useQuery below it just works.</p>
+
+      <p>For <code>useQuery</code> to have a cache to talk to, you create a <b>QueryClient</b> (the cache itself) and
+      wrap your app in a <b>QueryClientProvider</b>. This is the same provider pattern as context — set up once at
+      the root:</p>
+
+      <div class="anatomy">
+        <div class="ahead">Code anatomy — main.tsx</div>
+        <div class="anacode"><span class="tok kw" data-exp="const queryClient|Create ONE client for the whole app. It holds the cache. Make it once, outside your components, so it isn't recreated on every render.">const queryClient</span> = <span class="tok fn" data-exp="new QueryClient()|Instantiates the cache + its defaults (staleTime, gcTime, retry…). You can pass options here later; empty defaults are fine to start.">new QueryClient()</span>
+
+<span class="tok op" data-exp="<QueryClientProvider>|Makes the client available to every component inside it via context. Every useQuery reads from this.">&lt;QueryClientProvider</span> <span class="tok pm" data-exp="client={queryClient}|Hand the provider your one client. This is the required prop.">client={queryClient}</span>&gt;
+  <span class="tok op" data-exp="<App />|Your whole app goes inside — so any component can call useQuery.">&lt;App /&gt;</span>
+  <span class="tok fn" data-exp="<ReactQueryDevtools />|The floating cache inspector. Add it here (dev only). It's the real version of the panel in section 1 — invaluable for seeing keys, status, and staleness.">&lt;ReactQueryDevtools /&gt;</span>
+<span class="tok op" data-exp="</QueryClientProvider>|Close the provider.">&lt;/QueryClientProvider&gt;</span></div>
+        <div class="anapanel"><div class="anahint">Hover or tap a highlighted token above <span class="legend">· one client · wrap once · add devtools</span></div><div class="anatitle">—</div><div class="anatext">Every part explains its own job.</div></div>
+      </div>
+
+      <div class="insight warn">
+        <div class="htag">▲ Create the client outside your component</div>
+        <p>Make <code>new QueryClient()</code> a module-level constant (or a <code>useState</code> initialiser), not
+        a plain variable inside a component body. If it's recreated on every render, you get a brand-new empty cache
+        each time and lose all the benefits. Once, at the top, is the rule.</p>
+      </div>
+    </section>
+
+    <!-- ===== 4 ===== -->
+    <section class="chapter" id="c4">
+      <div class="chaphead"><span class="num">04</span><h2>Common mistakes</h2></div>
+      <p class="chapsub">Three that catch nearly everyone. Recognising them saves hours.</p>
+
+      <h3>1 · Calling queryFn instead of passing it</h3>
+      <p>This is the big one. <code>queryFn</code> wants a <b>function it can call later</b> — not the result of
+      calling it now. Flip between the two and see what react-query actually receives:</p>
+
+      <div class="rvc" id="rvc">
+        <div class="rvch">what does queryFn receive?</div>
+        <div class="tabs">
+          <button class="tab wrong active" data-rvc="bad">✖ queryFn: fetchPokemon(name)</button>
+          <button class="tab" data-rvc="good">✓ queryFn: () =&gt; fetchPokemon(name)</button>
+        </div>
+        <div class="body" id="rvcBody"></div>
+      </div>
+
+      <h3>2 · Using data before it exists</h3>
+      <p><code>data</code> is <code>undefined</code> until the query resolves. Reach into it too early —
+      <code>data.name</code> on the first render — and you crash. In TypeScript you'll actually see this: the type
+      of <code>data</code> is <code>Pokemon | undefined</code> until you narrow it.</p>
+
+      <div class="cell">
+        <div class="bar"><span class="dots"><i></i><i></i><i></i></span><span class="fname">guard first</span></div>
+        <pre class="code"><span class="cm">// ✖ data is possibly undefined here — TS complains, runtime crashes</span>
+<span class="kw">return</span> <span class="tag">&lt;h2&gt;</span>{data.name}<span class="tag">&lt;/h2&gt;</span>
+
+<span class="cm">// ✓ guard with isPending first — after this, data is defined</span>
+<span class="kw">if</span> (isPending) <span class="kw">return</span> <span class="tag">&lt;p&gt;</span>Loading…<span class="tag">&lt;/p&gt;</span>
+<span class="kw">return</span> <span class="tag">&lt;h2&gt;</span>{data.name}<span class="tag">&lt;/h2&gt;</span>   <span class="cm">// TS now knows data exists</span></pre>
+      </div>
+
+      <div class="insight gotcha">
+        <div class="htag">✖ The guard is also a TypeScript narrowing</div>
+        <p>The <code>if (isPending) return</code> isn't just a nice loading UI — it <em>narrows the type</em>. Before
+        it, <code>data</code> is <code>Pokemon | undefined</code>; after it, TypeScript knows the pending case
+        already returned, so <code>data</code> is <code>Pokemon</code>. That's why the idiomatic order is guards
+        first, success last: it satisfies both the runtime and the compiler in one move. Handle
+        <code>isError</code> the same way, before the success return.</p>
+      </div>
+
+      <h3>3 · Unstable or duplicate keys</h3>
+      <p>The key <em>is</em> the cache identity. Two mistakes: keys that collide (different data, same key) and keys
+      that miss a variable they depend on.</p>
+
+      <div class="cell">
+        <div class="bar"><span class="dots"><i></i><i></i><i></i></span><span class="fname">query keys</span></div>
+        <pre class="code"><span class="cm">// ✖ every pokemon shares ONE cache entry — they'll clobber each other</span>
+queryKey: [<span class="st">'pokemon'</span>]
+
+<span class="cm">// ✓ the variable is part of the key — one entry per pokemon</span>
+queryKey: [<span class="st">'pokemon'</span>, name]
+
+<span class="cm">// ✓ same idea for your generation queries</span>
+queryKey: [<span class="st">'generation'</span>, generationId]</pre>
+      </div>
+
+      <div class="insight warn">
+        <div class="htag">▲ Rule of thumb — if queryFn reads it, the key includes it</div>
+        <p>Any variable your <code>queryFn</code> uses to fetch should appear in the <code>queryKey</code>. If the
+        fetch depends on <code>name</code>, the key needs <code>name</code>; otherwise react-query can't tell
+        pikachu's data from ditto's, and switching <code>name</code> won't trigger a refetch. Keys are compared by
+        <em>value</em> (deep equality), so inline arrays are fine — it's the <em>contents</em> that must be
+        complete and stable, not the array's identity.</p>
+      </div>
+
+      <div class="predict" data-predict>
+        <div class="phead"><span class="icon">?</span><b>Predict — how many requests?</b></div>
+        <div class="pbody">
+          <pre class="psrc"><span class="cm">// three components render at once:</span>
+<span class="fn">useQuery</span>({ queryKey: [<span class="st">'pokemon'</span>, <span class="st">'pikachu'</span>], queryFn: ... })
+<span class="fn">useQuery</span>({ queryKey: [<span class="st">'pokemon'</span>, <span class="st">'pikachu'</span>], queryFn: ... })
+<span class="fn">useQuery</span>({ queryKey: [<span class="st">'pokemon'</span>, <span class="st">'ditto'</span>],   queryFn: ... })</pre>
+          <button class="reveal-btn" data-reveal>Reveal</button>
+          <div class="answer" data-answer>
+            <div class="out"><span class="n">2</span> network requests</div>
+            <div class="why">The two <code>['pokemon', 'pikachu']</code> queries share one cache entry, so react-query
+            <b>dedupes</b> them into a single request. <code>['pokemon', 'ditto']</code> is a different key, so it
+            fetches separately. Three components, two keys, two requests — the cache did the saving.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== 5 ===== -->
+    <section class="chapter" id="c5">
+      <div class="chaphead"><span class="num">05</span><h2>Loading &amp; error patterns</h2></div>
+      <p class="chapsub">The idiomatic shape: guard clauses in order — pending, then error, then the happy path.</p>
+
+      <p>The clean pattern is <b>early returns</b>, in this order. Each guard handles one state and bails, so by the
+      time you reach the success render, both the runtime and TypeScript know <code>data</code> is there:</p>
+
+      <div class="anatomy">
+        <div class="ahead">Code anatomy — the guard-clause pattern</div>
+        <div class="anacode"><span class="tok kw" data-exp="const { data, isPending, isError, error }|Pull the flags you'll branch on, plus error for the message.">const { data, isPending, isError, error }</span> = <span class="tok fn" data-exp="useQuery(...)|Your query.">useQuery</span>({ <span class="tok pn" data-exp="...|queryKey + queryFn as before.">/* ... */</span> })
+
+<span class="tok kw" data-exp="if (isPending)|FIRST guard: still loading, no data. Return the loading UI and stop.">if</span> (isPending) <span class="tok kw" data-exp="return|Bail early — nothing below runs while pending.">return</span> <span class="tok op" data-exp="<Spinner />|Your loading UI. A spinner, a skeleton, or just <p>Loading…</p>.">&lt;Spinner /&gt;</span>
+
+<span class="tok kw" data-exp="if (isError)|SECOND guard: the fetch failed. Return an error UI and stop.">if</span> (isError) <span class="tok kw" data-exp="return|Bail on the error case too.">return</span> <span class="tok op" data-exp="<p>Error: {error.message}</p>|Show a friendly message. error carries the details.">&lt;p&gt;Error: {error.message}&lt;/p&gt;</span>
+
+<span class="tok kw" data-exp="return|Reached only when NOT pending and NOT error → success.">return</span> <span class="tok op" data-exp="<Card pokemon={data} />|The happy path. data is guaranteed defined here — both at runtime and to TypeScript.">&lt;Card pokemon={data} /&gt;</span></div>
+        <div class="anapanel"><div class="anahint">Hover or tap a highlighted token above <span class="legend">· pending → error → success, in that order</span></div><div class="anatitle">—</div><div class="anatext">Every part explains its own job.</div></div>
+      </div>
+
+      <div class="insight">
+        <div class="htag">◆ Insight — order is not arbitrary</div>
+        <p>Pending first, error second, success last — because each early return removes a possibility from what
+        follows. After the <code>isPending</code> guard, data <em>might</em> exist but could have errored; after the
+        <code>isError</code> guard, only success remains, so <code>data</code> is safe. Reordering these (success
+        before the guards) is exactly how you hit the "data is undefined" crash from the last section. The pattern
+        <em>is</em> the fix.</p>
+      </div>
+
+      <div class="check" data-check
+        data-correct="1"
+        data-fb="Right — isPending means there's no data yet and the first fetch is in flight. It's your signal to render a loading state before touching data.">
+        <div class="q">Checkpoint: what does <code>isPending</code> being true tell you?</div>
+        <div class="opts">
+          <button class="opt" data-opt="0">The request failed</button>
+          <button class="opt" data-opt="1">There's no data yet; the first fetch is in flight</button>
+          <button class="opt" data-opt="2">The data is cached and fresh</button>
+          <button class="opt" data-opt="3">The query key is invalid</button>
+        </div>
+        <div class="fb-msg" data-fbbox></div>
+      </div>
+    </section>
+
+    <!-- ===== 6 ===== -->
+    <section class="chapter" id="c6">
+      <div class="chaphead"><span class="num">06</span><h2>Try this yourself</h2></div>
+      <p class="chapsub">Small experiments to run against your own Pokémon app. Nudges only — the code is yours to write.</p>
+
+      <div class="kintro">
+        <div class="htag">How to use these</div>
+        <p>Each is a variation you can try in your workshop code and verify with the Devtools panel open. They build
+        on each other. No solutions here — just enough of a push to find your own. Watch the cache panel as you go;
+        it'll tell you whether you got it right.</p>
+      </div>
+
+      <div class="challenge" data-challenge>
+        <div class="cq">A · Add a second query</div>
+        <div class="csig"><span class="cm">// A component already fetches one pokemon.</span>
+<span class="cm">// Add a SECOND useQuery in the same component for its generation.</span></div>
+        <div class="chints">
+          <button class="hintbtn" data-hint>Nudge 1 · shape</button>
+          <div class="hint"><div class="htier">Shape</div>A component can call <code>useQuery</code> more than once —
+          just call it a second time and destructure into differently-named variables (you can rename with
+          <code>{ data: generation }</code>). Two independent queries, two cache entries.</div>
+          <button class="hintbtn" data-hint>Nudge 2 · the key</button>
+          <div class="hint"><div class="htier">The key</div>Give the second query its own distinct key —
+          something like <code>['generation', generationId]</code>. Different kind of data → different key prefix.
+          Check the Devtools: you should see two separate entries appear.</div>
+        </div>
+      </div>
+
+      <div class="challenge" data-challenge>
+        <div class="cq">B · Make one query depend on another</div>
+        <div class="csig"><span class="cm">// You only know the generationId AFTER the pokemon query resolves.</span>
+<span class="cm">// How do you stop the generation query running with undefined?</span></div>
+        <div class="chints">
+          <button class="hintbtn" data-hint>Nudge 1 · concept</button>
+          <div class="hint"><div class="htier">Concept</div>A query shouldn't fire until its inputs exist. React-query
+          has an option that switches a query on or off based on a condition — look for one that takes a boolean and
+          decides whether the query runs.</div>
+          <button class="hintbtn" data-hint>Nudge 2 · the option</button>
+          <div class="hint"><div class="htier">The option</div>It's <code>enabled</code>. Set
+          <code>enabled: !!pokemon</code> (or whatever must exist first) on the dependent query. While it's false,
+          the query waits — and stays <code>isPending</code> — until the condition flips true.</div>
+          <button class="hintbtn" data-hint>Nudge 3 · watch for</button>
+          <div class="hint deep"><div class="htier">Watch for</div>Because a disabled query is still "pending", relying
+          only on <code>isPending</code> can mislead you here. Look into <code>isLoading</code> vs
+          <code>isPending</code> vs the <code>fetchStatus</code> for dependent queries — the Devtools will show you
+          the difference in states as the condition flips.</div>
+        </div>
+      </div>
+
+      <div class="challenge" data-challenge>
+        <div class="cq">C · Invalidate a query</div>
+        <div class="csig"><span class="cm">// Force a refetch of a pokemon — e.g. after some action.</span>
+<span class="fn">queryClient</span>.<span class="fn">invalidateQueries</span>({ queryKey: <span class="cm">/* ? */</span> })</div>
+        <div class="chints">
+          <button class="hintbtn" data-hint>Nudge 1 · how to reach the client</button>
+          <div class="hint"><div class="htier">Reaching the client</div>You don't import the client into a component —
+          you grab it with a hook: <code>const queryClient = useQueryClient()</code>. That gives you the same client
+          from the provider.</div>
+          <button class="hintbtn" data-hint>Nudge 2 · what to pass</button>
+          <div class="hint"><div class="htier">What to pass</div>Pass the queryKey of what you want refetched:
+          <code>{ queryKey: ['pokemon', name] }</code>. Invalidating marks that entry <b>stale</b> and triggers a
+          refetch. Try it with the <b>invalidate</b> button in the section-1 inspector — watch the network counter
+          tick up and the entry refetch.</div>
+          <button class="hintbtn" data-hint>Nudge 3 · prefixes</button>
+          <div class="hint deep"><div class="htier">Prefixes</div>Keys are matched by prefix. Invalidating
+          <code>{ queryKey: ['pokemon'] }</code> (no name) invalidates <em>every</em> pokemon query at once — that's
+          why the string label at the front of the key is useful. Try invalidating a whole group vs a single entry
+          and compare.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== RECAP ===== -->
+    <section class="chapter" id="recap">
+      <div class="chaphead"><span class="num">★</span><h2>Recap</h2></div>
+      <div class="recap">
+        <h3>Mental model</h3>
+        <ul>
+          <li>React Query is a <b>cache with a request lifecycle</b> — it replaces the useState/useEffect fetch dance.</li>
+          <li>Data is stored by <b>queryKey</b>; same key = same cache entry, shared &amp; deduped across components.</li>
+          <li>Cached data shows <b>instantly</b>; react-query refetches in the background to keep it fresh (see <b>staleTime</b>).</li>
+        </ul>
+      </div>
+      <div class="recap">
+        <h3>useQuery</h3>
+        <ul>
+          <li>Takes one object: <b>queryKey</b> (array id) + <b>queryFn</b> (function returning a promise).</li>
+          <li>queryFn must be a <b>reference</b>: <code>() => fetchPokemonByName(name)</code>, not <code>fetchPokemonByName(name)</code>.</li>
+          <li>Returns <b>{ data, isPending, isError, error, isSuccess, isFetching }</b> — take what you need.</li>
+          <li><b>isPending</b> = no data yet (spinner). <b>isFetching</b> = any fetch, incl. background.</li>
+          <li>Setup once: <b>new QueryClient()</b> + <b>&lt;QueryClientProvider client={...}&gt;</b> at the root, plus Devtools.</li>
+        </ul>
+      </div>
+      <div class="recap">
+        <h3>Pitfalls &amp; patterns</h3>
+        <ul>
+          <li><b>Guard before using data</b> — <code>data</code> is undefined until it resolves (TS: <code>T | undefined</code>).</li>
+          <li>Idiomatic order: <b>if (isPending) → if (isError) → success</b>. The guards narrow the type too.</li>
+          <li><b>Keys include their variables</b> — <code>['pokemon', name]</code>, not <code>['pokemon']</code>. Compared by value.</li>
+          <li>Create <b>QueryClient outside</b> components so the cache survives renders.</li>
+          <li>Dependent queries: <b>enabled</b>. Refetch on demand: <b>queryClient.invalidateQueries({ queryKey })</b> (matches by prefix).</li>
+        </ul>
+      </div>
+
+      <footer>
+        <p>Built for your @tanstack/react-query Pokémon workshop — Dev Academy Aotearoa. Interactives simulate
+        react-query's cache behaviour; exercises are deliberately left for you to solve. Uses v5 naming
+        (<code>isPending</code>, object-form <code>invalidateQueries</code>).</p>
+        <p class="mono">reference:
+          <a href="https://tanstack.com/query/latest/docs/framework/react/overview" target="_blank" rel="noopener">TanStack Query docs</a> ·
+          <a href="https://tanstack.com/query/latest/docs/framework/react/guides/query-keys" target="_blank" rel="noopener">query keys</a> ·
+          <a href="./consuming-apis.html">← Consuming APIs</a> ·
+          <a href="./index.html">⌂ All guides</a></p>
+      </footer>
+    </section>
+  </main>
+</div>
+
+<script>
+/* ---------- anatomy ---------- */
+document.querySelectorAll('.anatomy').forEach(an=>{
+  const title=an.querySelector('.anatitle'), text=an.querySelector('.anatext'), hint=an.querySelector('.anahint');
+  const toks=an.querySelectorAll('.tok');
+  function show(tok){
+    const raw=tok.getAttribute('data-exp')||''; const i=raw.indexOf('|');
+    title.textContent=i>=0?raw.slice(0,i):tok.textContent.trim();
+    text.textContent=i>=0?raw.slice(i+1):raw;
+    hint.textContent='what this part does';
+    toks.forEach(x=>x.classList.remove('active')); tok.classList.add('active');
+  }
+  toks.forEach(tok=>{tok.setAttribute('tabindex','0');
+    tok.addEventListener('mouseenter',()=>show(tok));
+    tok.addEventListener('click',()=>show(tok));
+    tok.addEventListener('focus',()=>show(tok));});
+});
+
+/* ---------- CACHE INSPECTOR ---------- */
+(function(){
+  const DATA={ pikachu:{name:'pikachu',id:25}, bulbasaur:{name:'bulbasaur',id:1} };
+  const cache=new Map();   // keyStr -> {status, data, observers}
+  let comps=[];            // {id, name, keyStr, status, fromCache}
+  let netCount=0, mountCount=0, nextId=1;
+
+  const compsEl=document.getElementById('qcComps');
+  const cacheEl=document.getElementById('qcCache');
+  const netEl=document.getElementById('qcNet');
+  const mountEl=document.getElementById('qcMounts');
+  const note=document.getElementById('qcNote');
+
+  function keyOf(name){ return JSON.stringify(['pokemon',name]); }
+
+  function renderComps(){
+    if(!comps.length){ compsEl.innerHTML='<div class="empty">Nothing mounted yet. Add a component above.</div>'; return; }
+    compsEl.innerHTML=comps.map(c=>{
+      const p=c.status==='pending', s=c.status==='success';
+      return '<div class="comp"><div class="cn">&lt;Pokemon name="'+c.name+'"&gt;</div>'
+        +'<div class="flags">'
+        +'<span class="fl pending '+(p?'on':'')+'">isPending: '+p+'</span>'
+        +'<span class="fl success '+(s?'on':'')+'">isSuccess: '+s+'</span>'
+        +'</div>'
+        +(s?'<div class="data">data: { name: "'+c.name+'", id: '+DATA[c.name].id+' }</div>':'')
+        +'<div class="src '+(c.fromCache?'hit':'')+'">'+(c.fromCache?'✓ served from cache — no request':'⇢ triggered a network request')+'</div>'
+        +'</div>';
+    }).join('');
+  }
+  function renderCache(){
+    if(cache.size===0){ cacheEl.innerHTML='<div class="cacheEmpty">cache is empty</div>'; return; }
+    let h='';
+    cache.forEach((v,k)=>{
+      const badge = v.status==='pending'?'<span class="badge pending">fetching</span>'
+                  : v.status==='stale'?'<span class="badge stale">stale</span>'
+                  : '<span class="badge success">fresh</span>';
+      h+='<div class="centry"><span class="key">'+k+'</span>'
+        +'<div class="meta">'+badge+'<span class="obs">'+v.observers+' observer'+(v.observers===1?'':'s')+'</span></div>'
+        +(v.data?'<div class="cdata">data: { name: "'+v.data.name+'", id: '+v.data.id+' }</div>':'')
+        +'</div>';
+    });
+    cacheEl.innerHTML=h;
+  }
+  function paint(){ renderComps(); renderCache(); netEl.textContent=netCount; mountEl.textContent=mountCount; }
+
+  function mount(name){
+    mountCount++;
+    const keyStr=keyOf(name);
+    const comp={ id:nextId++, name, keyStr, status:'pending', fromCache:false };
+    const entry=cache.get(keyStr);
+
+    if(entry && entry.status==='success'){
+      // cache hit — instant, no request
+      entry.observers++;
+      comp.status='success'; comp.fromCache=true;
+      comps.push(comp); paint();
+      note.innerHTML='<b>Cache hit.</b> &lt;Pokemon name="'+name+'"&gt; found ['+'\u2018pokemon\u2019, \u2018'+name+'\u2019'+'] already in cache — rendered instantly, <b>network requests stayed at '+netCount+'</b>.';
+      return;
+    }
+    if(entry && entry.status==='pending'){
+      // dedupe onto in-flight request
+      entry.observers++;
+      comps.push(comp); paint();
+      note.innerHTML='<b>Deduped.</b> A request for this key is already in flight — this component <b>waits on it</b> instead of firing its own. Still '+netCount+' request(s).';
+      return;
+    }
+    // miss — new request
+    netCount++;
+    cache.set(keyStr,{status:'pending',data:null,observers:1});
+    comps.push(comp); paint();
+    note.innerHTML='<b>Cache miss.</b> No entry for this key → react-query fired a <b>network request</b> (now '+netCount+'). Watch it resolve…';
+    setTimeout(()=>{
+      const e=cache.get(keyStr); if(!e) return;
+      e.status='success'; e.data=DATA[name];
+      comps.forEach(c=>{ if(c.keyStr===keyStr && c.status==='pending') c.status='success'; });
+      paint();
+    }, 620);
+  }
+
+  function invalidate(name){
+    const keyStr=keyOf(name);
+    const entry=cache.get(keyStr);
+    if(!entry){ note.innerHTML='Nothing to invalidate — mount a '+name+' first.'; return; }
+    netCount++;
+    entry.status='pending'; entry.data=null;
+    comps.forEach(c=>{ if(c.keyStr===keyStr){ c.status='pending'; c.fromCache=false; } });
+    paint();
+    note.innerHTML='<b>Invalidated ['+'\u2018pokemon\u2019, \u2018'+name+'\u2019'+'].</b> The entry was marked stale and <b>refetched</b> (network +1 → '+netCount+'). Every component on that key shows pending, then updates together.';
+    setTimeout(()=>{
+      const e=cache.get(keyStr); if(!e) return;
+      e.status='success'; e.data=DATA[name];
+      comps.forEach(c=>{ if(c.keyStr===keyStr && c.status==='pending') c.status='success'; });
+      paint();
+    }, 620);
+  }
+
+  document.querySelectorAll('#qcBar [data-mount]').forEach(b=>b.addEventListener('click',()=>mount(b.dataset.mount)));
+  document.querySelector('#qcBar [data-invalidate]').addEventListener('click',()=>invalidate('pikachu'));
+  document.querySelector('#qcBar [data-clear]').addEventListener('click',()=>{
+    cache.clear(); comps=[]; netCount=0; mountCount=0; nextId=1; paint();
+    note.innerHTML='Cleared. Mount a pikachu, then another pikachu — watch the network counter stay put on the second.';
+  });
+  paint();
+})();
+
+/* ---------- REFERENCE VS CALL ---------- */
+(function(){
+  const body=document.getElementById('rvcBody');
+  const VIEWS={
+    bad:{
+      code:'queryFn: <span class="bad">fetchPokemon(name)</span>',
+      detail:'React-query receives: <b>a Promise</b> (the result of calling it) — or worse, it runs <b>on every render</b>.',
+      verdict:'bad',
+      text:'<b>Wrong.</b> You <em>called</em> the function during render, so <code>fetchPokemon(name)</code> runs immediately, every render, and react-query gets the returned Promise instead of a function it controls. It can\'t decide when to fetch, retry, or refetch — you\'ve taken the timing away from it.',
+      passes:'passed to queryFn → Promise<Pokemon>   // already running'
+    },
+    good:{
+      code:'queryFn: <span class="good">() =&gt; fetchPokemon(name)</span>',
+      detail:'React-query receives: <b>a function</b> it can call whenever it needs the data.',
+      verdict:'good',
+      text:'<b>Right.</b> You passed a <em>function reference</em>. React-query calls it when it decides to fetch — on mount, on refetch, on invalidation — and gets a fresh Promise each time. You handed over the <em>ability</em> to fetch, not a fetch already in progress. That\'s the whole contract.',
+      passes:'passed to queryFn → () => Promise<Pokemon>   // called on demand'
+    }
+  };
+  function render(k){
+    const v=VIEWS[k];
+    body.innerHTML='<div class="cd">'+v.code+'\n\n'+v.detail+'</div>'
+      +'<div class="verdict '+v.verdict+'">'+v.text+'<div class="passes">'+v.passes+'</div></div>';
+  }
+  document.querySelectorAll('#rvc .tab').forEach(t=>{
+    t.addEventListener('click',()=>{
+      document.querySelectorAll('#rvc .tab').forEach(x=>x.classList.remove('active'));
+      t.classList.add('active'); render(t.dataset.rvc);
+    });
+  });
+  render('bad');
+})();
+
+/* ---------- challenge nudges ---------- */
+document.querySelectorAll('[data-challenge]').forEach(ch=>{
+  const btns=[...ch.querySelectorAll('[data-hint]')];
+  const hints=[...ch.querySelectorAll('.hint')];
+  btns.forEach((b,i)=>{ if(i>0) b.style.display='none'; });
+  btns.forEach((b,i)=>{
+    b.addEventListener('click',()=>{
+      hints[i].classList.add('show');
+      b.disabled=true; b.textContent=b.textContent.replace('Nudge','✓ Nudge');
+      if(btns[i+1]) btns[i+1].style.display='';
+    });
+  });
+});
+
+/* ---------- predict reveals ---------- */
+document.querySelectorAll('[data-predict]').forEach(p=>{
+  p.querySelector('[data-reveal]').addEventListener('click',function(){
+    p.querySelector('[data-answer]').classList.add('show');
+    this.textContent='Answer shown ↓';this.disabled=true;this.style.opacity=.55;
+  });
+});
+
+/* ---------- checkpoints ---------- */
+document.querySelectorAll('[data-check]').forEach(chk=>{
+  const correct=parseInt(chk.dataset.correct,10);
+  const fbbox=chk.querySelector('[data-fbbox]');
+  chk.querySelectorAll('.opt').forEach(opt=>{
+    opt.addEventListener('click',()=>{
+      const pick=parseInt(opt.dataset.opt,10);
+      if(pick===correct){opt.classList.add('correct');fbbox.textContent=chk.dataset.fb;fbbox.classList.add('show');chk.querySelectorAll('.opt').forEach(o=>o.style.pointerEvents='none');}
+      else{opt.classList.add('wrong');opt.style.pointerEvents='none';}
+    });
+  });
+});
+
+/* ---------- scrollspy ---------- */
+const sections=[...document.querySelectorAll('section.chapter')];
+const links=[...document.querySelectorAll('nav.side a[data-sec]')];
+const mlinks=[...document.querySelectorAll('.mobtop .mlink')];
+function spy(){
+  const y=window.scrollY+120;let cur=sections[0].id;
+  for(const s of sections){if(s.offsetTop<=y)cur=s.id;}
+  links.forEach(l=>l.classList.toggle('active',l.getAttribute('href')==='#'+cur));
+  mlinks.forEach(l=>l.classList.toggle('active',l.getAttribute('href')==='#'+cur));
+}
+window.addEventListener('scroll',spy,{passive:true});spy();
+</script>
+</body>
+</html>

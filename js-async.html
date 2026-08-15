@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Async JavaScript — Promises &amp; async/await — interactive guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;450;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F1F1F4;--card:#FBFBFD;--ink:#1B1E26;--muted:#5A5F6B;--line:#E1E1E8;
+    --violet:#6C4CE0;--violet-soft:#EDE8FC;--violet-line:#D8CEF7;
+    --emerald:#12905F;--amber:#B67A08;--rose:#D6455D;--blue:#2C6FE0;
+    --term-bg:#15171E;--term-panel:#1D2029;--term-fg:#E6E8EC;--term-dim:#8A90A0;
+    --radius:14px;
+    --mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+    --disp:'Space Grotesk',system-ui,sans-serif;--body:'Inter',system-ui,sans-serif;
+  }
+  *{box-sizing:border-box}html{scroll-behavior:smooth}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);font-size:16.5px;line-height:1.62;-webkit-font-smoothing:antialiased}
+  a{color:var(--violet);text-decoration:none}a:hover{text-decoration:underline}
+  code{font-family:var(--mono);font-size:.88em;background:#E7E7EE;padding:.08em .38em;border-radius:5px;color:#2C2140}
+  .wrap{display:grid;grid-template-columns:270px minmax(0,1fr);max-width:1200px;margin:0 auto}
+  nav.side{position:sticky;top:0;align-self:start;height:100vh;overflow-y:auto;padding:30px 22px 40px;border-right:1px solid var(--line)}
+  main{padding:0 clamp(20px,5vw,64px) 120px;min-width:0}
+  .brand{font-family:var(--mono);font-weight:700;font-size:14px;letter-spacing:.04em;color:var(--violet);margin-bottom:4px}
+  .brand small{color:var(--muted);font-weight:400;display:block;letter-spacing:0;margin-top:3px;font-family:var(--body);font-size:12.5px}
+  .navsec{margin-top:26px}
+  .navsec > span{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:9px;padding-left:12px}
+  nav.side a.link{display:flex;gap:10px;align-items:baseline;padding:7px 12px;border-radius:9px;color:var(--ink);font-size:14.5px;line-height:1.35}
+  nav.side a.link:hover{background:#E9E9F0;text-decoration:none}
+  nav.side a.link.active{background:var(--violet-soft);color:#3B2A73;font-weight:500}
+  nav.side a.link b{font-family:var(--mono);font-size:11.5px;color:var(--violet);min-width:20px}
+  .backlink{margin-top:24px;font-size:13px;color:var(--muted)}
+  .backlink a{font-family:var(--mono);font-size:12.5px;display:block;margin-top:6px}
+  header.hero{padding:64px 0 30px}
+  .eyebrow{font-family:var(--mono);font-size:12.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--violet);margin-bottom:18px}
+  h1{font-family:var(--disp);font-weight:700;font-size:clamp(34px,5.4vw,54px);line-height:1.04;letter-spacing:-.02em;margin:0 0 20px}
+  h1 .brace{color:var(--violet)}
+  .lede{font-size:19px;color:#3A3E48;max-width:62ch;margin:0}.lede + .lede{margin-top:14px}
+  .runline{font-family:var(--mono);font-size:13.5px;color:var(--muted);margin-top:26px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .runline .kbd{background:var(--term-bg);color:#93D6A0;padding:5px 11px;border-radius:7px;font-size:12.5px}
+  section.chapter{padding-top:56px;scroll-margin-top:20px}
+  .chaphead{display:flex;align-items:baseline;gap:16px;border-bottom:2px solid var(--ink);padding-bottom:12px;margin-bottom:8px}
+  .chaphead .num{font-family:var(--mono);font-weight:700;font-size:15px;color:var(--violet)}
+  h2{font-family:var(--disp);font-weight:600;font-size:clamp(25px,3.4vw,34px);letter-spacing:-.015em;margin:0}
+  .chapsub{color:var(--muted);font-size:15px;margin:14px 0 0}
+  h3{font-family:var(--disp);font-weight:600;font-size:21px;letter-spacing:-.01em;margin:40px 0 10px}
+  p{margin:14px 0}main p,main li{color:#24272F}
+  .cell{margin:22px 0;border-radius:var(--radius);overflow:hidden;border:1px solid #2A2E3A;box-shadow:0 10px 30px -18px rgba(20,20,40,.4)}
+  .cell .bar{background:var(--term-panel);display:flex;align-items:center;gap:8px;padding:9px 14px;border-bottom:1px solid #2A2E3A}
+  .cell .bar .dots{display:flex;gap:6px}.cell .bar .dots i{width:11px;height:11px;border-radius:50%;display:block}
+  .dots i:nth-child(1){background:#E06C75}.dots i:nth-child(2){background:#E5C07B}.dots i:nth-child(3){background:#98C379}
+  .cell .bar .fname{font-family:var(--mono);font-size:12px;color:var(--term-dim);margin-left:4px}
+  .cell pre.code{margin:0;background:var(--term-bg);color:var(--term-fg);font-family:var(--mono);font-size:13px;line-height:1.7;padding:16px 18px;white-space:pre;overflow-x:auto;tab-size:2}
+  .cell pre.code .cm{color:#6B7180}.cell pre.code .kw{color:#C9A6F6}.cell pre.code .fn{color:#8CC0F5}
+  .cell pre.code .st{color:#93D6A0}.cell pre.code .nm{color:#E7B45A}
+  .anatomy{margin:22px 0;border:1px solid #2A2E3A;border-radius:var(--radius);overflow:hidden;box-shadow:0 10px 30px -18px rgba(20,20,40,.4)}
+  .anatomy .ahead{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--term-dim);padding:10px 16px;border-bottom:1px solid #2A2E3A;background:var(--term-panel);display:flex;align-items:center;gap:8px}
+  .anatomy .ahead::before{content:'⌖';color:#C39BF5;font-size:14px}
+  .anacode{padding:18px;background:var(--term-bg);font-family:var(--mono);font-size:14px;line-height:2.1;color:var(--term-fg);overflow-x:auto;white-space:pre-wrap;word-break:break-word}
+  .tok{cursor:pointer;border-radius:5px;padding:2px 3px;transition:.12s;outline:1.5px solid transparent}
+  .tok:hover{outline-color:rgba(255,255,255,.28)}
+  .tok.kw{background:rgba(195,155,245,.16);color:#C9A6F6}
+  .tok.fn{background:rgba(124,183,240,.15);color:#8CC0F5}
+  .tok.pm{background:rgba(231,180,90,.15);color:#E7B45A}
+  .tok.rt{background:rgba(147,214,160,.15);color:#93D6A0}
+  .tok.op{background:rgba(240,128,143,.14);color:#F0909F}
+  .tok.active{outline-color:var(--violet)!important;background:rgba(108,76,224,.32)!important;color:#fff}
+  .anapanel{padding:15px 18px;min-height:78px;background:var(--card)}
+  .anahint{font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:.05em}
+  .anahint .legend{color:var(--muted);opacity:.8}
+  .anatitle{font-family:var(--mono);font-weight:700;font-size:14px;color:var(--violet);margin:6px 0 3px}
+  .anatext{font-size:13.5px;color:#2A2D36;line-height:1.55}
+  .insight{margin:24px 0;background:var(--card);border:1px solid var(--line);border-left:3px solid var(--violet);border-radius:12px;padding:16px 20px}
+  .insight .htag{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--violet);font-weight:700;display:flex;align-items:center;gap:8px;margin-bottom:6px}
+  .insight.warn{border-left-color:var(--amber)}.insight.warn .htag{color:var(--amber)}
+  .insight.gotcha{border-left-color:var(--rose)}.insight.gotcha .htag{color:var(--rose)}
+  .insight p{margin:6px 0}.insight p:first-of-type{margin-top:0}
+  /* order tracer */
+  .tracer{margin:26px 0;border:1px solid #2A2E3A;border-radius:14px;overflow:hidden;background:#1A1C23;box-shadow:0 14px 40px -20px rgba(20,20,40,.5)}
+  .tracer .tbar{background:#15171E;display:flex;align-items:center;gap:8px;padding:9px 14px;border-bottom:1px solid #2A2E3A}
+  .tracer .tbar .dots{display:flex;gap:6px}.tracer .tbar .dots i{width:11px;height:11px;border-radius:50%;display:block}
+  .tracer .tbar .dots i:nth-child(1){background:#E06C75}.tracer .tbar .dots i:nth-child(2){background:#E5C07B}.tracer .tbar .dots i:nth-child(3){background:#98C379}
+  .tracer .tbar .fname{font-family:var(--mono);font-size:12px;color:var(--term-dim);margin-left:4px}
+  .tracer .tgrid{display:grid;grid-template-columns:1fr 1fr;gap:0}
+  @media(max-width:640px){.tracer .tgrid{grid-template-columns:1fr}}
+  .tracer .tcode{padding:16px 18px;background:var(--term-bg);font-family:var(--mono);font-size:12.5px;line-height:1.9;color:var(--term-fg);white-space:pre;overflow-x:auto;border-right:1px solid #2A2E3A}
+  .tracer .tcode .cm{color:#6B7180}.tracer .tcode .kw{color:#C9A6F6}.tracer .tcode .fn{color:#8CC0F5}.tracer .tcode .st{color:#93D6A0}
+  .tracer .tcode .ln{display:block;border-radius:4px;padding:0 4px;transition:.15s}
+  .tracer .tcode .ln.lit{background:rgba(231,180,90,.22)}
+  .tracer .tout{padding:16px 18px;background:#12141A}
+  .tracer .tout .lbl{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--term-dim);margin-bottom:10px}
+  .tracer .logline{font-family:var(--mono);font-size:13px;color:#93D6A0;padding:4px 0;opacity:0;transform:translateY(4px);transition:.25s}
+  .tracer .logline.show{opacity:1;transform:none}
+  .tracer .logline .ord{color:#E7B45A;margin-right:8px}
+  .tracer .tctl{display:flex;gap:10px;padding:12px 16px;background:#15171E;border-top:1px solid #2A2E3A}
+  .tracer .tctl button{font-family:var(--mono);font-size:12.5px;font-weight:700;border:none;border-radius:8px;padding:9px 18px;cursor:pointer}
+  .tracer .run{background:var(--violet);color:#fff}.tracer .run:hover{background:#5A3CD0}
+  .tracer .reset{background:#22252F;color:#C4C8D2;border:1px solid #2A2E3A}
+  .tracer .run:disabled{opacity:.5;cursor:wait}
+  .predict{margin:24px 0;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px}
+  .predict .q{font-family:var(--disp);font-weight:600;font-size:16px;margin-bottom:14px}
+  .predict .opts{display:flex;flex-direction:column;gap:9px}
+  .predict .opt{font-family:var(--mono);font-size:13.5px;text-align:left;cursor:pointer;background:#fff;border:1px solid var(--line);border-radius:9px;padding:11px 14px;transition:.15s}
+  .predict .opt:hover{border-color:var(--violet-line);background:#FAF8FF}
+  .predict .opt.correct{border-color:var(--emerald);background:#EAF7F0;color:#0C6B45}
+  .predict .opt.wrong{border-color:var(--rose);background:#FBECEE;color:#9E2B3B}
+  .predict .fb-msg{margin-top:12px;font-size:13.5px;color:var(--muted);display:none}
+  .predict .fb-msg.show{display:block}
+  .recap{background:var(--term-bg);border-radius:16px;padding:26px 28px;margin:26px 0;color:var(--term-fg)}
+  .recap h3{color:#fff;margin-top:0}
+  .recap ul{list-style:none;padding:0;margin:0;display:grid;gap:10px}
+  .recap li{font-family:var(--mono);font-size:13px;line-height:1.55;padding-left:22px;position:relative;color:#D3D7E0}
+  .recap li::before{content:'›';position:absolute;left:0;color:var(--violet);font-weight:700}
+  .recap li b{color:#E7B45A;font-weight:500}
+  footer{border-top:1px solid var(--line);margin-top:70px;padding-top:24px;color:var(--muted);font-size:13.5px}
+  footer .mono{font-family:var(--mono);font-size:12px}
+  .mobtop{display:none}
+  @media(max-width:860px){
+    .wrap{grid-template-columns:1fr}nav.side{display:none}
+    .mobtop{display:flex;position:sticky;top:0;z-index:20;background:rgba(241,241,244,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);padding:12px 18px;gap:10px;align-items:center;overflow-x:auto}
+    .mobtop .brand{margin:0;white-space:nowrap}
+    .mobtop a{font-family:var(--mono);font-size:12px;white-space:nowrap;color:var(--muted);padding:5px 10px;border-radius:7px}
+    .mobtop a.active{background:var(--violet-soft);color:#3B2A73}
+    main{padding-left:20px;padding-right:20px}
+  }
+  @media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important;scroll-behavior:auto}}
+</style>
+</head>
+<body>
+<div class="mobtop">
+  <span class="brand">Async JS</span>
+  <a href="#c1" class="mlink active">Why</a>
+  <a href="#c2" class="mlink">Promises</a>
+  <a href="#c3" class="mlink">async/await</a>
+  <a href="#c4" class="mlink">Order</a>
+  <a href="#c5" class="mlink">Gotchas</a>
+  <a href="#recap" class="mlink">Recap</a>
+</div>
+<div class="wrap">
+  <nav class="side">
+    <div class="brand">Async JavaScript<small>Promises &amp; async/await · guide</small></div>
+    <div class="navsec">
+      <span>Sections</span>
+      <a href="#c1" class="link" data-sec><b>01</b> Why async exists</a>
+      <a href="#c2" class="link" data-sec><b>02</b> Promises</a>
+      <a href="#c3" class="link" data-sec><b>03</b> async / await</a>
+      <a href="#c4" class="link" data-sec><b>04</b> What runs when</a>
+      <a href="#c5" class="link" data-sec><b>05</b> Common gotchas</a>
+      <a href="#recap" class="link" data-sec><b>★</b> Recap</a>
+    </div>
+    <div class="navsec">
+      <span>The one idea</span>
+      <p style="font-size:13px;color:var(--muted);line-height:1.5;margin:0 12px">
+        Some things take time (the network). Async lets your code <b>start</b> them, keep going, and
+        <b>come back</b> for the result — without freezing everything.</p>
+    </div>
+    <div class="backlink">
+      Related guides:
+      <a href="./consuming-apis.html">→ Consuming APIs</a>
+      <a href="./react-query.html">→ React Query</a>
+      <a href="./index.html">⌂ All guides</a>
+    </div>
+  </nav>
+  <main>
+    <header class="hero">
+      <div class="eyebrow">Supplementary · JavaScript</div>
+      <h1>Code that <span class="brace">waits without freezing</span></h1>
+      <p class="lede">Every time you <code>fetch</code> from an API, your code has to wait for a reply that might
+      take a second to arrive. Async JavaScript is how it waits <b>politely</b> — starting the request, letting
+      the rest of the page keep working, and picking up the result the moment it lands.</p>
+      <p class="lede">You've already used <code>async</code> and <code>await</code> in the API guides. This one
+      explains what they actually do underneath, so they stop feeling like magic words.</p>
+      <div class="runline"><span class="kbd">start it → keep going → come back for the result</span></div>
+    </header>
+
+    <section class="chapter" id="c1">
+      <div class="chaphead"><span class="num">01</span><h2>Why async exists</h2></div>
+      <p class="chapsub">JavaScript does one thing at a time. Slow things would freeze the page — unless it can set them aside.</p>
+      <p>JavaScript runs on a <b>single thread</b> — one line at a time, in order. That's usually fine, because most
+      lines finish instantly. But some things are <em>slow</em>: fetching from a server, reading a file, a timer.
+      If JS just stopped and waited for a network reply, the whole page would lock up — no clicking, no scrolling —
+      until it came back.</p>
+      <div class="insight">
+        <div class="htag">◆ Analogy — ordering a book</div>
+        <p>Think of a slow task like ordering a book that isn't in stock. You don't stand frozen at the counter
+        until it arrives. The shop takes your order, hands you a <b>receipt</b>, and you go do other things. When
+        the book arrives, you come back and collect it. Async code works the same way: the slow task hands back a
+        receipt <em>now</em>, and you collect the real result <em>later</em>. That receipt is called a
+        <b>Promise</b>.</p>
+      </div>
+    </section>
+
+    <section class="chapter" id="c2">
+      <div class="chaphead"><span class="num">02</span><h2>Promises</h2></div>
+      <p class="chapsub">A Promise is a placeholder for a value that isn't here yet. It's in one of three states.</p>
+      <p>A <b>Promise</b> is an object representing a value you'll have <em>eventually</em>. When you call
+      <code>fetch()</code>, you don't get the data — you get a Promise for the data. It lives in one of three states:</p>
+      <div class="anatomy">
+        <div class="ahead">Code anatomy — the three states of a promise</div>
+        <div class="anacode"><span class="tok kw" data-exp="pending|The starting state. The task is in flight — the request has been sent but no answer yet. The receipt exists; the book hasn't arrived.">pending</span>  →  <span class="tok rt" data-exp="fulfilled|Success. The task finished and the Promise now holds a value — the data you asked for. This is what .then() and await give you.">fulfilled</span>  (got the value)
+         →  <span class="tok op" data-exp="rejected|Failure. Something went wrong — network down, 404, thrown error. The Promise holds a reason instead of a value. This is what .catch() and try/catch handle.">rejected</span>   (got an error)</div>
+        <div class="anapanel"><div class="anahint">Hover or tap a state <span class="legend">· a promise starts pending, then settles once — either fulfilled or rejected</span></div><div class="anatitle">—</div><div class="anatext">Each state explains itself.</div></div>
+      </div>
+      <p>The old way to read a settled promise is <code>.then()</code> for success and <code>.catch()</code> for
+      failure:</p>
+      <div class="cell">
+        <div class="bar"><span class="dots"><i></i><i></i><i></i></span><span class="fname">promise-then.js</span></div>
+        <pre class="code"><span class="fn">fetch</span>(<span class="st">'/api/sharks'</span>)
+  .<span class="fn">then</span>(res => res.<span class="fn">json</span>())   <span class="cm">// when it arrives, turn it into data</span>
+  .<span class="fn">then</span>(data => <span class="fn">console</span>.log(data))
+  .<span class="fn">catch</span>(err => <span class="fn">console</span>.log(<span class="st">'failed:'</span>, err))</pre>
+      </div>
+      <p>It works, but the chain gets awkward fast. That's why <code>async/await</code> exists — same promises,
+      nicer to read.</p>
+    </section>
+
+    <section class="chapter" id="c3">
+      <div class="chaphead"><span class="num">03</span><h2>async / await</h2></div>
+      <p class="chapsub">Syntactic sugar over promises. It lets asynchronous code read top-to-bottom, like the sync code you're used to.</p>
+      <div class="anatomy">
+        <div class="ahead">Code anatomy — an async function</div>
+        <div class="anacode"><span class="tok kw" data-exp="async|Marks a function as asynchronous. Two effects: you're allowed to use await inside it, and the function automatically returns a Promise. You put this keyword before function.">async</span> <span class="tok fn" data-exp="function getSharks|A normal function otherwise. Because it's async, calling it hands back a Promise — even the values you return get wrapped in one.">function getSharks()</span> {
+  <span class="tok kw" data-exp="try|Wraps code that might fail. If any awaited promise rejects, control jumps straight to catch — this is how you handle network errors with async/await.">try</span> {
+    <span class="tok op" data-exp="await|Pauses THIS function until the promise settles, then unwraps it — you get the value, not the Promise. Only legal inside an async function. The rest of the program keeps running while it waits.">await</span> <span class="tok fn" data-exp="fetch(...)|Returns a Promise. Without await you'd hold the receipt; WITH await you wait for the book and hold the book.">fetch('/api/sharks')</span>
+  } <span class="tok rt" data-exp="catch (err)|Runs if anything in the try block rejected or threw. err is the rejection reason. This replaces the .catch() from the promise chain.">catch (err)</span> {
+    <span class="tok fn" data-exp="handle|Deal with the failure — show an error message, log it, return a fallback. The function doesn't crash; it recovers here.">handleError(err)</span>
+  }
+}</div>
+        <div class="anapanel"><div class="anahint">Hover or tap a token <span class="legend">· async unlocks await · await unwraps the value · try/catch handles rejection</span></div><div class="anatitle">—</div><div class="anatext">Each keyword explains its job.</div></div>
+      </div>
+      <p>Here's the same shark fetch from section 2, rewritten. Notice it reads like a straight list of steps:</p>
+      <div class="cell">
+        <div class="bar"><span class="dots"><i></i><i></i><i></i></span><span class="fname">get-sharks.js</span></div>
+        <pre class="code"><span class="kw">async function</span> <span class="fn">getSharks</span>() {
+  <span class="kw">const</span> res  = <span class="kw">await</span> <span class="fn">fetch</span>(<span class="st">'/api/sharks'</span>)   <span class="cm">// wait for the reply</span>
+  <span class="kw">const</span> data = <span class="kw">await</span> res.<span class="fn">json</span>()             <span class="cm">// wait for the body to parse</span>
+  <span class="kw">return</span> data
+}</pre>
+      </div>
+      <div class="insight warn">
+        <div class="htag">▲ Two awaits, not one — the classic trap</div>
+        <p>A fetch usually needs <b>two</b> awaits: one for the response to arrive, and a second for
+        <code>.json()</code> — because reading the body is <em>also</em> async. Forget the second one and
+        <code>data</code> is a Promise, not your object. This is the same trap flagged in the
+        <a href="./consuming-apis.html">Consuming APIs</a> guide.</p>
+      </div>
+    </section>
+
+    <section class="chapter" id="c4">
+      <div class="chaphead"><span class="num">04</span><h2>What runs when</h2></div>
+      <p class="chapsub">The part that trips everyone up: awaited code doesn't run in the order it's written. Trace it and see.</p>
+      <p>When JS hits an <code>await</code>, it <b>pauses that function</b> and lets the rest of the program run.
+      The awaited work finishes later. So synchronous lines <em>after</em> an async call often log
+      <em>first</em>. Press run and watch the real order:</p>
+
+      <div class="tracer" id="tracer">
+        <div class="tbar"><span class="dots"><i></i><i></i><i></i></span><span class="fname">execution-order.js</span></div>
+        <div class="tgrid">
+          <div class="tcode" id="tcode"><span class="ln" data-line="0"><span class="fn">console</span>.log(<span class="st">'1 — start'</span>)</span><span class="ln" data-line="1"><span class="fn">loadData</span>()  <span class="cm">// async, has an await</span></span><span class="ln" data-line="2"><span class="fn">console</span>.log(<span class="st">'2 — after calling'</span>)</span><span class="ln" data-line="3"> </span><span class="ln" data-line="4"><span class="kw">async function</span> <span class="fn">loadData</span>() {</span><span class="ln" data-line="5">  <span class="fn">console</span>.log(<span class="st">'3 — inside, before await'</span>)</span><span class="ln" data-line="6">  <span class="kw">await</span> <span class="fn">fetch</span>(<span class="st">'/x'</span>)</span><span class="ln" data-line="7">  <span class="fn">console</span>.log(<span class="st">'4 — after await'</span>)</span><span class="ln" data-line="8">}</span></div>
+          <div class="tout">
+            <div class="lbl">console output (in real order)</div>
+            <div id="logout"></div>
+          </div>
+        </div>
+        <div class="tctl">
+          <button class="run" id="traceRun">▶ Run</button>
+          <button class="reset" id="traceReset">Reset</button>
+        </div>
+      </div>
+
+      <div class="predict" data-check data-correct="1"
+        data-fb="Exactly. '1' and '2' and '3' are synchronous — they run straight through, and '3' runs because the function is called before the await pauses it. Only '4', which sits AFTER the await, is deferred to run last.">
+        <div class="q">Before you run it: which line logs <em>last</em>?</div>
+        <div class="opts">
+          <button class="opt" data-opt="0">'2 — after calling'</button>
+          <button class="opt" data-opt="1">'4 — after await'</button>
+          <button class="opt" data-opt="2">'3 — inside, before await'</button>
+          <button class="opt" data-opt="3">'1 — start'</button>
+        </div>
+        <div class="fb-msg" data-fbbox></div>
+      </div>
+
+      <div class="insight">
+        <div class="htag">◆ The rule in one line</div>
+        <p>Everything up to the first <code>await</code> runs immediately, in order. Everything <em>after</em> an
+        <code>await</code> is set aside to run once the promise settles — which is almost always <b>after</b> the
+        synchronous code that follows the function call. Async doesn't mean "later" for the whole function; it means
+        "later" for the part after the await.</p>
+      </div>
+    </section>
+
+    <section class="chapter" id="c5">
+      <div class="chaphead"><span class="num">05</span><h2>Common gotchas</h2></div>
+      <p class="chapsub">Four mistakes that produce confusing bugs — and the tell for each.</p>
+      <h3>Forgetting <code>await</code></h3>
+      <p>Without it you hold the Promise, not the value. The tell: your variable logs as
+      <code>Promise { &lt;pending&gt; }</code> instead of the data. Add the missing <code>await</code>.</p>
+      <h3><code>await</code> outside an <code>async</code> function</h3>
+      <p>It's a syntax error. <code>await</code> is only legal inside a function marked <code>async</code>. If you
+      need it at the top level, wrap it in an async function and call that.</p>
+      <h3>Forgetting the error path</h3>
+      <p>Networks fail. An <code>await</code>ed fetch that rejects with no <code>try/catch</code> around it becomes
+      an unhandled rejection. Wrap awaited calls that can fail in <code>try/catch</code>.</p>
+      <div class="insight gotcha">
+        <div class="htag">✖ In React, you rarely write this by hand</div>
+        <p>Once you're in components, <a href="./react-query.html">React Query</a> runs your async function for you
+        and hands back <code>isPending</code>, <code>error</code>, and <code>data</code> — no manual
+        <code>try/catch</code> in the component. But it's calling an async function underneath. Understanding
+        <em>this</em> is what makes that one make sense.</p>
+      </div>
+    </section>
+
+    <section class="chapter" id="recap">
+      <div class="chaphead"><span class="num">★</span><h2>Recap</h2></div>
+      <div class="recap">
+        <h3>The mental model</h3>
+        <ul>
+          <li>JS runs <b>one thing at a time</b>; async lets slow tasks run without freezing the page.</li>
+          <li>A <b>Promise</b> is a placeholder for a future value: <b>pending</b> → <b>fulfilled</b> or <b>rejected</b>.</li>
+          <li><b>async</b> unlocks <b>await</b> and makes a function return a Promise.</li>
+          <li><b>await</b> pauses the function and unwraps the value — you get data, not a Promise.</li>
+          <li><b>try/catch</b> handles a rejected promise inside async functions.</li>
+        </ul>
+      </div>
+      <div class="recap">
+        <h3>Watch out for</h3>
+        <ul>
+          <li>A fetch needs <b>two awaits</b> — one for the response, one for <code>.json()</code>.</li>
+          <li>Code <b>after</b> an await runs later than the sync code after the call — trace the order.</li>
+          <li>Missing await → you're holding a <b>Promise</b>, not the value.</li>
+        </ul>
+      </div>
+      <footer>
+        <p>Supplementary guide · Dev Academy Aotearoa. Builds toward
+        <a href="./consuming-apis.html">Consuming APIs</a> and <a href="./react-query.html">React Query</a>.</p>
+        <p class="mono"><a href="./index.html">⌂ All guides</a></p>
+      </footer>
+    </section>
+  </main>
+</div>
+<script>
+document.querySelectorAll('.anatomy').forEach(an=>{
+  const title=an.querySelector('.anatitle'),text=an.querySelector('.anatext'),hint=an.querySelector('.anahint');
+  const toks=an.querySelectorAll('.tok');
+  function show(tok){const raw=tok.getAttribute('data-exp')||'';const i=raw.indexOf('|');
+    title.textContent=i>=0?raw.slice(0,i):tok.textContent.trim();
+    text.textContent=i>=0?raw.slice(i+1):raw;hint.textContent='what this part does';
+    toks.forEach(x=>x.classList.remove('active'));tok.classList.add('active');}
+  toks.forEach(tok=>{tok.setAttribute('tabindex','0');
+    tok.addEventListener('mouseenter',()=>show(tok));tok.addEventListener('click',()=>show(tok));tok.addEventListener('focus',()=>show(tok));});
+});
+/* order tracer — the log order is the teachable logic */
+(function(){
+  // each entry: {label, line, async:true means deferred to after sync run}
+  const events=[
+    {label:"1 — start",line:0,deferred:false},
+    {label:"3 — inside, before await",line:5,deferred:false},
+    {label:"2 — after calling",line:2,deferred:false},
+    {label:"4 — after await",line:7,deferred:true}
+  ];
+  // real runtime order: sync ones in encounter order, then deferred ones
+  function runtimeOrder(evs){
+    const sync=evs.filter(e=>!e.deferred);
+    const deferred=evs.filter(e=>e.deferred);
+    return [...sync,...deferred];
+  }
+  window.__traceOrder=runtimeOrder; // exposed for testing
+  const ordered=runtimeOrder(events);
+  const out=document.getElementById('logout');
+  const codeLines=[...document.querySelectorAll('#tcode .ln')];
+  const runBtn=document.getElementById('traceRun');
+  const resetBtn=document.getElementById('traceReset');
+  let timers=[];
+  function reset(){
+    timers.forEach(clearTimeout);timers=[];
+    out.innerHTML='';codeLines.forEach(l=>l.classList.remove('lit'));
+    runBtn.disabled=false;
+  }
+  function run(){
+    reset();runBtn.disabled=true;
+    ordered.forEach((e,i)=>{
+      const row=document.createElement('div');
+      row.className='logline';
+      row.innerHTML='<span class="ord">'+(i+1)+'</span>'+e.label;
+      out.appendChild(row);
+      timers.push(setTimeout(()=>{
+        row.classList.add('show');
+        const ln=codeLines[e.line];if(ln){ln.classList.add('lit');timers.push(setTimeout(()=>ln.classList.remove('lit'),650));}
+        if(i===ordered.length-1)runBtn.disabled=false;
+      }, 520*(i+1)));
+    });
+  }
+  runBtn.addEventListener('click',run);
+  resetBtn.addEventListener('click',reset);
+})();
+document.querySelectorAll('[data-check]').forEach(chk=>{
+  const correct=parseInt(chk.dataset.correct,10);const fbbox=chk.querySelector('[data-fbbox]');
+  chk.querySelectorAll('.opt').forEach(opt=>{opt.addEventListener('click',()=>{
+    const pick=parseInt(opt.dataset.opt,10);
+    if(pick===correct){opt.classList.add('correct');fbbox.textContent=chk.dataset.fb;fbbox.classList.add('show');chk.querySelectorAll('.opt').forEach(o=>o.style.pointerEvents='none');}
+    else{opt.classList.add('wrong');opt.style.pointerEvents='none';}
+  });});
+});
+const sections=[...document.querySelectorAll('section.chapter')];
+const links=[...document.querySelectorAll('nav.side a[data-sec]')];
+const mlinks=[...document.querySelectorAll('.mobtop .mlink')];
+function spy(){const y=window.scrollY+120;let cur=sections[0].id;
+  for(const s of sections){if(s.offsetTop<=y)cur=s.id;}
+  links.forEach(l=>l.classList.toggle('active',l.getAttribute('href')==='#'+cur));
+  mlinks.forEach(l=>l.classList.toggle('active',l.getAttribute('href')==='#'+cur));}
+window.addEventListener('scroll',spy,{passive:true});spy();
+</script>
+</body>
+</html>

@@ -1,0 +1,1153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Domain Driven Design — bowling</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;450;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F1F1F4;--card:#FBFBFD;--ink:#1B1E26;--muted:#5A5F6B;--line:#E1E1E8;
+    --violet:#6C4CE0;--violet-soft:#EDE8FC;--violet-line:#D8CEF7;
+    --emerald:#12905F;--amber:#B67A08;--rose:#D6455D;
+    --term-bg:#15171E;--term-panel:#1D2029;--term-fg:#E6E8EC;--term-dim:#8A90A0;
+    --t-num:#E7B45A;--t-str:#93D6A0;--t-null:#8A90A0;--t-err:#F0808F;
+    --radius:14px;
+    --mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+    --disp:'Space Grotesk',system-ui,sans-serif;--body:'Inter',system-ui,sans-serif;
+  }
+  *{box-sizing:border-box}html{scroll-behavior:smooth}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);font-size:16.5px;line-height:1.62;-webkit-font-smoothing:antialiased}
+  a{color:var(--violet);text-decoration:none}a:hover{text-decoration:underline}
+  code{font-family:var(--mono);font-size:.88em;background:#E7E7EE;padding:.08em .38em;border-radius:5px;color:#2C2140}
+
+  .wrap{display:grid;grid-template-columns:270px minmax(0,1fr);max-width:1200px;margin:0 auto}
+  nav.side{position:sticky;top:0;align-self:start;height:100vh;overflow-y:auto;padding:30px 22px 40px;border-right:1px solid var(--line)}
+  main{padding:0 clamp(20px,5vw,64px) 120px;min-width:0}
+  .brand{font-family:var(--mono);font-weight:700;font-size:14px;letter-spacing:.04em;color:var(--violet);margin-bottom:4px}
+  .brand small{color:var(--muted);font-weight:400;display:block;letter-spacing:0;margin-top:3px;font-family:var(--body);font-size:12.5px}
+  .navsec{margin-top:26px}
+  .navsec > span{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:9px;padding-left:12px}
+  nav.side a.link{display:flex;gap:10px;align-items:baseline;padding:7px 12px;border-radius:9px;color:var(--ink);font-size:14.5px;line-height:1.35}
+  nav.side a.link:hover{background:#E9E9F0;text-decoration:none}
+  nav.side a.link.active{background:var(--violet-soft);color:#3B2A73;font-weight:500}
+  nav.side a.link b{font-family:var(--mono);font-size:11.5px;color:var(--violet);min-width:20px}
+  nav.side a.link.kata{background:#FFF4E8;color:#8A5A00}
+  nav.side a.link.kata b{color:var(--amber)}
+  .backlink{margin-top:24px;font-size:13px;color:var(--muted)}
+  .backlink a{font-family:var(--mono);font-size:12.5px;display:block;margin-top:6px}
+
+  header.hero{padding:64px 0 30px}
+  .eyebrow{font-family:var(--mono);font-size:12.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--violet);margin-bottom:18px}
+  h1{font-family:var(--disp);font-weight:700;font-size:clamp(34px,5.4vw,54px);line-height:1.04;letter-spacing:-.02em;margin:0 0 20px}
+  h1 .brace{color:var(--violet)}
+  .lede{font-size:19px;color:#3A3E48;max-width:60ch;margin:0}.lede + .lede{margin-top:14px}
+  .runline{font-family:var(--mono);font-size:13.5px;color:var(--muted);margin-top:26px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .runline .kbd{background:var(--term-bg);color:var(--t-str);padding:5px 11px;border-radius:7px;font-size:12.5px}
+
+  section.chapter{padding-top:56px;scroll-margin-top:20px}
+  .chaphead{display:flex;align-items:baseline;gap:16px;border-bottom:2px solid var(--ink);padding-bottom:12px;margin-bottom:8px}
+  .chaphead .num{font-family:var(--mono);font-weight:700;font-size:15px;color:var(--violet)}
+  h2{font-family:var(--disp);font-weight:600;font-size:clamp(26px,3.6vw,36px);letter-spacing:-.015em;margin:0}
+  .chapsub{color:var(--muted);font-size:15px;margin:14px 0 0}
+  h3{font-family:var(--disp);font-weight:600;font-size:22px;letter-spacing:-.01em;margin:44px 0 10px}
+  h4{font-family:var(--disp);font-weight:600;font-size:17px;margin:28px 0 6px}
+  p{margin:14px 0}main p,main li{color:#24272F}
+
+  /* code cell */
+  .cell{margin:22px 0;border-radius:var(--radius);overflow:hidden;border:1px solid #2A2E3A;box-shadow:0 10px 30px -18px rgba(20,20,40,.4)}
+  .cell .bar{background:var(--term-panel);display:flex;align-items:center;gap:8px;padding:9px 14px;border-bottom:1px solid #2A2E3A}
+  .cell .bar .dots{display:flex;gap:6px}.cell .bar .dots i{width:11px;height:11px;border-radius:50%;display:block}
+  .dots i:nth-child(1){background:#E06C75}.dots i:nth-child(2){background:#E5C07B}.dots i:nth-child(3){background:#98C379}
+  .cell .bar .fname{font-family:var(--mono);font-size:12px;color:var(--term-dim);margin-left:4px}
+  .cell .bar .spacer{flex:1}
+  .cell .bar button{font-family:var(--mono);font-size:12px;font-weight:500;cursor:pointer;border:1px solid #3A4152;background:#2A3040;color:#CBD3E1;border-radius:7px;padding:5px 13px;transition:.15s}
+  .cell .bar button:hover{background:#343C4E;border-color:#4A5264}
+  .cell .bar button.run{background:var(--violet);border-color:var(--violet);color:#fff}
+  .cell .bar button.run:hover{background:#5B3ED1}
+  .cell pre.code{margin:0;background:var(--term-bg);color:var(--term-fg);font-family:var(--mono);font-size:13.5px;line-height:1.65;padding:16px 18px;white-space:pre;overflow-x:auto;outline:none;tab-size:2}
+  .cell pre.code:focus{box-shadow:inset 3px 0 0 var(--violet)}
+  .console{background:#0F1116;border-top:1px solid #2A2E3A;padding:0 18px;max-height:0;overflow:hidden;transition:max-height .35s ease,padding .35s ease}
+  .console.show{max-height:420px;overflow-y:auto;padding:13px 18px}
+  .console .cline{font-family:var(--mono);font-size:13px;line-height:1.7;white-space:pre-wrap;word-break:break-word}
+  .console .prompt{color:#4A5060}.console .empty{color:var(--term-dim);font-style:italic}
+  .tok-num{color:var(--t-num)}.tok-str{color:var(--t-str)}.tok-null{color:var(--t-null)}.tok-err{color:var(--t-err)}.tok-fn{color:#C39BF5}
+
+  /* anatomy */
+  .anatomy{margin:22px 0;border:1px solid #2A2E3A;border-radius:var(--radius);overflow:hidden;box-shadow:0 10px 30px -18px rgba(20,20,40,.4)}
+  .anatomy .ahead{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--term-dim);padding:10px 16px;border-bottom:1px solid #2A2E3A;background:var(--term-panel);display:flex;align-items:center;gap:8px}
+  .anatomy .ahead::before{content:'⌖';color:#C39BF5;font-size:14px}
+  .anacode{padding:18px;background:var(--term-bg);font-family:var(--mono);font-size:14.5px;line-height:2.15;color:var(--term-fg);overflow-x:auto;white-space:pre-wrap;word-break:break-word}
+  .tok{cursor:pointer;border-radius:5px;padding:2px 3px;transition:.12s;outline:1.5px solid transparent}
+  .tok:hover{outline-color:rgba(255,255,255,.28)}
+  .tok.kw{background:rgba(195,155,245,.16);color:#C9A6F6}
+  .tok.fn{background:rgba(124,183,240,.15);color:#8CC0F5}
+  .tok.pm{background:rgba(231,180,90,.15);color:#E7B45A}
+  .tok.rt{background:rgba(147,214,160,.15);color:#93D6A0}
+  .tok.op{background:rgba(240,128,143,.14);color:#F0909F}
+  .tok.pn{background:rgba(150,156,172,.16);color:#B4BAC8}
+  .tok.st{background:rgba(147,214,160,.13);color:#93D6A0}
+  .tok.active{outline-color:var(--violet)!important;background:rgba(108,76,224,.32)!important;color:#fff}
+  .anapanel{padding:15px 18px;min-height:78px;background:var(--card)}
+  .anahint{font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:.05em}
+  .anahint .legend{color:var(--muted);opacity:.8}
+  .anatitle{font-family:var(--mono);font-weight:700;font-size:14px;color:var(--violet);margin:6px 0 3px}
+  .anatext{font-size:13.5px;color:#2A2D36;line-height:1.55}
+  @media(max-width:640px){.anacode{font-size:13px;line-height:2}}
+
+  /* ---------- SCORECARD ---------- */
+  .scorecard{margin:26px 0;border:1px solid var(--line);border-radius:16px;background:var(--card);overflow:hidden}
+  .scorecard .sh{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:11px 18px;border-bottom:1px solid var(--line);background:#F5F5F9;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .scorecard .sh .tot{margin-left:auto;font-size:13px;color:var(--ink)}
+  .scorecard .sh .tot b{font-size:17px;color:var(--violet)}
+  .frames{display:flex;gap:0;padding:16px 18px 8px;overflow-x:auto}
+  .frame{border:1px solid var(--line);border-right:none;min-width:62px;flex:1;background:#fff}
+  .frame:last-child{border-right:1px solid var(--line);min-width:82px}
+  .frame.active{background:#FAF8FF;box-shadow:inset 0 0 0 2px var(--violet)}
+  .frame .fnum{font-family:var(--mono);font-size:10px;color:var(--muted);text-align:center;padding:3px 0;border-bottom:1px solid var(--line);background:#F7F7FA}
+  .frame .rolls{display:flex;justify-content:flex-end;border-bottom:1px solid var(--line);min-height:26px}
+  .frame .roll{width:22px;height:26px;display:grid;place-items:center;font-family:var(--mono);font-size:13px;border-left:1px solid var(--line)}
+  .frame .roll.strike{color:var(--rose);font-weight:700}
+  .frame .roll.spare{color:var(--amber);font-weight:700}
+  .frame .fscore{text-align:center;font-family:var(--mono);font-size:15px;font-weight:600;padding:6px 0;min-height:32px;color:var(--ink)}
+  .frame .fscore.pending{color:#C4C8D2;font-weight:400}
+  .pins{display:flex;flex-wrap:wrap;gap:6px;padding:14px 18px 8px}
+  .pins button{font-family:var(--mono);font-size:13px;font-weight:600;cursor:pointer;width:40px;height:38px;border:1px solid var(--line);background:#fff;border-radius:9px;color:var(--ink);transition:.12s}
+  .pins button:hover:not(:disabled){border-color:var(--violet);background:var(--violet-soft)}
+  .pins button:disabled{opacity:.28;cursor:not-allowed}
+  .pins button.x{color:var(--rose);border-color:#F0C4CB}
+  .sctrl{display:flex;gap:8px;flex-wrap:wrap;padding:6px 18px 16px;align-items:center}
+  .sctrl button{font-family:var(--mono);font-size:12px;cursor:pointer;border:1px solid var(--line);background:#fff;border-radius:8px;padding:7px 12px;color:var(--muted)}
+  .sctrl button:hover{border-color:var(--violet-line);background:#FAF8FF;color:var(--ink)}
+  .scorecard .expl{margin:0 18px 18px;padding:12px 15px;border-radius:10px;background:#FAFAFC;border:1px solid var(--line);font-size:13.5px;line-height:1.55;min-height:20px}
+  .scorecard .expl b{color:var(--violet)}
+  .scorecard .expl .pend{color:var(--amber)}
+
+  /* frame type identifier */
+  .idbox{margin:24px 0;border:1px solid var(--line);border-radius:14px;background:var(--card);padding:18px}
+  .idbox .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
+  .idbox label{font-family:var(--mono);font-size:12px;color:var(--muted)}
+  .idbox input{width:66px;font-family:var(--mono);font-size:15px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--ink);text-align:center}
+  .idbox input:focus{outline:2px solid var(--violet-line);border-color:var(--violet)}
+  .idbox .verdict{padding:13px 15px;border-radius:10px;font-family:var(--mono);font-size:13.5px;line-height:1.55}
+  .idbox .verdict.basic{background:#EEEDF4;color:#3B3F4A}
+  .idbox .verdict.spare{background:#FBF3E4;color:#8A5A00;border:1px solid #F0DCBE}
+  .idbox .verdict.strike{background:#FBECEE;color:#9E2B3B;border:1px solid #F0C4CB}
+  .idbox .verdict.bad{background:#FBECEE;color:#9E2B3B}
+  .idbox .verdict b{font-weight:700}
+
+  .insight{margin:24px 0;background:var(--card);border:1px solid var(--line);border-left:3px solid var(--violet);border-radius:12px;padding:16px 20px}
+  .insight .htag{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--violet);font-weight:700;display:flex;align-items:center;gap:8px;margin-bottom:6px}
+  .insight.warn{border-left-color:var(--amber)}.insight.warn .htag{color:var(--amber)}
+  .insight.gotcha{border-left-color:var(--rose)}.insight.gotcha .htag{color:var(--rose)}
+  .insight p{margin:6px 0}.insight p:first-of-type{margin-top:0}
+
+  /* rules cards */
+  .rules{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin:22px 0}
+  .rule{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px}
+  .rule.basic{border-top:3px solid var(--muted)}
+  .rule.spare{border-top:3px solid var(--amber)}
+  .rule.strike{border-top:3px solid var(--rose)}
+  .rule.last{border-top:3px solid var(--violet)}
+  .rule .rt{font-family:var(--mono);font-size:11px;letter-spacing:.07em;text-transform:uppercase;font-weight:700;margin-bottom:6px}
+  .rule.basic .rt{color:var(--muted)}.rule.spare .rt{color:var(--amber)}
+  .rule.strike .rt{color:var(--rose)}.rule.last .rt{color:var(--violet)}
+  .rule .formula{font-family:var(--mono);font-size:13px;background:var(--term-bg);color:var(--t-str);padding:8px 10px;border-radius:8px;margin:8px 0}
+  .rule p{font-size:13.5px;margin:6px 0 0}
+
+  /* design checklist */
+  .checklist{margin:24px 0;border:1px solid var(--line);border-radius:14px;background:var(--card);overflow:hidden}
+  .checklist .ch{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:11px 18px;border-bottom:1px solid var(--line);background:#F5F5F9}
+  .qrow{border-bottom:1px solid var(--line);padding:14px 18px}
+  .qrow:last-child{border-bottom:none}
+  .qrow .qq{font-family:var(--disp);font-weight:600;font-size:15.5px;margin-bottom:4px}
+  .qrow .qa{font-size:13.5px;color:var(--muted);line-height:1.5}
+  .qrow .qa code{font-size:12.5px}
+
+  /* approach tabs */
+  .approach{margin:26px 0;border:1px solid var(--line);border-radius:16px;background:var(--card);overflow:hidden}
+  .approach .tabs{display:flex;border-bottom:1px solid var(--line);background:#F5F5F9}
+  .approach .tab{flex:1;font-family:var(--mono);font-size:13px;font-weight:500;cursor:pointer;background:none;border:none;padding:13px 10px;color:var(--muted);border-bottom:2px solid transparent;transition:.15s}
+  .approach .tab:hover{background:#EEEDF4}
+  .approach .tab.active{color:var(--violet);border-bottom-color:var(--violet);background:var(--card)}
+  .approach .panel{display:none;padding:18px}
+  .approach .panel.show{display:block}
+  .approach .panel p{margin:0 0 12px;font-size:14.5px}
+  .approach pre{margin:0;background:var(--term-bg);color:var(--term-fg);font-family:var(--mono);font-size:13px;line-height:1.65;padding:15px 17px;border-radius:10px;overflow-x:auto;white-space:pre}
+  .approach pre .cm{color:#6B7180}
+  .approach pre .kw{color:#C9A6F6}
+  .approach pre .fn{color:#8CC0F5}
+  .approach .tradeoff{margin-top:12px;font-size:13.5px;color:var(--muted);line-height:1.5;padding:11px 14px;background:#FAFAFC;border-radius:9px;border:1px solid var(--line)}
+
+  /* pseudocode stepper */
+  .stepper{margin:26px 0;border:1px solid var(--line);border-radius:16px;background:var(--card);overflow:hidden}
+  .stepper .sth{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:11px 18px;border-bottom:1px solid var(--line);background:#F5F5F9}
+  .stepper .body{padding:18px}
+  .stepper pre{margin:0;background:var(--term-bg);color:var(--term-fg);font-family:var(--mono);font-size:13.5px;line-height:1.85;padding:16px 18px;border-radius:10px;overflow-x:auto;white-space:pre}
+  .stepper pre .cm{color:#6B7180}
+  .stepper pre .kw{color:#C9A6F6}
+  .stepper pre .fn{color:#8CC0F5}
+  .stepper pre .new{background:rgba(108,76,224,.22);border-radius:4px}
+  .stepper .ctrl{display:flex;gap:8px;align-items:center;padding:0 18px 18px;flex-wrap:wrap}
+  .stepper .ctrl button{font-family:var(--mono);font-size:12.5px;font-weight:600;cursor:pointer;border:1px solid var(--violet);background:var(--violet);color:#fff;border-radius:8px;padding:8px 14px}
+  .stepper .ctrl button:hover{background:#5B3ED1}
+  .stepper .ctrl button.ghost{background:transparent;color:var(--violet)}
+  .stepper .ctrl button:disabled{opacity:.4;cursor:not-allowed;background:#B9B4CC;border-color:#B9B4CC}
+  .stepper .note{font-size:13.5px;color:#2A2D36;padding:0 18px 18px;line-height:1.55;min-height:20px}
+  .stepper .note b{color:var(--violet)}
+
+  /* predict */
+  .predict{margin:22px 0;border:1px solid var(--violet-line);border-radius:var(--radius);background:linear-gradient(180deg,#FAF8FF,#F4F0FE);overflow:hidden}
+  .predict .phead{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--violet-line)}
+  .predict .phead .icon{width:22px;height:22px;border-radius:6px;background:var(--violet);color:#fff;display:grid;place-items:center;font-size:13px;font-weight:700;font-family:var(--mono)}
+  .predict .phead b{font-family:var(--disp);font-size:15px}
+  .predict .pbody{padding:16px}
+  .predict pre.psrc{margin:0 0 14px;background:var(--term-bg);color:var(--term-fg);border-radius:10px;font-family:var(--mono);font-size:13px;line-height:1.6;padding:14px 16px;overflow-x:auto;white-space:pre-wrap}
+  .predict .reveal-btn{font-family:var(--mono);font-size:12.5px;font-weight:600;cursor:pointer;background:var(--violet);color:#fff;border:none;border-radius:8px;padding:8px 16px}
+  .predict .reveal-btn:hover{background:#5B3ED1}
+  .predict .answer{display:none;margin-top:14px;background:#0F1116;border-radius:10px;padding:13px 16px}
+  .predict .answer.show{display:block}
+  .predict .answer .cline{font-family:var(--mono);font-size:13px;line-height:1.7;color:var(--term-fg)}
+  .predict .answer .why{color:var(--term-dim);font-size:12.5px;margin-top:9px;font-family:var(--body);line-height:1.55}
+
+  /* checkpoint */
+  .check{margin:26px 0;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px}
+  .check .q{font-family:var(--disp);font-weight:600;font-size:16px;margin-bottom:14px}
+  .check .opts{display:flex;flex-direction:column;gap:9px}
+  .check .opt{font-family:var(--mono);font-size:13.5px;text-align:left;cursor:pointer;background:#fff;border:1px solid var(--line);border-radius:9px;padding:11px 14px;transition:.15s}
+  .check .opt:hover{border-color:var(--violet-line);background:#FAF8FF}
+  .check .opt.correct{border-color:var(--emerald);background:#EAF7F0;color:#0C6B45}
+  .check .opt.wrong{border-color:var(--rose);background:#FBECEE;color:#9E2B3B}
+  .check .fb{margin-top:12px;font-size:13.5px;color:var(--muted);display:none}
+  .check .fb.show{display:block}
+
+  /* challenge */
+  .kintro{background:#FFF7EC;border:1px solid #F0DCBE;border-radius:14px;padding:18px 20px;margin:22px 0}
+  .kintro .htag{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--amber);font-weight:700;margin-bottom:6px}
+  .kintro p{margin:6px 0;font-size:14.5px}
+  .challenge{margin:18px 0;border:1px solid var(--line);border-radius:14px;background:var(--card);overflow:hidden}
+  .challenge .csig{background:var(--term-bg);color:var(--term-fg);font-family:var(--mono);font-size:13px;line-height:1.6;padding:14px 16px;white-space:pre-wrap;border-bottom:1px solid #2A2E3A}
+  .challenge .csig .cm{color:#6B7180}
+  .challenge .csig .fn{color:#8CC0F5}
+  .challenge .csig .kw{color:#C9A6F6}
+  .challenge .chints{padding:14px 16px}
+  .challenge .hintbtn{font-family:var(--mono);font-size:12.5px;font-weight:600;cursor:pointer;border:1px solid var(--violet-line);background:var(--violet-soft);color:#4A3B85;border-radius:8px;padding:8px 14px;transition:.15s}
+  .challenge .hintbtn:hover{background:#E4DBFA}
+  .challenge .hintbtn:disabled{opacity:.5;cursor:default}
+  .challenge .hint{display:none;margin-top:12px;padding:12px 15px;border-radius:10px;background:#FAF8FF;border:1px solid var(--violet-line);font-size:14px;line-height:1.55}
+  .challenge .hint.show{display:block}
+  .challenge .hint .htier{font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--violet);font-weight:700;margin-bottom:5px}
+  .challenge .hint code{font-size:12.5px}
+  .challenge .hint.deep{background:#FFF7EC;border-color:#F0DCBE}
+  .challenge .hint.deep .htier{color:var(--amber)}
+  .stage{font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;font-weight:700;padding:10px 16px 0;color:var(--emerald)}
+
+  .recap{background:var(--term-bg);border-radius:16px;padding:26px 28px;margin:26px 0;color:var(--term-fg)}
+  .recap h3{color:#fff;margin-top:0}
+  .recap ul{list-style:none;padding:0;margin:0;display:grid;gap:10px}
+  .recap li{font-family:var(--mono);font-size:13px;line-height:1.55;padding-left:22px;position:relative;color:#D3D7E0}
+  .recap li::before{content:'›';position:absolute;left:0;color:var(--violet);font-weight:700}
+  .recap li b{color:var(--t-num);font-weight:500}
+
+  footer{border-top:1px solid var(--line);margin-top:70px;padding-top:24px;color:var(--muted);font-size:13.5px}
+  footer .mono{font-family:var(--mono);font-size:12px}
+
+  .mobtop{display:none}
+  @media(max-width:860px){
+    .wrap{grid-template-columns:1fr}nav.side{display:none}
+    .mobtop{display:flex;position:sticky;top:0;z-index:20;background:rgba(241,241,244,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);padding:12px 18px;gap:10px;align-items:center;overflow-x:auto}
+    .mobtop .brand{margin:0;white-space:nowrap}
+    .mobtop a{font-family:var(--mono);font-size:12px;white-space:nowrap;color:var(--muted);padding:5px 10px;border-radius:7px}
+    .mobtop a.active{background:var(--violet-soft);color:#3B2A73}
+    main{padding-left:20px;padding-right:20px}
+  }
+  @media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important;scroll-behavior:auto}}
+</style>
+</head>
+<body>
+
+<div class="mobtop">
+  <span class="brand">DDD · bowling</span>
+  <a href="#c1" class="mlink active">What DDD is</a>
+  <a href="#c2" class="mlink">The rules</a>
+  <a href="#c3" class="mlink">Modelling</a>
+  <a href="#c4" class="mlink">Design first</a>
+  <a href="#c5" class="mlink">Two approaches</a>
+  <a href="#c6" class="mlink">Debug &amp; refactor</a>
+  <a href="#kata" class="mlink">Your challenge</a>
+</div>
+
+<div class="wrap">
+  <nav class="side">
+    <div class="brand">DDD · bowling<small>W1D3 — interactive guide</small></div>
+    <div class="navsec">
+      <span>Sections</span>
+      <a href="#c1" class="link" data-sec><b>01</b> What DDD actually is</a>
+      <a href="#c2" class="link" data-sec><b>02</b> The domain: bowling</a>
+      <a href="#c3" class="link" data-sec><b>03</b> Modelling it as data</a>
+      <a href="#c4" class="link" data-sec><b>04</b> Design before code</a>
+      <a href="#c5" class="link" data-sec><b>05</b> Top-down vs bottom-up</a>
+      <a href="#c6" class="link" data-sec><b>06</b> Debug &amp; refactor</a>
+      <a href="#kata" class="link kata" data-sec><b>✦</b> Your challenge</a>
+      <a href="#recap" class="link" data-sec><b>★</b> Recap</a>
+    </div>
+    <div class="navsec">
+      <span>The one idea</span>
+      <p style="font-size:13px;color:var(--muted);line-height:1.5;margin:0 12px">
+        You can't code what you don't understand. Learn the <b>domain</b> first, model it as <b>data</b>, write
+        <b>pseudocode</b>, then code — in small pieces you can test.</p>
+    </div>
+    <div class="backlink">
+      Related guides:
+      <a href="./index.html">⌂ All guides</a>
+      <a href="./js-data-structures.html">← Nested data</a>
+      <a href="./js-arrays.html">← Arrays</a>
+      <a href="./js-foundations.html">← Types &amp; Functions</a>
+    </div>
+  </nav>
+
+  <main>
+    <header class="hero">
+      <div class="eyebrow">Domain Driven Design · W1D3</div>
+      <h1>You can't code what you <span class="brace">don't understand yet</span></h1>
+      <p class="lede">Domain Driven Design sounds grand, but the idea is plain: before you write a line, you have
+      to actually <em>know the thing you're modelling</em>. Your computer doesn't know how bowling is scored. You
+      have to learn it, then teach it.</p>
+      <p class="lede">So this guide does the domain first — with a scorecard you can play — and only then turns to
+      code. That order isn't decoration; it's the entire lesson.</p>
+      <div class="runline"><span class="kbd">domain → data → pseudocode → code</span> the pipeline this whole challenge runs on.</div>
+    </header>
+
+    <!-- ===== 1 ===== -->
+    <section class="chapter" id="c1">
+      <div class="chaphead"><span class="num">01</span><h2>What DDD actually is</h2></div>
+      <p class="chapsub">Taking knowledge that lives in a human head and encoding it as logic a machine can follow.</p>
+
+      <p>You might know a thing intuitively — how to score tennis, judge a snowboard run, tell a good coffee from a
+      bad one. Your computer knows none of it. Domain Driven Design is the discipline of <b>getting that specific
+      knowledge out of your head and into your code</b>, deliberately, before and during the build.</p>
+
+      <p>The "domain" here is bowling. And the reason it's a famously hard challenge isn't the JavaScript — it's
+      that you need to understand bowling <em>and</em> the code at the same time, and gaps in either one look
+      identical from the outside: a wrong number.</p>
+
+      <div class="insight">
+        <div class="htag">◆ Insight — why the wrong answer is actually useful</div>
+        <p>Because bowling has a knowable correct score, your code has a built-in truth check. If you get 64 and
+        the answer is 68, you don't have a mysterious bug — you have a <em>flaw in your understanding</em> that has
+        been made visible. That's the real gift of a domain challenge: the domain grades your logic for you. Chase
+        the difference, and you'll find either a misread rule or a mistranslated one.</p>
+      </div>
+
+      <div class="insight warn">
+        <div class="htag">▲ Worth knowing — this is most of professional work</div>
+        <p>Almost every job you'll take is DDD in disguise: an insurance firm's claim rules, a school's timetable
+        constraints, a shop's discount tiers. The code is rarely the hard part. Understanding the business well
+        enough to encode it — and noticing where the experts' explanation is vague or contradictory — is the job.
+        Bowling is a small, safe rehearsal for exactly that.</p>
+      </div>
+    </section>
+
+    <!-- ===== 2 ===== -->
+    <section class="chapter" id="c2">
+      <div class="chaphead"><span class="num">02</span><h2>The domain: bowling</h2></div>
+      <p class="chapsub">Learn the rules by playing, not by reading. Click pins and watch the bonuses resolve.</p>
+
+      <p>The basics: a game is <b>10 frames</b>. In each frame you roll <b>two balls</b> to knock down <b>10 pins</b>
+      — unless you knock them all down with the first ball, which ends the frame early. Simple so far. The
+      complexity is entirely in the <em>bonuses</em>.</p>
+
+      <div class="rules">
+        <div class="rule basic"><div class="rt">Open frame</div><div class="formula">ball1 + ball2</div><p>Didn't clear all 10. Score is just the sum. No bonus.</p></div>
+        <div class="rule spare"><div class="rt">Spare  /</div><div class="formula">10 + next 1 ball</div><p>All 10 down using both balls. Bonus: your <b>next ball</b>.</p></div>
+        <div class="rule strike"><div class="rt">Strike  X</div><div class="formula">10 + next 2 balls</div><p>All 10 down on the first ball. Bonus: your <b>next two balls</b>.</p></div>
+        <div class="rule last"><div class="rt">10th frame</div><div class="formula">just add its balls</div><p>Strike or spare here earns a <b>3rd ball</b>. Then simply sum them.</p></div>
+      </div>
+
+      <p>Now play. Click a pin count for each roll — the scorecard fills in live, and frames waiting on a bonus show
+      a dash until the bonus balls arrive. <b>That dash is the whole concept made visible.</b></p>
+
+      <div class="scorecard" id="sc">
+        <div class="sh">Bowling scorecard — click pins to bowl
+          <span class="tot">Total <b id="scTotal">0</b></span>
+        </div>
+        <div class="frames" id="scFrames"></div>
+        <div class="pins" id="scPins"></div>
+        <div class="sctrl">
+          <button data-preset="reset">⟲ New game</button>
+          <button data-preset="simple">Open game (64)</button>
+          <button data-preset="spare">One spare</button>
+          <button data-preset="strike">One strike</button>
+          <button data-preset="perfect">Perfect game (300)</button>
+        </div>
+        <div class="expl" id="scExpl">Click a number to bowl your first ball.</div>
+      </div>
+
+      <div class="insight gotcha">
+        <div class="htag">✖ The thing that makes bowling hard to code</div>
+        <p>A frame's score <b>can't be known when the frame ends</b>. A strike in frame 4 stays unresolved until
+        you've bowled frames 5 and 6. That's why the scorecard shows a dash — and it's why you can't simply loop
+        once adding pairs of numbers. Your code has to <em>look forward</em> into later frames. Every difficult part
+        of this challenge traces back to that single fact.</p>
+      </div>
+
+      <h3>Which kind of frame is this?</h3>
+      <p>Before you can apply a rule, your code has to identify which rule applies. Try some combinations:</p>
+
+      <div class="idbox">
+        <div class="row">
+          <label>ball 1</label><input type="number" id="b1" value="10" min="0" max="10">
+          <label>ball 2</label><input type="number" id="b2" value="0" min="0" max="10">
+        </div>
+        <div class="verdict" id="idVerdict"></div>
+      </div>
+
+      <div class="check" data-check
+        data-correct="1"
+        data-fb="Correct — a spare earns exactly one bonus ball, a strike earns two. That difference is why they need separate handling in your code.">
+        <div class="q">Checkpoint: how many bonus balls does a <em>spare</em> earn?</div>
+        <div class="opts">
+          <button class="opt" data-opt="0">None</button>
+          <button class="opt" data-opt="1">One — the next ball</button>
+          <button class="opt" data-opt="2">Two — the next two balls</button>
+          <button class="opt" data-opt="3">The whole next frame</button>
+        </div>
+        <div class="fb" data-fbbox></div>
+      </div>
+
+      <div class="insight warn">
+        <div class="htag">▲ Clearing up the 10th frame confusion</div>
+        <p>This tripped up the room in the lecture, so plainly: in frames 1–9 a strike ends the frame — you gave up
+        your second ball, and you get the next two balls as a bonus instead. In the 10th frame there <em>is</em> no
+        "next frame" to borrow from, so they let you roll the bonus balls right there. Strike or spare in the 10th
+        → you roll a 3rd ball, and the frame simply scores as the <b>sum of its balls</b>. Don't try to apply the
+        bonus rules there; treat the last frame as its own special case.</p>
+      </div>
+    </section>
+
+    <!-- ===== 3 ===== -->
+    <section class="chapter" id="c3">
+      <div class="chaphead"><span class="num">03</span><h2>Modelling it as data</h2></div>
+      <p class="chapsub">Turning "10 frames of 2 balls" into a shape JavaScript can hold — an array of arrays.</p>
+
+      <p>Here's where domain meets code. The domain says: <em>a game has 10 frames; a frame has 2 balls</em>.
+      That maps almost word-for-word onto a structure you already know from the nested data guide — a
+      <b>2D array</b>:</p>
+
+      <div class="anatomy">
+        <div class="ahead">Code anatomy — the game, modelled</div>
+        <div class="anacode"><span class="tok kw" data-exp="const|The frames don't get reassigned, so const is right. (Remember: const still lets you read and loop it freely.)">const</span> <span class="tok fn" data-exp="frames|The whole game — one array holding 10 items. This is the top-level thing you'll loop over.">frames</span> = <span class="tok pn" data-exp="[ ] outer array = THE GAME|The outer brackets hold the 10 frames. Its index (0–9) is the frame number, so frames[3] is the 4th frame.">[</span> <span class="tok op" data-exp="[3, 4] a FRAME|Each inner array is one frame — the balls you rolled in it. Two numbers for a normal frame.">[3, 4]</span>, <span class="tok op" data-exp="[10, 0] a STRIKE|A strike, written as 10 then 0. You never actually rolled that second ball — the 0 is padding so every frame has the same shape. Some people write just [10] instead; both are valid as long as your code is consistent.">[10, 0]</span>, <span class="tok op" data-exp="[5, 5] a SPARE|Two balls totalling 10 — a spare. Note the array looks ordinary; only the SUM tells you it's special. That's why you need a check, not just a lookup.">[5, 5]</span>, <span class="tok pm" data-exp="… the remaining frames|Seven more frames to make 10 in total. The 10th may hold three numbers if it ends in a strike or spare.">…</span> <span class="tok pn" data-exp="] closes the game|Closes the outer array. frames.length should be 10.">]</span></div>
+        <div class="anapanel"><div class="anahint">Hover or tap a highlighted token above <span class="legend">· outer index = frame, inner index = ball</span></div><div class="anatitle">—</div><div class="anatext">Every part explains its own job.</div></div>
+      </div>
+
+      <p>So <code>frames[0]</code> is the first frame (an array), and <code>frames[0][1]</code> is the second ball
+      of the first frame (a number). Exactly the <code>[row][col]</code> pattern from the Dejarik board — outer
+      index picks the frame, inner index picks the ball.</p>
+
+      <div class="insight">
+        <div class="htag">◆ Insight — good models make the code obvious</div>
+        <p>Notice how little translation was needed: "10 frames, each with 2 balls" became <code>[[a,b], [a,b],
+        …]</code> almost mechanically. That's the sign of a good model. When you find yourself fighting your data
+        shape — writing gnarly code to get at simple facts — it's usually the <em>model</em> that's wrong, not you.
+        Changing the shape is often easier than out-coding a bad one.</p>
+      </div>
+
+      <div class="predict" data-predict>
+        <div class="phead"><span class="icon">?</span><b>Predict the output</b></div>
+        <div class="pbody">
+          <pre class="psrc">const frames = [[3, 4], [10, 0], [5, 5]]
+
+console.log(frames.length)
+console.log(frames[1])
+console.log(frames[1][0])
+console.log(frames[2][0] + frames[2][1])</pre>
+          <button class="reveal-btn" data-reveal>Reveal answer</button>
+          <div class="answer" data-answer>
+            <div class="cline"><span class="tok-num">3</span></div>
+            <div class="cline"><span class="tok-null">[</span> <span class="tok-num">10</span>, <span class="tok-num">0</span> <span class="tok-null">]</span></div>
+            <div class="cline"><span class="tok-num">10</span></div>
+            <div class="cline"><span class="tok-num">10</span></div>
+            <div class="why">Three frames so far. <code>frames[1]</code> is a whole frame (an array);
+            <code>frames[1][0]</code> reaches into it for the first ball. The last line sums frame 2's balls to 10 —
+            which is precisely how you'd <em>detect</em> a spare.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== 4 ===== -->
+    <section class="chapter" id="c4">
+      <div class="chaphead"><span class="num">04</span><h2>Design before code</h2></div>
+      <p class="chapsub">Four questions and a habit of writing comments first. This is the part people skip, and it's the part that saves you.</p>
+
+      <p>Before writing any function, answer four questions. If you can answer all four, you'll usually write it
+      right the first time — and when you don't, you'll know exactly where to look.</p>
+
+      <div class="checklist">
+        <div class="ch">The function design checklist</div>
+        <div class="qrow"><div class="qq">1. What are the inputs?</div><div class="qa">What gets passed in, and in what shape? For <code>scoreFrame</code>: one frame — an array of two numbers.</div></div>
+        <div class="qrow"><div class="qq">2. What work does it do?</div><div class="qa">The one job, in a sentence. "Add the two balls together." If your sentence needs an "and", consider two functions.</div></div>
+        <div class="qrow"><div class="qq">3. What are the outputs?</div><div class="qa">What comes back, and of what type? A single number. Knowing this tells you what to <code>return</code>.</div></div>
+        <div class="qrow"><div class="qq">4. Any side effects?</div><div class="qa">Does it change anything outside itself, or log? Mostly you want <em>none</em> — pure in, pure out. (Straight from the mutability guide.)</div></div>
+      </div>
+
+      <h3>Pseudocode first</h3>
+      <p>Write your plan as comments, <em>then</em> fill in code beneath each one. It feels pedantic for about a
+      minute, and then it starts catching your mistakes before they exist. Step through how a function grows:</p>
+
+      <div class="stepper" id="stepper">
+        <div class="sth">Pseudocode → code, step by step</div>
+        <div class="body"><pre id="stepCode"></pre></div>
+        <div class="ctrl">
+          <button class="ghost" id="stepPrev">← Back</button>
+          <button id="stepNext">Next step →</button>
+          <span style="font-family:var(--mono);font-size:12px;color:var(--muted)" id="stepCount"></span>
+        </div>
+        <div class="note" id="stepNote"></div>
+      </div>
+
+      <div class="insight">
+        <div class="htag">◆ Insight — the comments are a gift to future you</div>
+        <p>When you finish, don't delete the pseudocode. Those comments are now documentation explaining
+        <em>why</em> the code is shaped the way it is. Come back in a fortnight and you'll re-understand it in
+        seconds instead of minutes. This is also the honest answer to "how do experienced developers write
+        complicated things?" — mostly, they write the plan down first.</p>
+      </div>
+    </section>
+
+    <!-- ===== 5 ===== -->
+    <section class="chapter" id="c5">
+      <div class="chaphead"><span class="num">05</span><h2>Top-down vs bottom-up</h2></div>
+      <p class="chapsub">Two legitimate ways in. Same destination, different first move — and different failure modes.</p>
+
+      <p>The lecture built the same solution twice to show the contrast. Flip between them:</p>
+
+      <div class="approach" id="approach">
+        <div class="tabs">
+          <button class="tab active" data-ap="bottom">▸ Bottom-up (start small)</button>
+          <button class="tab" data-ap="top">▸ Top-down (start whole)</button>
+        </div>
+        <div class="panel show" data-panel="bottom">
+          <p>Start with the <b>smallest thing you can get working</b> — score a single frame — then build outward
+          until it covers the game.</p>
+          <pre><span class="cm">// 1. smallest piece first: score ONE frame</span>
+<span class="kw">function</span> <span class="fn">scoreFrame</span>(frame) {
+  <span class="kw">return</span> frame[0] + frame[1]
+}
+
+<span class="cm">// 2. then build outward, using the piece you trust</span>
+<span class="kw">function</span> <span class="fn">totalScore</span>(gameFrames) {
+  <span class="cm">// create a total</span>
+  <span class="cm">// loop over the frames</span>
+  <span class="cm">//   add the frame score to the total</span>
+  <span class="cm">// return the total</span>
+}</pre>
+          <div class="tradeoff"><b>Trade-off:</b> you get working, testable functions fast, and each one is easy to
+          verify on its own. The risk is assembly — you can end up with a pile of good pieces and a fiddly job
+          fitting them together.</div>
+        </div>
+        <div class="panel" data-panel="top">
+          <p>Start with the <b>whole problem</b> in one function, get an answer, then carve out smaller functions as
+          it gets unwieldy.</p>
+          <pre><span class="cm">// start with the whole job in one place</span>
+<span class="kw">function</span> <span class="fn">totalScore</span>(gameFrames) {
+  <span class="kw">let</span> total = 0
+  <span class="kw">for</span> (<span class="kw">let</span> i = 0; i &lt; gameFrames.length; i++) {
+    <span class="kw">const</span> currentFrame = gameFrames[i]
+    total += currentFrame[0] + currentFrame[1]
+  }
+  <span class="kw">return</span> total
+}
+<span class="cm">// later: pull that += line out into its own scoreFrame()</span></pre>
+          <div class="tradeoff"><b>Trade-off:</b> you reach a working answer sooner, which feels great. The risk is
+          that it snowballs — by the time you add spares and strikes, one giant function becomes very hard to
+          reason about. It demands disciplined refactoring as you go.</div>
+        </div>
+      </div>
+
+      <div class="insight warn">
+        <div class="htag">▲ My steer for this challenge specifically</div>
+        <p>Start bottom-up. Bowling's rules are naturally small and separable — <code>isStrike</code>,
+        <code>isSpare</code>, <code>scoreFrame</code> — and small functions are far easier to <em>check</em>, which
+        matters enormously when the domain itself is the tricky bit. If a number comes out wrong, you want to test
+        one rule in isolation, not bisect a 40-line function. You can always work top-down for the outer loop and
+        bottom-up for the rules; most real work mixes both.</p>
+      </div>
+
+      <p>Both versions run on the same data — here's the bottom-up pair, complete for a basic game. Run it, then
+      try breaking it with a spare:</p>
+
+      <div class="cell" data-cell>
+        <div class="bar"><span class="dots"><i></i><i></i><i></i></span><span class="fname">basic-game.js</span><span class="spacer"></span><button class="run" data-run>▶ Run</button></div>
+        <pre class="code" contenteditable="true" spellcheck="false">const frames = [[1,4],[4,5],[6,3],[5,3],[2,6],[1,7],[3,4],[2,2],[3,3],[0,0]]
+
+function scoreFrame(frame) {
+  return frame[0] + frame[1]
+}
+
+function totalScore(gameFrames) {
+  let total = 0
+  gameFrames.forEach(frame => {
+    total += scoreFrame(frame)
+  })
+  return total
+}
+
+console.log(totalScore(frames))   // 64 — a basic game, no bonuses
+
+// now try this: swap one frame for a spare and re-run.
+// the answer WON'T change... but it should. why?
+</pre>
+        <div class="console" data-console></div>
+      </div>
+
+      <div class="insight gotcha">
+        <div class="htag">✖ Try it — the moment the simple version breaks</div>
+        <p>Change a frame to <code>[5,5]</code> in the code above and re-run. The total shifts only by the raw pin
+        count, because <code>scoreFrame</code> has no idea what a spare is — it just adds two numbers. <b>That's the
+        exact wall this challenge is built around.</b> Everything from here is teaching your code to notice special
+        frames and look ahead for their bonuses.</p>
+      </div>
+    </section>
+
+    <!-- ===== 6 ===== -->
+    <section class="chapter" id="c6">
+      <div class="chaphead"><span class="num">06</span><h2>Debug &amp; refactor</h2></div>
+      <p class="chapsub">Two habits that matter more than cleverness: log to find out what's true, and clean up while it's still small.</p>
+
+      <h3>The console.log habit</h3>
+      <p>The lecturer hit a real bug live — a loop written as <code>i &lt; frames.length + 1</code>, which ran 11
+      times over a 10-item array and crashed. The fix wasn't cleverness. It was <b>logging <code>i</code> inside the
+      loop</b> and seeing it count to 10 when it should have stopped at 9.</p>
+
+      <div class="cell" data-cell>
+        <div class="bar"><span class="dots"><i></i><i></i><i></i></span><span class="fname">off-by-one.js</span><span class="spacer"></span><button class="run" data-run>▶ Run</button></div>
+        <pre class="code" contenteditable="true" spellcheck="false">const frames = [[1,4],[4,5],[6,3]]
+
+// the bug: "+ 1" makes it run one time too many
+for (let i = 0; i < frames.length + 1; i++) {
+  console.log('i is', i, '→ frame is', frames[i])
+}
+// watch the last line: undefined. Reading [0] off THAT is the crash.</pre>
+        <div class="console" data-console></div>
+      </div>
+
+      <div class="insight">
+        <div class="htag">◆ Insight — this is the undefined cliff again</div>
+        <p>The error you'd get is <em>"Cannot read properties of undefined"</em> — the same cliff from the nested
+        data guide. It always means a step earlier than the error came back empty. Here, <code>frames[3]</code>
+        doesn't exist, so reading <code>[0]</code> off it explodes. When you see that message, don't stare at the
+        line that threw; ask <b>"what just handed me nothing?"</b></p>
+      </div>
+
+      <div class="insight warn">
+        <div class="htag">▲ Guessing vs finding out</div>
+        <p>When something's wrong there are two moves: change things semi-randomly and re-run, or log a value and
+        <em>find out what's actually true</em>. The first feels faster and almost never is. One
+        <code>console.log</code> inside the loop turned a mystery crash into an obvious off-by-one in seconds.
+        Print the thing you're assuming.</p>
+      </div>
+
+      <h3>Refactor while it's small</h3>
+      <p>Each time a piece works, stop and ask three questions before moving on:</p>
+      <ul>
+        <li><b>Naming</b> — would <code>scoreFrame</code> read better than <code>calc</code>? Will this make sense next week?</li>
+        <li><b>Simplify</b> — is there duplication I can pull out?</li>
+        <li><b>Size</b> — is this function doing too much? Should part of it become its own function?</li>
+      </ul>
+      <p>Doing this <em>during</em> the build is far cheaper than at the end. Bowling gets genuinely complicated once
+      strikes arrive, and messy code at that point compounds fast.</p>
+
+      <div class="insight">
+        <div class="htag">◆ Insight — the 15-minute rule</div>
+        <p>Stuck for more than 15 minutes? Ask. It's tempting to keep grinding combinations, but stuck-time rarely
+        converts to learning — you're usually missing one fact, and a two-minute conversation supplies it. Getting
+        unstuck fast means more of your afternoon is spent actually building. Asking early is a skill, not a
+        concession.</p>
+      </div>
+    </section>
+
+    <!-- ===== CHALLENGE ===== -->
+    <section class="chapter" id="kata">
+      <div class="chaphead"><span class="num">✦</span><h2>Your challenge</h2></div>
+      <p class="chapsub">The bowling kata, staged from basic to full. Nudges unlock one at a time — no finished solutions.</p>
+
+      <div class="kintro">
+        <div class="htag">How to attack this</div>
+        <p>Work the stages <b>in order</b> and get each one fully working before moving on: basic game → spares →
+        strikes → last frame. Don't try to write the whole scorer at once; that's the fastest route to a tangle.</p>
+        <p><b>For the assessment</b> you need iteration over the frames array <em>and</em> a conditional — which in
+        practice means reaching at least the spares stage. Commit often (even just pseudocode), and if you're
+        pairing, make sure you each have a couple of commits on the branch.</p>
+      </div>
+
+      <div class="challenge" data-challenge>
+        <div class="stage">Stage 1 — basic game</div>
+        <div class="csig"><span class="cm">// Score a game with no spares and no strikes.</span>
+<span class="cm">// Target: the sample basic game totals 64.</span>
+<span class="kw">function</span> <span class="fn">totalScore</span>(gameFrames) {}</div>
+        <div class="chints">
+          <button class="hintbtn" data-hint>Nudge 1 · plan</button>
+          <div class="hint"><div class="htier">Plan</div>Write the pseudocode before code: create a total, loop over
+          the frames, add each frame's score to the total, return the total. Those four comments <em>are</em> your
+          function's skeleton.</div>
+          <button class="hintbtn" data-hint>Nudge 2 · the pieces</button>
+          <div class="hint"><div class="htier">The pieces</div>You need a running total that starts at
+          <code>0</code>, a loop (<code>forEach</code> or a <code>for</code> loop — either is fine), and
+          <code>+=</code> to accumulate. A separate <code>scoreFrame(frame)</code> that returns
+          <code>frame[0] + frame[1]</code> keeps it tidy and gives you something testable.</div>
+          <button class="hintbtn" data-hint>Nudge 3 · watch for</button>
+          <div class="hint deep"><div class="htier">Watch for</div>Two classics: forgetting the <code>return</code>
+          at the end (you'll get <code>undefined</code>), and declaring <code>total</code> inside the loop so it
+          resets every iteration. Declare it <em>before</em> the loop. Test as you go with a console.log.</div>
+        </div>
+      </div>
+
+      <div class="challenge" data-challenge>
+        <div class="stage">Stage 2 — detect the frame type</div>
+        <div class="csig"><span class="cm">// Before you can score a special frame, you must spot one.</span>
+<span class="kw">function</span> <span class="fn">isStrike</span>(frame) {}
+<span class="kw">function</span> <span class="fn">isSpare</span>(frame) {}</div>
+        <div class="chints">
+          <button class="hintbtn" data-hint>Nudge 1 · concept</button>
+          <div class="hint"><div class="htier">Concept</div>Each returns a boolean — true or false. Think about what
+          is uniquely true of each. A strike: all ten pins on the <em>first</em> ball. A spare: ten pins total, but
+          <em>not</em> on the first ball alone.</div>
+          <button class="hintbtn" data-hint>Nudge 2 · the tests</button>
+          <div class="hint"><div class="htier">The tests</div>Strike → the first ball equals 10. Spare → the two
+          balls sum to 10. Careful: a strike written <code>[10, 0]</code> <em>also</em> sums to 10, so your spare
+          check must exclude strikes — either test <code>isSpare</code> only when it isn't a strike, or build that
+          condition into the check itself.</div>
+          <button class="hintbtn" data-hint>Nudge 3 · shape</button>
+          <div class="hint deep"><div class="htier">Shape</div>Each is a one-line <code>return</code> of a
+          comparison — no <code>if</code> statement needed, since a comparison already produces a boolean. Order
+          matters when you use them: check strike <em>first</em>, then spare, then fall through to basic.</div>
+        </div>
+      </div>
+
+      <div class="challenge" data-challenge>
+        <div class="stage">Stage 3 — spares</div>
+        <div class="csig"><span class="cm">// A spare scores 10 + the NEXT BALL bowled.</span>
+<span class="cm">// You'll need to look into the following frame.</span></div>
+        <div class="chints">
+          <button class="hintbtn" data-hint>Nudge 1 · concept</button>
+          <div class="hint"><div class="htier">Concept</div>Your per-frame scoring can no longer look at just one
+          frame — it needs to see the <em>next</em> one. That means the function needs access to the whole array and
+          the current position, not a lone frame. Rethink its inputs (checklist question 1).</div>
+          <button class="hintbtn" data-hint>Nudge 2 · the tools</button>
+          <div class="hint"><div class="htier">The tools</div>Pass in <code>frames</code> and an index
+          <code>i</code>. The next ball after frame <code>i</code> is the <em>first</em> ball of frame
+          <code>i + 1</code>. A <code>for</code> loop hands you <code>i</code> naturally;
+          <code>forEach</code> can too — its callback takes the index as a second argument.</div>
+          <button class="hintbtn" data-hint>Nudge 3 · watch for</button>
+          <div class="hint deep"><div class="htier">Watch for</div>When a spare lands in the last frame there's no
+          <code>frames[i + 1]</code> — that's the undefined cliff waiting. Handle the 10th frame separately (stage
+          5) and this disappears. Test with a known case: <code>[5,5]</code> then <code>[3,0]</code> should score
+          13 + 3 = 16.</div>
+        </div>
+      </div>
+
+      <div class="challenge" data-challenge>
+        <div class="stage">Stage 4 — strikes</div>
+        <div class="csig"><span class="cm">// A strike scores 10 + the NEXT TWO BALLS bowled.</span>
+<span class="cm">// Careful: those two balls might span two frames.</span></div>
+        <div class="chints">
+          <button class="hintbtn" data-hint>Nudge 1 · concept</button>
+          <div class="hint"><div class="htier">Concept</div>Same idea as spares but two balls deep — and here's the
+          trap: if the next frame is <em>also</em> a strike, it only contains one real ball. So your second bonus
+          ball comes from the frame after that. Consecutive strikes are what makes this stage hard.</div>
+          <button class="hintbtn" data-hint>Nudge 2 · two routes</button>
+          <div class="hint"><div class="htier">Two routes</div><b>A)</b> Handle it with conditionals: if
+          <code>frames[i+1]</code> is a strike, take its first ball plus the first ball of
+          <code>frames[i+2]</code>; otherwise take both balls of <code>frames[i+1]</code>. <b>B)</b> Build a flat
+          list of every ball bowled in order, then the bonus is simply the next two entries. Route B is more
+          thinking up front but far less branching.</div>
+          <button class="hintbtn" data-hint>Nudge 3 · verify</button>
+          <div class="hint deep"><div class="htier">Verify</div>Test against known totals rather than eyeballing:
+          a strike followed by <code>[3,4]</code> then all zeros = <b>24</b>. All ten frames strikes (with the
+          10th's bonus balls) = <b>300</b>. If you hit 300, your strike logic is genuinely correct — it's the
+          strictest test there is.</div>
+        </div>
+      </div>
+
+      <div class="challenge" data-challenge>
+        <div class="stage">Stage 5 — the last frame</div>
+        <div class="csig"><span class="cm">// The 10th frame is its own special case:</span>
+<span class="cm">// a strike or spare there earns a 3rd ball, and</span>
+<span class="cm">// the frame simply scores as the sum of its balls.</span></div>
+        <div class="chints">
+          <button class="hintbtn" data-hint>Nudge 1 · concept</button>
+          <div class="hint"><div class="htier">Concept</div>Don't try to make the general rules stretch to cover
+          frame 10 — that way lies pain. Treat it as an exception: no lookahead, no bonus logic, just add up
+          whatever balls it holds (two or three).</div>
+          <button class="hintbtn" data-hint>Nudge 2 · shape</button>
+          <div class="hint deep"><div class="htier">Shape</div>A conditional on the index does it — when
+          <code>i</code> is the last frame, sum its balls and skip the bonus branches entirely. Summing an array of
+          unknown length is a <code>reduce</code>, or a small loop. This also quietly fixes the stage-3 and stage-4
+          cliff, since the last frame never looks forward.</div>
+        </div>
+      </div>
+
+      <div class="insight" style="margin-top:30px">
+        <div class="htag">◆ Test targets to check yourself against</div>
+        <p>Rather than squinting at numbers, verify against known-correct games. All gutter balls → <b>0</b>. All
+        ones → <b>20</b>. The sample basic game → <b>64</b>. Every frame a 5/5 spare (with a final 5) →
+        <b>150</b>. All strikes → <b>300</b>. Get those five and your scorer is right. The scorecard in section 2
+        will reproduce any of them if you want to see the frame-by-frame breakdown.</p>
+      </div>
+    </section>
+
+    <!-- ===== RECAP ===== -->
+    <section class="chapter" id="recap">
+      <div class="chaphead"><span class="num">★</span><h2>Recap</h2></div>
+      <div class="recap">
+        <h3>Domain Driven Design</h3>
+        <ul>
+          <li><b>DDD</b> = getting domain knowledge out of a head and into code. Learn the domain first.</li>
+          <li>The domain <b>grades your logic</b> — a wrong total means a misunderstood or mistranslated rule.</li>
+          <li>Model the domain as data: "10 frames of 2 balls" → <b>[[a,b], …]</b>, a 2D array.</li>
+          <li>Good models make code obvious. Fighting your data usually means the <b>model</b> is wrong.</li>
+        </ul>
+      </div>
+      <div class="recap">
+        <h3>Bowling rules</h3>
+        <ul>
+          <li><b>Open frame</b> → ball1 + ball2 · <b>Spare</b> → 10 + next 1 ball · <b>Strike</b> → 10 + next 2 balls</li>
+          <li><b>10th frame</b> → strike/spare earns a 3rd ball; just sum its balls, no lookahead.</li>
+          <li>A frame's score often <b>can't be known when it ends</b> — that's why you must look forward.</li>
+          <li>Check <b>strike before spare</b>: [10,0] also sums to 10.</li>
+          <li>Targets: gutters <b>0</b> · all ones <b>20</b> · basic sample <b>64</b> · all 5/5 spares <b>150</b> · all strikes <b>300</b>.</li>
+        </ul>
+      </div>
+      <div class="recap">
+        <h3>Method</h3>
+        <ul>
+          <li>Design first — <b>inputs, work, outputs, side effects</b>.</li>
+          <li>Write <b>pseudocode comments</b>, then fill code beneath them. Keep the comments.</li>
+          <li><b>Bottom-up</b> = small testable pieces (best here) · <b>top-down</b> = fast answer, needs refactoring.</li>
+          <li>Debug by <b>logging what you assume</b>, not by guessing changes.</li>
+          <li>Refactor while it's small: naming, duplication, size.</li>
+          <li>Stuck 15 minutes? <b>Ask.</b> Commit often, even just pseudocode.</li>
+        </ul>
+      </div>
+
+      <footer>
+        <p>Built from your W1D3 Domain Driven Design lecture — Dev Academy Aotearoa. The scorecard implements
+        standard ten-pin scoring; solutions deliberately left for you to write.</p>
+        <p class="mono">reference:
+          <a href="https://en.wikipedia.org/wiki/Ten-pin_bowling#Scoring" target="_blank" rel="noopener">ten-pin scoring</a> ·
+          <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/forEach" target="_blank" rel="noopener">MDN forEach</a></p>
+      </footer>
+    </section>
+  </main>
+</div>
+
+<script>
+/* ---------- console runner ---------- */
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function fmt(v){
+  if(v===null) return '<span class="tok-null">null</span>';
+  if(v===undefined) return '<span class="tok-null">undefined</span>';
+  const t=typeof v;
+  if(t==='number') return '<span class="tok-num">'+String(v)+'</span>';
+  if(t==='boolean') return '<span class="tok-num">'+v+'</span>';
+  if(t==='string') return '<span class="tok-str">\''+esc(v)+'\'</span>';
+  if(Array.isArray(v)) return '<span class="tok-null">[</span> '+v.map(fmt).join('<span class="tok-null">, </span>')+' <span class="tok-null">]</span>';
+  if(t==='object'){return '<span class="tok-null">{</span> '+Object.keys(v).map(k=>esc(k)+': '+fmt(v[k])).join('<span class="tok-null">, </span>')+' <span class="tok-null">}</span>';}
+  return esc(String(v));
+}
+function fmtArgs(a){return a.map(x=>typeof x==='string'?'<span class="tok-str">'+esc(x)+'</span>':fmt(x)).join(' ');}
+function runCell(cell){
+  const code=cell.querySelector('pre.code').textContent;
+  const box=cell.querySelector('[data-console]');const logs=[];
+  const fc={log:(...a)=>logs.push({t:'log',a}),error:(...a)=>logs.push({t:'log',a}),warn:(...a)=>logs.push({t:'log',a}),info:(...a)=>logs.push({t:'log',a})};
+  try{ new Function('console','"use strict";\n'+code)(fc); }
+  catch(e){ logs.push({t:'err',m:(e&&e.message)?e.message:String(e)}); }
+  box.classList.add('show');
+  box.innerHTML = logs.length
+    ? logs.map(l=>l.t==='err'?'<div class="cline"><span class="tok-err">✖ '+esc(l.m)+'</span></div>':'<div class="cline"><span class="prompt">› </span>'+fmtArgs(l.a)+'</div>').join('')
+    : '<div class="cline empty">// no output — nothing was logged</div>';
+}
+document.querySelectorAll('[data-cell]').forEach(cell=>{
+  cell.querySelector('[data-run]').addEventListener('click',()=>runCell(cell));
+  cell.querySelector('pre.code').addEventListener('keydown',e=>{if((e.metaKey||e.ctrlKey)&&e.key==='Enter'){e.preventDefault();runCell(cell);}});
+});
+
+/* ---------- anatomy ---------- */
+document.querySelectorAll('.anatomy').forEach(an=>{
+  const title=an.querySelector('.anatitle'), text=an.querySelector('.anatext'), hint=an.querySelector('.anahint');
+  const toks=an.querySelectorAll('.tok');
+  function show(tok){
+    const raw=tok.getAttribute('data-exp')||''; const i=raw.indexOf('|');
+    title.textContent=i>=0?raw.slice(0,i):tok.textContent.trim();
+    text.textContent=i>=0?raw.slice(i+1):raw;
+    hint.textContent='what this part does';
+    toks.forEach(x=>x.classList.remove('active')); tok.classList.add('active');
+  }
+  toks.forEach(tok=>{tok.setAttribute('tabindex','0');
+    tok.addEventListener('mouseenter',()=>show(tok));
+    tok.addEventListener('click',()=>show(tok));
+    tok.addEventListener('focus',()=>show(tok));});
+});
+
+/* ---------- BOWLING SCORECARD ---------- */
+(function(){
+  let frames=[[]];                    // array of frames, each an array of rolls
+  const framesEl=document.getElementById('scFrames');
+  const pinsEl=document.getElementById('scPins');
+  const totalEl=document.getElementById('scTotal');
+  const explEl=document.getElementById('scExpl');
+
+  function isStrike(f,i){ return i<9 && f[0]===10 }
+  function isSpare(f,i){ return i<9 && f.length>=2 && f[0]!==10 && f[0]+f[1]===10 }
+  function ballsAfter(i){
+    const out=[];
+    for(let j=i+1;j<frames.length;j++){
+      const f=frames[j];
+      if(j<9 && f[0]===10) out.push(10); else out.push(...f);
+    }
+    return out;
+  }
+  function frameScore(i){
+    const f=frames[i]; if(!f) return null;
+    if(i===9){ return f.length>=2 ? f.reduce((a,b)=>a+b,0) : null }
+    if(f[0]===10){ const a=ballsAfter(i); return a.length<2?null:10+a[0]+a[1] }
+    if(f.length<2) return null;
+    if(f[0]+f[1]===10){ const a=ballsAfter(i); return a.length<1?null:10+a[0] }
+    return f[0]+f[1];
+  }
+  function frameComplete(i){
+    const f=frames[i]; if(!f) return false;
+    if(i===9){
+      if(f.length<2) return false;
+      const bonus = f[0]===10 || f[0]+f[1]===10;
+      return bonus ? f.length>=3 : f.length>=2;
+    }
+    return f[0]===10 || f.length>=2;
+  }
+  function gameOver(){ return frames.length===10 && frameComplete(9) }
+  function currentIndex(){ return Math.min(frames.length-1,9) }
+
+  function rollSymbol(f,i,ri){
+    const v=f[ri];
+    if(i<9){
+      if(ri===0 && v===10) return {t:'X',c:'strike'};
+      if(ri===1 && f[0]+v===10) return {t:'/',c:'spare'};
+      return {t:v===0?'-':String(v),c:''};
+    }
+    // 10th frame
+    if(v===10) return {t:'X',c:'strike'};
+    if(ri>0 && f[ri-1]!==10 && f[ri-1]+v===10) return {t:'/',c:'spare'};
+    return {t:v===0?'-':String(v),c:''};
+  }
+
+  function render(){
+    framesEl.innerHTML='';
+    let running=0, stopped=false;
+    for(let i=0;i<10;i++){
+      const f=frames[i]||[];
+      const slots=i===9?3:2;
+      let rollsHtml='';
+      for(let r=0;r<slots;r++){
+        if(f[r]!==undefined){const s=rollSymbol(f,i,r);rollsHtml+='<div class="roll '+s.c+'">'+s.t+'</div>';}
+        else rollsHtml+='<div class="roll"></div>';
+      }
+      const sc=frameScore(i);
+      let disp='';
+      if(sc===null||stopped){ if(f.length) {disp='<span class="pending">—</span>'; stopped=true;} }
+      else { running+=sc; disp=String(running); }
+      const active=(i===currentIndex() && !gameOver())?' active':'';
+      framesEl.insertAdjacentHTML('beforeend',
+        '<div class="frame'+active+'"><div class="fnum">'+(i+1)+'</div><div class="rolls">'+rollsHtml+'</div><div class="fscore'+(disp.includes('pending')?' pending':'')+'">'+disp+'</div></div>');
+    }
+    totalEl.textContent=running;
+    renderPins();
+  }
+
+  function pinsLeft(){
+    const i=currentIndex(); const f=frames[i]||[];
+    if(i<9){ return f.length===1 ? 10-f[0] : 10 }
+    // 10th
+    if(f.length===0) return 10;
+    if(f.length===1) return f[0]===10?10:10-f[0];
+    // third ball
+    if(f[0]===10) return f[1]===10?10:10-f[1];
+    return 10; // after a spare
+  }
+  function renderPins(){
+    pinsEl.innerHTML='';
+    const max=gameOver()?-1:pinsLeft();
+    for(let p=0;p<=10;p++){
+      const b=document.createElement('button');
+      b.textContent=p===10?'X':p;
+      if(p===10)b.className='x';
+      b.disabled=gameOver()||p>max;
+      b.addEventListener('click',()=>roll(p));
+      pinsEl.appendChild(b);
+    }
+  }
+
+  function explain(i,p){
+    const f=frames[i];
+    if(i<9 && f.length===1 && p===10){ explEl.innerHTML='<b>Strike!</b> All 10 on the first ball — the frame ends now. Its score stays a <span class="pend">dash</span> until you bowl <b>two more balls</b>.'; return }
+    if(i<9 && f.length===2 && f[0]+f[1]===10){ explEl.innerHTML='<b>Spare!</b> All 10 across two balls. Score waits on <b>one more ball</b> — see the <span class="pend">dash</span>.'; return }
+    if(i<9 && f.length===2){ explEl.innerHTML='<b>Open frame.</b> '+f[0]+' + '+f[1]+' = <b>'+(f[0]+f[1])+'</b>. No bonus, so it scores immediately.'; return }
+    if(i===9 && frameComplete(9)){ explEl.innerHTML='<b>Game over.</b> The 10th frame just sums its balls — no lookahead needed. Final score: <b>'+totalEl.textContent+'</b>.'; return }
+    explEl.innerHTML='Rolled <b>'+p+'</b>. Keep bowling — watch which frames resolve and which wait on bonuses.';
+  }
+
+  function roll(p){
+    if(gameOver())return;
+    const i=currentIndex();
+    if(!frames[i])frames[i]=[];
+    frames[i].push(p);
+    if(frameComplete(i) && frames.length<10) frames.push([]);
+    render(); explain(i,p);
+  }
+
+  const PRESETS={
+    reset:null,
+    simple:[[1,4],[4,5],[6,3],[5,3],[2,6],[1,7],[3,4],[2,2],[3,3],[0,0]],
+    spare:[[5,5],[3,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0]],
+    strike:[[10],[3,4],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0]],
+    perfect:[[10],[10],[10],[10],[10],[10],[10],[10],[10],[10,10,10]]
+  };
+  document.querySelectorAll('#sc .sctrl button').forEach(b=>{
+    b.addEventListener('click',()=>{
+      const p=PRESETS[b.dataset.preset];
+      frames = p ? JSON.parse(JSON.stringify(p)) : [[]];
+      render();
+      explEl.innerHTML = p
+        ? 'Loaded a preset. Total: <b>'+totalEl.textContent+'</b>. Look at which frames show a <span class="pend">dash</span> before their bonus arrives.'
+        : 'New game. Click a number to bowl your first ball.';
+    });
+  });
+  render();
+})();
+
+/* ---------- frame type identifier ---------- */
+(function(){
+  const b1=document.getElementById('b1'), b2=document.getElementById('b2'), v=document.getElementById('idVerdict');
+  function upd(){
+    const x=parseInt(b1.value,10), y=parseInt(b2.value,10);
+    if(isNaN(x)||isNaN(y)||x<0||y<0||x>10||y>10){ v.className='verdict bad'; v.textContent='Enter two numbers from 0 to 10.'; return }
+    if(x===10){ v.className='verdict strike'; v.innerHTML='<b>STRIKE</b> — first ball took all 10. Score = 10 + your next <b>two</b> balls. Detect it with: first ball === 10'; return }
+    if(x+y>10){ v.className='verdict bad'; v.textContent='Impossible — only 10 pins stand in a frame.'; return }
+    if(x+y===10){ v.className='verdict spare'; v.innerHTML='<b>SPARE</b> — 10 across two balls. Score = 10 + your next <b>one</b> ball. Detect it with: ball1 + ball2 === 10 (and not a strike)'; return }
+    v.className='verdict basic'; v.innerHTML='<b>OPEN FRAME</b> — '+x+' + '+y+' = <b>'+(x+y)+'</b>. No bonus; score it straight away.';
+  }
+  b1.addEventListener('input',upd); b2.addEventListener('input',upd); upd();
+})();
+
+/* ---------- pseudocode stepper ---------- */
+(function(){
+  const STEPS=[
+    {code:`<span class="cm">// 1. what are the inputs?  a frame: [3, 4]</span>
+<span class="cm">// 2. what work?           add the two balls</span>
+<span class="cm">// 3. what output?         one number</span>
+<span class="cm">// 4. side effects?        none</span>`,
+     note:'<b>Answer the four questions first.</b> No code yet — you\'re deciding what the function IS before deciding how it works.'},
+    {code:`<span class="cm">// 1. inputs: a frame [3, 4]   2. add the balls</span>
+<span class="cm">// 3. output: one number       4. no side effects</span>
+
+<span class="kw">function</span> <span class="fn">scoreFrame</span>(frame) {
+<span class="new">  <span class="cm">// add ball one and ball two</span>
+  <span class="cm">// return the result</span></span>
+}`,
+     note:'<b>Now the plan, as comments.</b> The shell exists and each step is written in English. Still nothing to get wrong.'},
+    {code:`<span class="kw">function</span> <span class="fn">scoreFrame</span>(frame) {
+  <span class="cm">// add ball one and ball two</span>
+<span class="new">  <span class="kw">const</span> score = frame[0] + frame[1]</span>
+  <span class="cm">// return the result</span>
+}`,
+     note:'<b>Fill in one comment at a time.</b> Each line has an obvious job because the comment above already said what it should do.'},
+    {code:`<span class="kw">function</span> <span class="fn">scoreFrame</span>(frame) {
+  <span class="cm">// add ball one and ball two</span>
+  <span class="kw">const</span> score = frame[0] + frame[1]
+  <span class="cm">// return the result</span>
+<span class="new">  <span class="kw">return</span> score</span>
+}`,
+     note:'<b>Complete.</b> The comments stay as documentation. Now test it before building anything on top: <code>scoreFrame([3,4])</code> should give 7.'},
+    {code:`<span class="cm">// now the same method for the bigger function</span>
+<span class="kw">function</span> <span class="fn">totalScore</span>(gameFrames) {
+<span class="new">  <span class="cm">// create a total</span>
+  <span class="cm">// loop over the frames</span>
+  <span class="cm">//   add the frame score to the total</span>
+  <span class="cm">// return the total</span></span>
+}`,
+     note:'<b>Repeat, one level up.</b> Same rhythm: plan in English, then fill each line. Notice the indented comment — it belongs <em>inside</em> the loop, and writing it that way already tells you where the code goes.'}
+  ];
+  let idx=0;
+  const codeEl=document.getElementById('stepCode'), noteEl=document.getElementById('stepNote');
+  const prev=document.getElementById('stepPrev'), next=document.getElementById('stepNext'), cnt=document.getElementById('stepCount');
+  function draw(){
+    codeEl.innerHTML=STEPS[idx].code; noteEl.innerHTML=STEPS[idx].note;
+    cnt.textContent='step '+(idx+1)+' of '+STEPS.length;
+    prev.disabled=idx===0; next.disabled=idx===STEPS.length-1;
+  }
+  next.addEventListener('click',()=>{if(idx<STEPS.length-1){idx++;draw()}});
+  prev.addEventListener('click',()=>{if(idx>0){idx--;draw()}});
+  draw();
+})();
+
+/* ---------- approach tabs ---------- */
+document.querySelectorAll('#approach .tab').forEach(tab=>{
+  tab.addEventListener('click',()=>{
+    document.querySelectorAll('#approach .tab').forEach(t=>t.classList.remove('active'));
+    document.querySelectorAll('#approach .panel').forEach(p=>p.classList.remove('show'));
+    tab.classList.add('active');
+    document.querySelector('#approach .panel[data-panel="'+tab.dataset.ap+'"]').classList.add('show');
+  });
+});
+
+/* ---------- predict reveals ---------- */
+document.querySelectorAll('[data-predict]').forEach(p=>{
+  p.querySelector('[data-reveal]').addEventListener('click',function(){
+    p.querySelector('[data-answer]').classList.add('show');
+    this.textContent='Answer shown ↓';this.disabled=true;this.style.opacity=.55;
+  });
+});
+
+/* ---------- challenge nudges ---------- */
+document.querySelectorAll('[data-challenge]').forEach(ch=>{
+  const btns=[...ch.querySelectorAll('[data-hint]')];
+  const hints=[...ch.querySelectorAll('.hint')];
+  btns.forEach((b,i)=>{ if(i>0) b.style.display='none'; });
+  btns.forEach((b,i)=>{
+    b.addEventListener('click',()=>{
+      hints[i].classList.add('show');
+      b.disabled=true; b.textContent=b.textContent.replace('Nudge','✓ Nudge');
+      if(btns[i+1]) btns[i+1].style.display='';
+    });
+  });
+});
+
+/* ---------- checkpoints ---------- */
+document.querySelectorAll('[data-check]').forEach(chk=>{
+  const correct=parseInt(chk.dataset.correct,10);
+  const fbbox=chk.querySelector('[data-fbbox]');
+  chk.querySelectorAll('.opt').forEach(opt=>{
+    opt.addEventListener('click',()=>{
+      const pick=parseInt(opt.dataset.opt,10);
+      if(pick===correct){opt.classList.add('correct');fbbox.textContent=chk.dataset.fb;fbbox.classList.add('show');chk.querySelectorAll('.opt').forEach(o=>o.style.pointerEvents='none');}
+      else{opt.classList.add('wrong');opt.style.pointerEvents='none';}
+    });
+  });
+});
+
+/* ---------- scrollspy ---------- */
+const sections=[...document.querySelectorAll('section.chapter')];
+const links=[...document.querySelectorAll('nav.side a[data-sec]')];
+const mlinks=[...document.querySelectorAll('.mobtop .mlink')];
+function spy(){
+  const y=window.scrollY+120;let cur=sections[0].id;
+  for(const s of sections){if(s.offsetTop<=y)cur=s.id;}
+  links.forEach(l=>l.classList.toggle('active',l.getAttribute('href')==='#'+cur));
+  mlinks.forEach(l=>l.classList.toggle('active',l.getAttribute('href')==='#'+cur));
+}
+window.addEventListener('scroll',spy,{passive:true});spy();
+</script>
+</body>
+</html>

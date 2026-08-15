@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The DOM &amp; Events — interactive guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;450;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F1F1F4;--card:#FBFBFD;--ink:#1B1E26;--muted:#5A5F6B;--line:#E1E1E8;
+    --violet:#6C4CE0;--violet-soft:#EDE8FC;--violet-line:#D8CEF7;
+    --emerald:#12905F;--amber:#B67A08;--rose:#D6455D;--blue:#2C6FE0;
+    --term-bg:#15171E;--term-panel:#1D2029;--term-fg:#E6E8EC;--term-dim:#8A90A0;
+    --radius:14px;
+    --mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+    --disp:'Space Grotesk',system-ui,sans-serif;--body:'Inter',system-ui,sans-serif;
+  }
+  *{box-sizing:border-box}html{scroll-behavior:smooth}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);font-size:16.5px;line-height:1.62;-webkit-font-smoothing:antialiased}
+  a{color:var(--violet);text-decoration:none}a:hover{text-decoration:underline}
+  code{font-family:var(--mono);font-size:.88em;background:#E7E7EE;padding:.08em .38em;border-radius:5px;color:#2C2140}
+  .wrap{display:grid;grid-template-columns:270px minmax(0,1fr);max-width:1200px;margin:0 auto}
+  nav.side{position:sticky;top:0;align-self:start;height:100vh;overflow-y:auto;padding:30px 22px 40px;border-right:1px solid var(--line)}
+  main{padding:0 clamp(20px,5vw,64px) 120px;min-width:0}
+  .brand{font-family:var(--mono);font-weight:700;font-size:14px;letter-spacing:.04em;color:var(--violet);margin-bottom:4px}
+  .brand small{color:var(--muted);font-weight:400;display:block;letter-spacing:0;margin-top:3px;font-family:var(--body);font-size:12.5px}
+  .navsec{margin-top:26px}
+  .navsec > span{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:9px;padding-left:12px}
+  nav.side a.link{display:flex;gap:10px;align-items:baseline;padding:7px 12px;border-radius:9px;color:var(--ink);font-size:14.5px;line-height:1.35}
+  nav.side a.link:hover{background:#E9E9F0;text-decoration:none}
+  nav.side a.link.active{background:var(--violet-soft);color:#3B2A73;font-weight:500}
+  nav.side a.link b{font-family:var(--mono);font-size:11.5px;color:var(--violet);min-width:20px}
+  .backlink{margin-top:24px;font-size:13px;color:var(--muted)}
+  .backlink a{font-family:var(--mono);font-size:12.5px;display:block;margin-top:6px}
+  header.hero{padding:64px 0 30px}
+  .eyebrow{font-family:var(--mono);font-size:12.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--violet);margin-bottom:18px}
+  h1{font-family:var(--disp);font-weight:700;font-size:clamp(34px,5.4vw,54px);line-height:1.04;letter-spacing:-.02em;margin:0 0 20px}
+  h1 .brace{color:var(--violet)}
+  .lede{font-size:19px;color:#3A3E48;max-width:62ch;margin:0}.lede + .lede{margin-top:14px}
+  .runline{font-family:var(--mono);font-size:13.5px;color:var(--muted);margin-top:26px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .runline .kbd{background:var(--term-bg);color:#93D6A0;padding:5px 11px;border-radius:7px;font-size:12.5px}
+  section.chapter{padding-top:56px;scroll-margin-top:20px}
+  .chaphead{display:flex;align-items:baseline;gap:16px;border-bottom:2px solid var(--ink);padding-bottom:12px;margin-bottom:8px}
+  .chaphead .num{font-family:var(--mono);font-weight:700;font-size:15px;color:var(--violet)}
+  h2{font-family:var(--disp);font-weight:600;font-size:clamp(25px,3.4vw,34px);letter-spacing:-.015em;margin:0}
+  .chapsub{color:var(--muted);font-size:15px;margin:14px 0 0}
+  h3{font-family:var(--disp);font-weight:600;font-size:21px;letter-spacing:-.01em;margin:40px 0 10px}
+  p{margin:14px 0}main p,main li{color:#24272F}
+  .cell{margin:22px 0;border-radius:var(--radius);overflow:hidden;border:1px solid #2A2E3A;box-shadow:0 10px 30px -18px rgba(20,20,40,.4)}
+  .cell .bar{background:var(--term-panel);display:flex;align-items:center;gap:8px;padding:9px 14px;border-bottom:1px solid #2A2E3A}
+  .cell .bar .dots{display:flex;gap:6px}.cell .bar .dots i{width:11px;height:11px;border-radius:50%;display:block}
+  .dots i:nth-child(1){background:#E06C75}.dots i:nth-child(2){background:#E5C07B}.dots i:nth-child(3){background:#98C379}
+  .cell .bar .fname{font-family:var(--mono);font-size:12px;color:var(--term-dim);margin-left:4px}
+  .cell pre.code{margin:0;background:var(--term-bg);color:var(--term-fg);font-family:var(--mono);font-size:13px;line-height:1.7;padding:16px 18px;white-space:pre;overflow-x:auto;tab-size:2}
+  .cell pre.code .cm{color:#6B7180}.cell pre.code .kw{color:#C9A6F6}.cell pre.code .fn{color:#8CC0F5}
+  .cell pre.code .st{color:#93D6A0}.cell pre.code .nm{color:#E7B45A}
+  .anatomy{margin:22px 0;border:1px solid #2A2E3A;border-radius:var(--radius);overflow:hidden;box-shadow:0 10px 30px -18px rgba(20,20,40,.4)}
+  .anatomy .ahead{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--term-dim);padding:10px 16px;border-bottom:1px solid #2A2E3A;background:var(--term-panel);display:flex;align-items:center;gap:8px}
+  .anatomy .ahead::before{content:'⌖';color:#C39BF5;font-size:14px}
+  .anacode{padding:18px;background:var(--term-bg);font-family:var(--mono);font-size:14px;line-height:2.1;color:var(--term-fg);overflow-x:auto;white-space:pre-wrap;word-break:break-word}
+  .tok{cursor:pointer;border-radius:5px;padding:2px 3px;transition:.12s;outline:1.5px solid transparent}
+  .tok:hover{outline-color:rgba(255,255,255,.28)}
+  .tok.kw{background:rgba(195,155,245,.16);color:#C9A6F6}
+  .tok.fn{background:rgba(124,183,240,.15);color:#8CC0F5}
+  .tok.pm{background:rgba(231,180,90,.15);color:#E7B45A}
+  .tok.rt{background:rgba(147,214,160,.15);color:#93D6A0}
+  .tok.op{background:rgba(240,128,143,.14);color:#F0909F}
+  .tok.active{outline-color:var(--violet)!important;background:rgba(108,76,224,.32)!important;color:#fff}
+  .anapanel{padding:15px 18px;min-height:78px;background:var(--card)}
+  .anahint{font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:.05em}
+  .anahint .legend{color:var(--muted);opacity:.8}
+  .anatitle{font-family:var(--mono);font-weight:700;font-size:14px;color:var(--violet);margin:6px 0 3px}
+  .anatext{font-size:13.5px;color:#2A2D36;line-height:1.55}
+  .insight{margin:24px 0;background:var(--card);border:1px solid var(--line);border-left:3px solid var(--violet);border-radius:12px;padding:16px 20px}
+  .insight .htag{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--violet);font-weight:700;display:flex;align-items:center;gap:8px;margin-bottom:6px}
+  .insight.warn{border-left-color:var(--amber)}.insight.warn .htag{color:var(--amber)}
+  .insight.gotcha{border-left-color:var(--rose)}.insight.gotcha .htag{color:var(--rose)}
+  .insight p{margin:6px 0}.insight p:first-of-type{margin-top:0}
+  /* DOM playground */
+  .dom{margin:26px 0;border:1px solid #2A2E3A;border-radius:14px;overflow:hidden;background:#1A1C23;box-shadow:0 14px 40px -20px rgba(20,20,40,.5)}
+  .dom .dbar{background:#15171E;display:flex;align-items:center;gap:8px;padding:9px 14px;border-bottom:1px solid #2A2E3A}
+  .dom .dbar .dots{display:flex;gap:6px}.dom .dbar .dots i{width:11px;height:11px;border-radius:50%;display:block}
+  .dom .dbar .dots i:nth-child(1){background:#E06C75}.dom .dbar .dots i:nth-child(2){background:#E5C07B}.dom .dbar .dots i:nth-child(3){background:#98C379}
+  .dom .dbar .fname{font-family:var(--mono);font-size:12px;color:var(--term-dim);margin-left:4px}
+  .dom .dgrid{display:grid;grid-template-columns:1fr 1fr;gap:0}
+  @media(max-width:640px){.dom .dgrid{grid-template-columns:1fr}}
+  .dom .stage{padding:20px;background:#0E1014;border-right:1px solid #2A2E3A;display:flex;flex-direction:column;gap:14px;min-height:200px}
+  .dom .stagelbl{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--term-dim)}
+  .dom .box{border:1px dashed #3A3F4C;border-radius:10px;padding:18px;text-align:center;transition:.2s}
+  .dom .box h4{font-family:var(--disp);font-weight:600;font-size:19px;margin:0 0 6px;color:#E6E8EC;transition:.2s}
+  .dom .box p{margin:0;font-size:13px;color:#8A90A0;transition:.2s}
+  .dom .box.hl{border-color:var(--violet);box-shadow:0 0 0 3px rgba(108,76,224,.25)}
+  .dom .box.on{background:#123021;border-color:#1C6B45;border-style:solid}
+  .dom .box.on h4{color:#7DDB9A}
+  .dom .counter{font-family:var(--mono);font-size:13px;color:#E7B45A}
+  .dom .code-side{padding:16px 18px;background:var(--term-bg);display:flex;flex-direction:column}
+  .dom .codelbl{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--term-dim);margin-bottom:10px}
+  .dom .runcode{font-family:var(--mono);font-size:12.5px;line-height:1.75;color:var(--term-fg);white-space:pre-wrap;flex:1}
+  .dom .runcode .kw{color:#C9A6F6}.dom .runcode .fn{color:#8CC0F5}.dom .runcode .st{color:#93D6A0}.dom .runcode .cm{color:#6B7180}
+  .dom .runcode .fresh{background:rgba(231,180,90,.18);border-radius:4px}
+  .dom .dctl{display:flex;flex-wrap:wrap;gap:8px;padding:12px 16px;background:#15171E;border-top:1px solid #2A2E3A}
+  .dom .dctl button{font-family:var(--mono);font-size:12px;font-weight:600;border:1px solid #2A2E3A;background:#22252F;color:#E6E8EC;border-radius:8px;padding:8px 13px;cursor:pointer;transition:.14s}
+  .dom .dctl button:hover{border-color:var(--violet-line);background:#2A2E3A}
+  .dom .dctl .reset{margin-left:auto;color:#8A90A0}
+  .predict{margin:24px 0;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px}
+  .predict .q{font-family:var(--disp);font-weight:600;font-size:16px;margin-bottom:14px}
+  .predict .opts{display:flex;flex-direction:column;gap:9px}
+  .predict .opt{font-family:var(--mono);font-size:13.5px;text-align:left;cursor:pointer;background:#fff;border:1px solid var(--line);border-radius:9px;padding:11px 14px;transition:.15s}
+  .predict .opt:hover{border-color:var(--violet-line);background:#FAF8FF}
+  .predict .opt.correct{border-color:var(--emerald);background:#EAF7F0;color:#0C6B45}
+  .predict .opt.wrong{border-color:var(--rose);background:#FBECEE;color:#9E2B3B}
+  .predict .fb-msg{margin-top:12px;font-size:13.5px;color:var(--muted);display:none}
+  .predict .fb-msg.show{display:block}
+  .recap{background:var(--term-bg);border-radius:16px;padding:26px 28px;margin:26px 0;color:var(--term-fg)}
+  .recap h3{color:#fff;margin-top:0}
+  .recap ul{list-style:none;padding:0;margin:0;display:grid;gap:10px}
+  .recap li{font-family:var(--mono);font-size:13px;line-height:1.55;padding-left:22px;position:relative;color:#D3D7E0}
+  .recap li::before{content:'›';position:absolute;left:0;color:var(--violet);font-weight:700}
+  .recap li b{color:#E7B45A;font-weight:500}
+  footer{border-top:1px solid var(--line);margin-top:70px;padding-top:24px;color:var(--muted);font-size:13.5px}
+  footer .mono{font-family:var(--mono);font-size:12px}
+  .mobtop{display:none}
+  @media(max-width:860px){
+    .wrap{grid-template-columns:1fr}nav.side{display:none}
+    .mobtop{display:flex;position:sticky;top:0;z-index:20;background:rgba(241,241,244,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);padding:12px 18px;gap:10px;align-items:center;overflow-x:auto}
+    .mobtop .brand{margin:0;white-space:nowrap}
+    .mobtop a{font-family:var(--mono);font-size:12px;white-space:nowrap;color:var(--muted);padding:5px 10px;border-radius:7px}
+    .mobtop a.active{background:var(--violet-soft);color:#3B2A73}
+    main{padding-left:20px;padding-right:20px}
+  }
+  @media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important;scroll-behavior:auto}}
+</style>
+</head>
+<body>
+<div class="mobtop">
+  <span class="brand">DOM &amp; Events</span>
+  <a href="#c1" class="mlink active">The tree</a>
+  <a href="#c2" class="mlink">Select</a>
+  <a href="#c3" class="mlink">Change</a>
+  <a href="#c4" class="mlink">Events</a>
+  <a href="#c5" class="mlink">Why React</a>
+  <a href="#recap" class="mlink">Recap</a>
+</div>
+<div class="wrap">
+  <nav class="side">
+    <div class="brand">The DOM &amp; Events<small>the pre-React model · guide</small></div>
+    <div class="navsec">
+      <span>Sections</span>
+      <a href="#c1" class="link" data-sec><b>01</b> The page is a tree</a>
+      <a href="#c2" class="link" data-sec><b>02</b> Selecting elements</a>
+      <a href="#c3" class="link" data-sec><b>03</b> Changing them</a>
+      <a href="#c4" class="link" data-sec><b>04</b> Events</a>
+      <a href="#c5" class="link" data-sec><b>05</b> Why React exists</a>
+      <a href="#recap" class="link" data-sec><b>★</b> Recap</a>
+    </div>
+    <div class="navsec">
+      <span>The one idea</span>
+      <p style="font-size:13px;color:var(--muted);line-height:1.5;margin:0 12px">
+        The <b>DOM</b> is the browser's live model of your page. JavaScript <b>finds</b> a piece, <b>changes</b> it,
+        and <b>listens</b> for clicks — that loop is all of hand-written interactivity.</p>
+    </div>
+    <div class="backlink">
+      Related guides:
+      <a href="./js-foundations.html">→ JS Foundations</a>
+      <a href="./react-and-testing.html">→ React &amp; Testing</a>
+      <a href="./index.html">⌂ All guides</a>
+    </div>
+  </nav>
+  <main>
+    <header class="hero">
+      <div class="eyebrow">Supplementary · JavaScript</div>
+      <h1>The page is a <span class="brace">thing you can grab</span></h1>
+      <p class="lede">Before React, making a page interactive meant reaching into it by hand: find the element,
+      change its text, listen for the click. That's the <b>DOM</b> — and understanding it is what makes React click,
+      because React is a machine built to do all this reaching-in <em>for</em> you.</p>
+      <p class="lede">This is the model underneath everything visual. Even when you never touch it directly, it's
+      what your components ultimately drive.</p>
+      <div class="runline"><span class="kbd">select → change → listen</span> — the whole loop of hand-made interactivity.</div>
+    </header>
+
+    <section class="chapter" id="c1">
+      <div class="chaphead"><span class="num">01</span><h2>The page is a tree</h2></div>
+      <p class="chapsub">HTML you write is static text. The browser turns it into a living tree of objects — that tree is the DOM.</p>
+      <p>When the browser loads your HTML, it doesn't keep it as text. It builds a <b>tree of objects</b> — one for
+      every tag — nested exactly like your HTML. A <code>&lt;body&gt;</code> holds a <code>&lt;div&gt;</code> holds
+      an <code>&lt;h1&gt;</code>. This live tree is the <b>DOM</b> (Document Object Model), and JavaScript can reach
+      into it and change any node — which instantly changes what you see.</p>
+      <div class="insight">
+        <div class="htag">◆ Analogy — the set, not the script</div>
+        <p>Your HTML file is the <em>script</em> — written once, fixed. The DOM is the <em>set</em> the crew built
+        from it: physical, on stage, and rearrangeable mid-show. When JS moves a prop or changes a line on set, the
+        audience sees it change live — without anyone rewriting the script. JavaScript is the stagehand working the
+        live set, not the author editing the page.</p>
+      </div>
+    </section>
+
+    <section class="chapter" id="c2">
+      <div class="chaphead"><span class="num">02</span><h2>Selecting elements</h2></div>
+      <p class="chapsub">Before you can change something, you have to point at it. That's what a query selector does.</p>
+      <div class="anatomy">
+        <div class="ahead">Code anatomy — grabbing an element</div>
+        <div class="anacode"><span class="tok kw" data-exp="const|Store the found element in a variable so you can act on it. If nothing matches, you get null instead — a common source of 'cannot read property of null' errors.">const</span> <span class="tok rt" data-exp="heading|Your name for the grabbed element. Now 'heading' IS that node on the live page — change it and the page changes.">heading</span> = <span class="tok pm" data-exp="document|The entry point to the whole DOM tree. Every selection starts here — it's the root object representing the page.">document</span>.<span class="tok fn" data-exp="querySelector|Finds the FIRST element matching a CSS selector and hands it back. querySelectorAll returns all matches as a list.">querySelector</span>(<span class="tok op" data-exp="'#title'|A CSS selector string — the same syntax as CSS. '#title' means the element with id='title'. '.card' means class card; 'h1' means any h1 tag.">'#title'</span>)</div>
+        <div class="anapanel"><div class="anahint">Hover or tap a token <span class="legend">· document is the root · querySelector takes a CSS selector · returns the element (or null)</span></div><div class="anatitle">—</div><div class="anatext">Each part explains its job.</div></div>
+      </div>
+      <p>The selector string is just CSS: <code>'#id'</code>, <code>'.class'</code>, or a tag like
+      <code>'button'</code>. If nothing matches, you get <code>null</code> — so a selection that "does nothing" is
+      usually a selector pointing at the wrong thing.</p>
+    </section>
+
+    <section class="chapter" id="c3">
+      <div class="chaphead"><span class="num">03</span><h2>Changing them</h2></div>
+      <p class="chapsub">Once you hold an element, you set its properties — and the screen updates the instant you do.</p>
+      <p>A grabbed element has properties you can read and write. Set <code>.textContent</code> and the visible text
+      changes; toggle <code>.classList</code> and its styling changes. Try it — each button runs one real DOM
+      operation on the little card and shows you the exact line:</p>
+
+      <div class="dom" id="dom">
+        <div class="dbar"><span class="dots"><i></i><i></i><i></i></span><span class="fname">dom-playground.js — live</span></div>
+        <div class="dgrid">
+          <div class="stage">
+            <div class="stagelbl">the page (a mini DOM)</div>
+            <div class="box" id="domBox">
+              <h4 id="domTitle">Sharks</h4>
+              <p id="domSub">a card on the page</p>
+              <div class="counter" id="domCount" style="display:none">clicks: 0</div>
+            </div>
+          </div>
+          <div class="code-side">
+            <div class="codelbl">the line that just ran</div>
+            <div class="runcode" id="domCode"><span class="cm">// press a button below —</span>
+<span class="cm">// the matching DOM code appears here</span></div>
+          </div>
+        </div>
+        <div class="dctl">
+          <button data-op="text">.textContent = 'Pokémon'</button>
+          <button data-op="sub">change the subtitle</button>
+          <button data-op="highlight">.classList toggle 'hl'</button>
+          <button data-op="on">.classList toggle 'on'</button>
+          <button class="reset" data-op="reset">reset</button>
+        </div>
+      </div>
+
+      <div class="insight warn">
+        <div class="htag">▲ You change one property at a time, by hand</div>
+        <p>Notice the shape of this: grab the element, set one property, repeat for the next change. For a whole
+        page of moving parts, that's a lot of manual grab-and-set — and it's easy to forget one, so the screen
+        drifts out of sync with your data. Hold that thought for section 5.</p>
+      </div>
+    </section>
+
+    <section class="chapter" id="c4">
+      <div class="chaphead"><span class="num">04</span><h2>Events</h2></div>
+      <p class="chapsub">Interactivity is: when THIS happens, run THAT function. That wiring is an event listener.</p>
+      <p>A page reacts to the user through <b>events</b> — a click, a keypress, a form submit. You wire a function to
+      an event with <code>addEventListener</code>, and the browser calls your function every time it happens:</p>
+      <div class="anatomy">
+        <div class="ahead">Code anatomy — listening for a click</div>
+        <div class="anacode"><span class="tok rt" data-exp="button|An element you grabbed earlier with querySelector. This is the thing you're watching.">button</span>.<span class="tok fn" data-exp="addEventListener|Wires up a listener. It says: from now on, every time the named event happens on this element, run my function. It doesn't run the function now — it registers it for later.">addEventListener</span>(<span class="tok op" data-exp="'click'|The event name — the thing to wait for. Others: 'input' (typing), 'submit' (a form), 'mouseover'. Just a string naming what to listen for.">'click'</span>, <span class="tok pm" data-exp="(event) => { ... }|The handler — the function to run when the event fires. It receives an event object with details (which key, which element, etc). This is where your response lives.">(event) => {
+  handleClick()
+}</span>)</div>
+        <div class="anapanel"><div class="anahint">Hover or tap a token <span class="legend">· element · what to listen for · what to run when it happens</span></div><div class="anatitle">—</div><div class="anatext">Each part explains its job.</div></div>
+      </div>
+      <p>The <b>on</b> button in the playground above is doing exactly this — it added a click listener that toggles a
+      class and bumps a counter. Event → handler → change the DOM. That three-beat loop is the entire engine of a
+      hand-written interactive page.</p>
+
+      <div class="predict" data-check data-correct="1"
+        data-fb="Right. addEventListener registers the function for later — it hands the browser a function to call each time the event fires. It does not call it immediately, and it can fire many times, not once.">
+        <div class="q">When does the function inside <code>addEventListener('click', fn)</code> run?</div>
+        <div class="opts">
+          <button class="opt" data-opt="0">Immediately, once, on that line</button>
+          <button class="opt" data-opt="1">Every time the element is clicked, later</button>
+          <button class="opt" data-opt="2">Once when the page finishes loading</button>
+          <button class="opt" data-opt="3">Never — it's just a definition</button>
+        </div>
+        <div class="fb-msg" data-fbbox></div>
+      </div>
+    </section>
+
+    <section class="chapter" id="c5">
+      <div class="chaphead"><span class="num">05</span><h2>Why React exists</h2></div>
+      <p class="chapsub">The manual loop works — until the page gets big. React is the machine that runs the loop for you.</p>
+      <p>Everything so far works. But imagine a page with a list of 50 items, each with a like button, a count, and
+      a highlight. Doing it by hand means dozens of <code>querySelector</code>s and listeners, and remembering to
+      re-run the right updates whenever your data changes. Miss one and the screen shows stale information.</p>
+      <div class="insight">
+        <div class="htag">◆ The shift React makes</div>
+        <p>React flips it around. Instead of <em>you</em> grabbing elements and setting properties step by step, you
+        describe what the page <b>should look like for a given state</b> — and React does the DOM grabbing and
+        updating for you. Change the state, and React works out exactly which nodes to touch. The
+        <a href="./js-async.html">select–change–listen</a> loop from this guide is still happening; React is just
+        the tireless stagehand running it, so you never write <code>document.querySelector</code> in a component.</p>
+      </div>
+      <div class="cell">
+        <div class="bar"><span class="dots"><i></i><i></i><i></i></span><span class="fname">the same idea, two eras</span></div>
+        <pre class="code"><span class="cm">// DOM by hand: grab, then set, every time</span>
+<span class="kw">const</span> el = document.<span class="fn">querySelector</span>(<span class="st">'#count'</span>)
+el.<span class="fn">textContent</span> = count
+
+<span class="cm">// React: describe it, and let React update the DOM</span>
+&lt;span&gt;{count}&lt;/span&gt;</pre>
+      </div>
+      <p>That's the bridge into <a href="./react-and-testing.html">Unit 2</a>: React isn't a different universe — it's
+      an automation layer over exactly the DOM you just met.</p>
+    </section>
+
+    <section class="chapter" id="recap">
+      <div class="chaphead"><span class="num">★</span><h2>Recap</h2></div>
+      <div class="recap">
+        <h3>The model</h3>
+        <ul>
+          <li>The <b>DOM</b> is the browser's live tree of objects, built from your HTML.</li>
+          <li><b>Select</b> with <code>document.querySelector('css-selector')</code> — returns the element or <b>null</b>.</li>
+          <li><b>Change</b> by setting properties: <code>.textContent</code>, <code>.classList</code>, <code>.style</code>.</li>
+          <li><b>Listen</b> with <code>addEventListener('click', fn)</code> — runs your function each time it fires.</li>
+          <li>The loop <b>select → change → listen</b> is all of hand-written interactivity.</li>
+        </ul>
+      </div>
+      <div class="recap">
+        <h3>The bridge to React</h3>
+        <ul>
+          <li>Doing this by hand doesn't scale — easy to miss an update and show <b>stale</b> data.</li>
+          <li><b>React</b> automates the loop: you describe the page for a state, React updates the DOM.</li>
+        </ul>
+      </div>
+      <footer>
+        <p>Supplementary guide · Dev Academy Aotearoa. Sits between
+        <a href="./js-foundations.html">JS Foundations</a> and
+        <a href="./react-and-testing.html">React &amp; Testing</a>.</p>
+        <p class="mono"><a href="./index.html">⌂ All guides</a></p>
+      </footer>
+    </section>
+  </main>
+</div>
+<script>
+document.querySelectorAll('.anatomy').forEach(an=>{
+  const title=an.querySelector('.anatitle'),text=an.querySelector('.anatext'),hint=an.querySelector('.anahint');
+  const toks=an.querySelectorAll('.tok');
+  function show(tok){const raw=tok.getAttribute('data-exp')||'';const i=raw.indexOf('|');
+    title.textContent=i>=0?raw.slice(0,i):tok.textContent.trim();
+    text.textContent=i>=0?raw.slice(i+1):raw;hint.textContent='what this part does';
+    toks.forEach(x=>x.classList.remove('active'));tok.classList.add('active');}
+  toks.forEach(tok=>{tok.setAttribute('tabindex','0');
+    tok.addEventListener('mouseenter',()=>show(tok));tok.addEventListener('click',()=>show(tok));tok.addEventListener('focus',()=>show(tok));});
+});
+/* DOM playground — real DOM ops on a sandboxed card */
+(function(){
+  const box=document.getElementById('domBox');
+  const title=document.getElementById('domTitle');
+  const sub=document.getElementById('domSub');
+  const count=document.getElementById('domCount');
+  const codeEl=document.getElementById('domCode');
+  let clicks=0, listenerOn=false, clickHandler=null;
+  const subs=['a card on the page','now updated by JS','changed again','the DOM is live'];
+  let subIdx=0;
+  function setCode(html){ codeEl.innerHTML='<span class="fresh">'+html+'</span>'; }
+  const ops={
+    text(){ title.textContent = title.textContent==='Sharks' ? 'Pokémon' : 'Sharks';
+      setCode('title.<span class="fn">textContent</span> = <span class="st">\''+title.textContent+'\'</span>'); },
+    sub(){ subIdx=(subIdx+1)%subs.length; sub.textContent=subs[subIdx];
+      setCode('sub.<span class="fn">textContent</span> = <span class="st">\''+subs[subIdx]+'\'</span>'); },
+    highlight(){ box.classList.toggle('hl');
+      setCode('box.<span class="fn">classList</span>.<span class="fn">toggle</span>(<span class="st">\'hl\'</span>)  <span class="cm">// '+(box.classList.contains('hl')?'added':'removed')+'</span>'); },
+    on(){
+      if(!listenerOn){
+        count.style.display='';
+        clickHandler=()=>{ clicks++; count.textContent='clicks: '+clicks; };
+        box.addEventListener('click',clickHandler); listenerOn=true;
+        setCode('box.<span class="fn">addEventListener</span>(<span class="st">\'click\'</span>, () => {\n  clicks++\n  count.<span class="fn">textContent</span> = <span class="st">\'clicks: \'</span> + clicks\n})  <span class="cm">// now CLICK the card</span>');
+      } else {
+        box.removeEventListener('click',clickHandler); listenerOn=false;
+        setCode('box.<span class="fn">removeEventListener</span>(<span class="st">\'click\'</span>, handler)  <span class="cm">// listener off</span>');
+      }
+    },
+    reset(){
+      title.textContent='Sharks'; sub.textContent='a card on the page'; subIdx=0;
+      box.classList.remove('hl'); clicks=0; count.textContent='clicks: 0'; count.style.display='none';
+      if(listenerOn && clickHandler){ box.removeEventListener('click',clickHandler); listenerOn=false; }
+      codeEl.innerHTML='<span class="cm">// press a button below —</span>\n<span class="cm">// the matching DOM code appears here</span>';
+    }
+  };
+  document.querySelectorAll('#dom .dctl button').forEach(b=>{
+    b.addEventListener('click',()=>{ const op=b.dataset.op; if(ops[op]) ops[op](); });
+  });
+})();
+document.querySelectorAll('[data-check]').forEach(chk=>{
+  const correct=parseInt(chk.dataset.correct,10);const fbbox=chk.querySelector('[data-fbbox]');
+  chk.querySelectorAll('.opt').forEach(opt=>{opt.addEventListener('click',()=>{
+    const pick=parseInt(opt.dataset.opt,10);
+    if(pick===correct){opt.classList.add('correct');fbbox.textContent=chk.dataset.fb;fbbox.classList.add('show');chk.querySelectorAll('.opt').forEach(o=>o.style.pointerEvents='none');}
+    else{opt.classList.add('wrong');opt.style.pointerEvents='none';}
+  });});
+});
+const sections=[...document.querySelectorAll('section.chapter')];
+const links=[...document.querySelectorAll('nav.side a[data-sec]')];
+const mlinks=[...document.querySelectorAll('.mobtop .mlink')];
+function spy(){const y=window.scrollY+120;let cur=sections[0].id;
+  for(const s of sections){if(s.offsetTop<=y)cur=s.id;}
+  links.forEach(l=>l.classList.toggle('active',l.getAttribute('href')==='#'+cur));
+  mlinks.forEach(l=>l.classList.toggle('active',l.getAttribute('href')==='#'+cur));}
+window.addEventListener('scroll',spy,{passive:true});spy();
+</script>
+</body>
+</html>

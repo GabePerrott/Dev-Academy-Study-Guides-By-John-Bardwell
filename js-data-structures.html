@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nested Data Structures — interactive guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;450;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F1F1F4;--card:#FBFBFD;--ink:#1B1E26;--muted:#5A5F6B;--line:#E1E1E8;
+    --violet:#6C4CE0;--violet-soft:#EDE8FC;--violet-line:#D8CEF7;
+    --emerald:#12905F;--amber:#B67A08;--rose:#D6455D;
+    --term-bg:#15171E;--term-panel:#1D2029;--term-fg:#E6E8EC;--term-dim:#8A90A0;
+    --t-num:#E7B45A;--t-str:#93D6A0;--t-bool:#E7B45A;--t-null:#8A90A0;--t-err:#F0808F;
+    --radius:14px;
+    --mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+    --disp:'Space Grotesk',system-ui,sans-serif;--body:'Inter',system-ui,sans-serif;
+  }
+  *{box-sizing:border-box}html{scroll-behavior:smooth}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);font-size:16.5px;line-height:1.62;-webkit-font-smoothing:antialiased}
+  a{color:var(--violet);text-decoration:none}a:hover{text-decoration:underline}
+  code{font-family:var(--mono);font-size:.88em;background:#E7E7EE;padding:.08em .38em;border-radius:5px;color:#2C2140}
+
+  .wrap{display:grid;grid-template-columns:270px minmax(0,1fr);max-width:1200px;margin:0 auto}
+  nav.side{position:sticky;top:0;align-self:start;height:100vh;overflow-y:auto;padding:30px 22px 40px;border-right:1px solid var(--line)}
+  main{padding:0 clamp(20px,5vw,64px) 120px;min-width:0}
+  .brand{font-family:var(--mono);font-weight:700;font-size:14px;letter-spacing:.04em;color:var(--violet);margin-bottom:4px}
+  .brand small{color:var(--muted);font-weight:400;display:block;letter-spacing:0;margin-top:3px;font-family:var(--body);font-size:12.5px}
+  .navsec{margin-top:26px}
+  .navsec > span{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:9px;padding-left:12px}
+  nav.side a.link{display:flex;gap:10px;align-items:baseline;padding:7px 12px;border-radius:9px;color:var(--ink);font-size:14.5px;line-height:1.35}
+  nav.side a.link:hover{background:#E9E9F0;text-decoration:none}
+  nav.side a.link.active{background:var(--violet-soft);color:#3B2A73;font-weight:500}
+  nav.side a.link b{font-family:var(--mono);font-size:11.5px;color:var(--violet);min-width:20px}
+  .backlink{margin-top:24px;font-size:13px;color:var(--muted)}
+  .backlink a{font-family:var(--mono);font-size:12.5px;display:block;margin-top:6px}
+
+  header.hero{padding:64px 0 30px}
+  .eyebrow{font-family:var(--mono);font-size:12.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--violet);margin-bottom:18px}
+  h1{font-family:var(--disp);font-weight:700;font-size:clamp(34px,5.4vw,54px);line-height:1.04;letter-spacing:-.02em;margin:0 0 20px}
+  h1 .brace{color:var(--violet)}
+  .lede{font-size:19px;color:#3A3E48;max-width:60ch;margin:0}.lede + .lede{margin-top:14px}
+  .runline{font-family:var(--mono);font-size:13.5px;color:var(--muted);margin-top:26px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .runline .kbd{background:var(--term-bg);color:var(--t-str);padding:5px 11px;border-radius:7px;font-size:12.5px}
+
+  section.chapter{padding-top:56px;scroll-margin-top:20px}
+  .chaphead{display:flex;align-items:baseline;gap:16px;border-bottom:2px solid var(--ink);padding-bottom:12px;margin-bottom:8px}
+  .chaphead .num{font-family:var(--mono);font-weight:700;font-size:15px;color:var(--violet)}
+  h2{font-family:var(--disp);font-weight:600;font-size:clamp(26px,3.6vw,36px);letter-spacing:-.015em;margin:0}
+  .chapsub{color:var(--muted);font-size:15px;margin:14px 0 0}
+  h3{font-family:var(--disp);font-weight:600;font-size:22px;letter-spacing:-.01em;margin:44px 0 10px}
+  p{margin:14px 0}main p,main li{color:#24272F}
+
+  /* code cell */
+  .cell{margin:22px 0;border-radius:var(--radius);overflow:hidden;border:1px solid #2A2E3A;box-shadow:0 10px 30px -18px rgba(20,20,40,.4)}
+  .cell .bar{background:var(--term-panel);display:flex;align-items:center;gap:8px;padding:9px 14px;border-bottom:1px solid #2A2E3A}
+  .cell .bar .dots{display:flex;gap:6px}.cell .bar .dots i{width:11px;height:11px;border-radius:50%;display:block}
+  .dots i:nth-child(1){background:#E06C75}.dots i:nth-child(2){background:#E5C07B}.dots i:nth-child(3){background:#98C379}
+  .cell .bar .fname{font-family:var(--mono);font-size:12px;color:var(--term-dim);margin-left:4px}
+  .cell .bar .spacer{flex:1}
+  .cell .bar button{font-family:var(--mono);font-size:12px;font-weight:500;cursor:pointer;border:1px solid #3A4152;background:#2A3040;color:#CBD3E1;border-radius:7px;padding:5px 13px;transition:.15s}
+  .cell .bar button:hover{background:#343C4E;border-color:#4A5264}
+  .cell .bar button.run{background:var(--violet);border-color:var(--violet);color:#fff}
+  .cell .bar button.run:hover{background:#5B3ED1}
+  .cell pre.code{margin:0;background:var(--term-bg);color:var(--term-fg);font-family:var(--mono);font-size:13.5px;line-height:1.65;padding:16px 18px;white-space:pre;overflow-x:auto;outline:none;tab-size:2}
+  .cell pre.code:focus{box-shadow:inset 3px 0 0 var(--violet)}
+  .console{background:#0F1116;border-top:1px solid #2A2E3A;padding:0 18px;max-height:0;overflow:hidden;transition:max-height .35s ease,padding .35s ease}
+  .console.show{max-height:460px;overflow-y:auto;padding:13px 18px}
+  .console .cline{font-family:var(--mono);font-size:13px;line-height:1.7;white-space:pre-wrap;word-break:break-word}
+  .console .prompt{color:#4A5060}.console .empty{color:var(--term-dim);font-style:italic}
+  .tok-num{color:var(--t-num)}.tok-str{color:var(--t-str)}.tok-bool{color:var(--t-bool)}.tok-null{color:var(--t-null)}.tok-err{color:var(--t-err)}.tok-fn{color:#C39BF5}
+
+  /* anatomy */
+  .anatomy{margin:22px 0;border:1px solid #2A2E3A;border-radius:var(--radius);overflow:hidden;box-shadow:0 10px 30px -18px rgba(20,20,40,.4)}
+  .anatomy .ahead{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--term-dim);padding:10px 16px;border-bottom:1px solid #2A2E3A;background:var(--term-panel);display:flex;align-items:center;gap:8px}
+  .anatomy .ahead::before{content:'⌖';color:#C39BF5;font-size:14px}
+  .anacode{padding:18px;background:var(--term-bg);font-family:var(--mono);font-size:14.5px;line-height:2.15;color:var(--term-fg);overflow-x:auto;white-space:pre-wrap;word-break:break-word}
+  .tok{cursor:pointer;border-radius:5px;padding:2px 3px;transition:.12s;outline:1.5px solid transparent}
+  .tok:hover{outline-color:rgba(255,255,255,.28)}
+  .tok.kw{background:rgba(195,155,245,.16);color:#C9A6F6}
+  .tok.fn{background:rgba(124,183,240,.15);color:#8CC0F5}
+  .tok.pm{background:rgba(231,180,90,.15);color:#E7B45A}
+  .tok.rt{background:rgba(147,214,160,.15);color:#93D6A0}
+  .tok.op{background:rgba(240,128,143,.14);color:#F0909F}
+  .tok.pn{background:rgba(150,156,172,.16);color:#B4BAC8}
+  .tok.st{background:rgba(147,214,160,.13);color:#93D6A0}
+  .tok.nm{background:rgba(231,180,90,.14);color:#E7B45A}
+  .tok.active{outline-color:var(--violet)!important;background:rgba(108,76,224,.32)!important;color:#fff}
+  .anapanel{padding:15px 18px;min-height:78px;background:var(--card)}
+  .anahint{font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:.05em}
+  .anahint .legend{color:var(--muted);opacity:.8}
+  .anatitle{font-family:var(--mono);font-weight:700;font-size:14px;color:var(--violet);margin:6px 0 3px}
+  .anatext{font-size:13.5px;color:#2A2D36;line-height:1.55}
+  @media(max-width:640px){.anacode{font-size:13px;line-height:2}}
+
+  /* structure cards */
+  .combos{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:22px 0}
+  @media(max-width:600px){.combos{grid-template-columns:1fr}}
+  .combo{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px}
+  .combo .tag{font-family:var(--mono);font-size:11px;letter-spacing:.05em;color:var(--violet);font-weight:700;margin-bottom:8px}
+  .combo pre{margin:0;font-family:var(--mono);font-size:12.5px;line-height:1.6;color:#2A2D36;white-space:pre-wrap}
+  .combo .obj{color:var(--violet)}.combo .arr{color:var(--emerald)}
+  .combo .desc{font-size:13px;color:var(--muted);margin-top:8px}
+
+  /* ---------- NESTED EXPLORER ---------- */
+  .explorer{margin:26px 0;border:1px solid var(--line);border-radius:16px;background:var(--card);overflow:hidden}
+  .explorer .eh{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:11px 18px;border-bottom:1px solid var(--line);background:#F5F5F9}
+  .explorer .ebar{display:flex;gap:8px;padding:16px 18px 8px;flex-wrap:wrap}
+  .explorer input{flex:1;min-width:200px;font-family:var(--mono);font-size:14px;padding:10px 13px;border:1px solid var(--line);border-radius:9px;background:#fff;color:var(--ink)}
+  .explorer input:focus{outline:2px solid var(--violet-line);border-color:var(--violet)}
+  .explorer .go{font-family:var(--mono);font-size:13px;font-weight:600;cursor:pointer;border:1px solid var(--violet);background:var(--violet);color:#fff;border-radius:9px;padding:10px 16px}
+  .explorer .go:hover{background:#5B3ED1}
+  .explorer .presets{display:flex;gap:7px;flex-wrap:wrap;padding:0 18px 12px}
+  .explorer .preset{font-family:var(--mono);font-size:11.5px;cursor:pointer;background:#EEEDF4;border:1px solid var(--line);border-radius:99px;padding:5px 11px;color:#414550}
+  .explorer .preset:hover{background:var(--violet-soft);border-color:var(--violet-line)}
+  .explorer .steps{padding:6px 18px 20px}
+  .estep{font-family:var(--mono);font-size:13px;padding:9px 12px;border-radius:9px;margin-top:8px;background:#FAFAFC;border:1px solid var(--line);display:flex;gap:10px;flex-wrap:wrap;align-items:baseline;opacity:0;transform:translateX(-6px);animation:stepin .3s forwards}
+  @keyframes stepin{to{opacity:1;transform:none}}
+  .estep .ep{color:var(--violet);font-weight:600}
+  .estep .arr{color:var(--muted)}
+  .estep .ev{color:#2A2D36}
+  .estep .ty{font-family:var(--mono);font-size:10px;letter-spacing:.04em;text-transform:uppercase;padding:2px 7px;border-radius:99px;margin-left:auto}
+  .estep .ty.object{background:var(--violet-soft);color:#5A44A8}
+  .estep .ty.array{background:#E3F3EC;color:#0E7A4F}
+  .estep .ty.value{background:#FBF0DC;color:#8A5A00}
+  .estep.last{border-color:var(--violet);background:#FAF8FF;box-shadow:0 0 0 1px var(--violet-line)}
+  .estep.err{border-color:var(--rose);background:#FBECEE}
+  .estep.err .ev{color:#9E2B3B}
+  .vnum{color:var(--amber)}.vstr{color:var(--emerald)}.vnull{color:var(--muted)}
+
+  /* ---------- DEJARIK GRID ---------- */
+  .dejarik{margin:26px 0;border:1px solid var(--line);border-radius:16px;background:var(--card);overflow:hidden}
+  .dejarik .dh{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:11px 18px;border-bottom:1px solid var(--line);background:#F5F5F9}
+  .dejarik .board{padding:18px;display:grid;gap:8px}
+  .drow{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .drow .rlabel{font-family:var(--mono);font-size:11px;color:var(--muted);width:52px;flex-shrink:0}
+  .dcell{width:52px;height:52px;border-radius:10px;border:1px solid var(--line);background:#FAFAFC;display:grid;place-items:center;cursor:pointer;font-family:var(--mono);font-size:13px;font-weight:600;color:var(--ink);transition:.12s;position:relative}
+  .dcell:hover{border-color:var(--violet-line);background:#FAF8FF}
+  .dcell.null{color:#C4C8D2;font-weight:400}
+  .dcell.sel{border-color:var(--violet);background:var(--violet);color:#fff;box-shadow:0 4px 14px -4px rgba(108,76,224,.5)}
+  .dcell .ci{position:absolute;bottom:2px;right:4px;font-size:8px;color:var(--muted);font-weight:400}
+  .dcell.sel .ci{color:rgba(255,255,255,.7)}
+  .dejarik .dout{margin:0 18px 18px;padding:13px 15px;border-radius:10px;background:var(--term-bg);font-family:var(--mono);font-size:14px;color:var(--term-fg);min-height:20px}
+  .dejarik .dout .p{color:var(--violet)}.dejarik .dout .v{color:var(--t-str)}.dejarik .dout .n{color:var(--muted)}
+  .dejarik .legend{font-family:var(--body);font-size:12.5px;color:var(--muted);padding:0 18px 18px;line-height:1.5}
+
+  .insight{margin:24px 0;background:var(--card);border:1px solid var(--line);border-left:3px solid var(--violet);border-radius:12px;padding:16px 20px}
+  .insight .htag{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--violet);font-weight:700;display:flex;align-items:center;gap:8px;margin-bottom:6px}
+  .insight.warn{border-left-color:var(--amber)}.insight.warn .htag{color:var(--amber)}
+  .insight.gotcha{border-left-color:var(--rose)}.insight.gotcha .htag{color:var(--rose)}
+  .insight p{margin:6px 0}.insight p:first-of-type{margin-top:0}
+
+  /* predict */
+  .predict{margin:22px 0;border:1px solid var(--violet-line);border-radius:var(--radius);background:linear-gradient(180deg,#FAF8FF,#F4F0FE);overflow:hidden}
+  .predict .phead{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--violet-line)}
+  .predict .phead .icon{width:22px;height:22px;border-radius:6px;background:var(--violet);color:#fff;display:grid;place-items:center;font-size:13px;font-weight:700;font-family:var(--mono)}
+  .predict .phead b{font-family:var(--disp);font-size:15px}
+  .predict .pbody{padding:16px}
+  .predict pre.psrc{margin:0 0 14px;background:var(--term-bg);color:var(--term-fg);border-radius:10px;font-family:var(--mono);font-size:13px;line-height:1.6;padding:14px 16px;overflow-x:auto;white-space:pre-wrap}
+  .predict .reveal-btn{font-family:var(--mono);font-size:12.5px;font-weight:600;cursor:pointer;background:var(--violet);color:#fff;border:none;border-radius:8px;padding:8px 16px}
+  .predict .reveal-btn:hover{background:#5B3ED1}
+  .predict .answer{display:none;margin-top:14px;background:#0F1116;border-radius:10px;padding:13px 16px}
+  .predict .answer.show{display:block}
+  .predict .answer .cline{font-family:var(--mono);font-size:13px;line-height:1.7;color:var(--term-fg)}
+  .predict .answer .why{color:var(--term-dim);font-size:12.5px;margin-top:9px;font-family:var(--body);line-height:1.55}
+
+  /* checkpoint */
+  .check{margin:26px 0;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px}
+  .check .q{font-family:var(--disp);font-weight:600;font-size:16px;margin-bottom:14px}
+  .check .opts{display:flex;flex-direction:column;gap:9px}
+  .check .opt{font-family:var(--mono);font-size:13.5px;text-align:left;cursor:pointer;background:#fff;border:1px solid var(--line);border-radius:9px;padding:11px 14px;transition:.15s}
+  .check .opt:hover{border-color:var(--violet-line);background:#FAF8FF}
+  .check .opt.correct{border-color:var(--emerald);background:#EAF7F0;color:#0C6B45}
+  .check .opt.wrong{border-color:var(--rose);background:#FBECEE;color:#9E2B3B}
+  .check .fb{margin-top:12px;font-size:13.5px;color:var(--muted);display:none}
+  .check .fb.show{display:block}
+
+  .recap{background:var(--term-bg);border-radius:16px;padding:26px 28px;margin:26px 0;color:var(--term-fg)}
+  .recap h3{color:#fff;margin-top:0}
+  .recap ul{list-style:none;padding:0;margin:0;display:grid;gap:10px}
+  .recap li{font-family:var(--mono);font-size:13px;line-height:1.55;padding-left:22px;position:relative;color:#D3D7E0}
+  .recap li::before{content:'›';position:absolute;left:0;color:var(--violet);font-weight:700}
+  .recap li b{color:var(--t-num);font-weight:500}
+
+  footer{border-top:1px solid var(--line);margin-top:70px;padding-top:24px;color:var(--muted);font-size:13.5px}
+  footer .mono{font-family:var(--mono);font-size:12px}
+
+  .mobtop{display:none}
+  @media(max-width:860px){
+    .wrap{grid-template-columns:1fr}nav.side{display:none}
+    .mobtop{display:flex;position:sticky;top:0;z-index:20;background:rgba(241,241,244,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);padding:12px 18px;gap:10px;align-items:center;overflow-x:auto}
+    .mobtop .brand{margin:0;white-space:nowrap}
+    .mobtop a{font-family:var(--mono);font-size:12px;white-space:nowrap;color:var(--muted);padding:5px 10px;border-radius:7px}
+    .mobtop a.active{background:var(--violet-soft);color:#3B2A73}
+    main{padding-left:20px;padding-right:20px}
+  }
+  @media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important;scroll-behavior:auto}}
+</style>
+</head>
+<body>
+
+<div class="mobtop">
+  <span class="brand">nested data</span>
+  <a href="#c1" class="mlink active">What nesting is</a>
+  <a href="#c2" class="mlink">Dot vs bracket</a>
+  <a href="#c3" class="mlink">Explorer</a>
+  <a href="#c4" class="mlink">Querying</a>
+  <a href="#c5" class="mlink">The grid</a>
+  <a href="#recap" class="mlink">Recap</a>
+</div>
+
+<div class="wrap">
+  <nav class="side">
+    <div class="brand">nested data<small>Unit 1 · T5 — interactive guide</small></div>
+    <div class="navsec">
+      <span>Sections</span>
+      <a href="#c1" class="link" data-sec><b>01</b> What nesting is</a>
+      <a href="#c2" class="link" data-sec><b>02</b> Dot vs bracket</a>
+      <a href="#c3" class="link" data-sec><b>03</b> The explorer</a>
+      <a href="#c4" class="link" data-sec><b>04</b> Querying with array methods</a>
+      <a href="#c5" class="link" data-sec><b>05</b> Arrays in arrays: the grid</a>
+      <a href="#recap" class="link" data-sec><b>★</b> Recap</a>
+    </div>
+    <div class="navsec">
+      <span>How to use</span>
+      <p style="font-size:13px;color:var(--muted);line-height:1.5;margin:0 12px">
+        The <b>explorer</b> resolves any path one step at a time. Code panels <b>run</b> against real
+        <code>luke</code> and <code>dejarik</code> data. Hover tokens in an <b>anatomy</b>.</p>
+    </div>
+    <div class="backlink">
+      Related guides:
+      <a href="./index.html">⌂ All guides</a>
+      <a href="./js-arrays.html">← Arrays</a>
+      <a href="./js-foundations.html">← Types, Functions &amp; Modules</a>
+      <a href="./js-mutability.html">← Mutability</a>
+    </div>
+  </nav>
+
+  <main>
+    <header class="hero">
+      <div class="eyebrow">Nested objects · Nested arrays · Both at once</div>
+      <h1>Digging into <span class="brace">data inside data</span></h1>
+      <p class="lede">Real data is rarely flat. It's objects holding arrays holding objects — and the skill is
+      calmly walking down through the layers to grab the one value you want.</p>
+      <p class="lede">Using the lecture's Star Wars dataset (Luke, his vehicles, and a Dejarik board), this guide
+      lets you <em>build a path and watch it resolve</em> step by step, then run every query live.</p>
+      <div class="runline"><span class="kbd">luke.vehicles[0].model</span> one path, four layers deep — let's take it apart.</div>
+    </header>
+
+    <!-- ===== 1 ===== -->
+    <section class="chapter" id="c1">
+      <div class="chaphead"><span class="num">01</span><h2>What nesting is</h2></div>
+      <p class="chapsub">Objects and arrays can hold each other, in any combination. Four shapes cover everything.</p>
+
+      <p>You already know objects (<code>{ }</code>, keyed values) and arrays (<code>[ ]</code>, ordered lists).
+      Nesting is just putting one inside the other. There are four combinations, and once you can spot which one
+      you're looking at, navigating it becomes mechanical:</p>
+
+      <div class="combos">
+        <div class="combo"><div class="tag">object in object</div><pre><span class="obj">{</span> a: <span class="obj">{</span> b: 1 <span class="obj">}</span> <span class="obj">}</span></pre><div class="desc">A key whose value is another object. Reach in with <code>.a.b</code>.</div></div>
+        <div class="combo"><div class="tag">object in array</div><pre><span class="arr">[</span> <span class="obj">{</span>id:1<span class="obj">}</span>, <span class="obj">{</span>id:2<span class="obj">}</span> <span class="arr">]</span></pre><div class="desc">A list of objects. Reach in with <code>[0].id</code>.</div></div>
+        <div class="combo"><div class="tag">array in object</div><pre><span class="obj">{</span> a: <span class="arr">[</span>1, 2<span class="arr">]</span> <span class="obj">}</span></pre><div class="desc">A key whose value is a list. Reach in with <code>.a[0]</code>.</div></div>
+        <div class="combo"><div class="tag">array in array</div><pre><span class="arr">[</span> <span class="arr">[</span>1,2<span class="arr">]</span>, <span class="arr">[</span>3,4<span class="arr">]</span> <span class="arr">]</span></pre><div class="desc">A grid / matrix. Reach in with <code>[row][col]</code>.</div></div>
+      </div>
+
+      <div class="insight">
+        <div class="htag">◆ Insight — read the brackets to know the shape</div>
+        <p>The outermost symbol tells you what you're holding. Starts with <code>{</code> → it's an object, reach in
+        by <em>key name</em>. Starts with <code>[</code> → it's an array, reach in by <em>index number</em>. The
+        Star Wars data below starts with <code>{</code> (Luke is an object); the Dejarik board starts with
+        <code>[</code> (it's an array of arrays). That first character decides your first move.</p>
+      </div>
+    </section>
+
+    <!-- ===== 2 ===== -->
+    <section class="chapter" id="c2">
+      <div class="chaphead"><span class="num">02</span><h2>Dot vs bracket</h2></div>
+      <p class="chapsub">Two ways to reach one level in. Dot for named keys, brackets for indexes — and each layer just chains onto the last.</p>
+
+      <p>Every step deeper is either a <code>.key</code> (into an object) or a <code>[index]</code> (into an array).
+      You chain them left to right, and after each one you're "standing on" whatever that step returned. Hover the
+      four-layer path the whole guide is built around:</p>
+
+      <div class="anatomy">
+        <div class="ahead">Code anatomy — one path, four layers</div>
+        <div class="anacode"><span class="tok fn" data-exp="luke|The starting object — the whole Luke Skywalker record. Everything branches off this. It's an object, so the next step must be a .key.">luke</span><span class="tok pn" data-exp=".vehicles (dot into object)|Dot notation reaches a named key of an object. luke.vehicles grabs the vehicles property — which happens to be an ARRAY. So the next step will need brackets.">.vehicles</span><span class="tok op" data-exp="[0] (bracket into array)|Bracket notation reaches an array by INDEX. [0] takes the first vehicle (the X-wing). Now you're standing on a single vehicle OBJECT again.">[0]</span><span class="tok pn" data-exp=".model (dot into object)|Back to dot notation, because [0] handed you an object. .model grabs that vehicle's model string: 'T-65 X-wing'. Path complete.">.model</span></div>
+        <div class="anapanel"><div class="anahint">Hover or tap a highlighted token above <span class="legend">· notice how . and [ ] alternate as the shape changes</span></div><div class="anatitle">—</div><div class="anatext">Every step explains its own job.</div></div>
+      </div>
+
+      <div class="insight warn">
+        <div class="htag">▲ When must you use brackets?</div>
+        <p>Dot notation only works with a key name you can type literally: <code>obj.climate</code>. Brackets are
+        required for two cases: <b>array indexes</b> (<code>arr[0]</code> — you can't write <code>arr.0</code>), and
+        <b>dynamic keys</b> held in a variable (<code>obj[myKey]</code>). So when the "key" is a number or lives in
+        a variable, reach for <code>[ ]</code>. When it's a fixed name you know, <code>.</code> reads cleaner.</p>
+      </div>
+
+      <div class="check" data-check
+        data-correct="1"
+        data-fb="Right — array positions are indexes, so they need brackets: vehicles[0]. You can't write vehicles.0. Dot notation is only for named object keys.">
+        <div class="q">Checkpoint: to grab the first item of an array, you use…</div>
+        <div class="opts">
+          <button class="opt" data-opt="0"><code>arr.0</code> (dot notation)</button>
+          <button class="opt" data-opt="1"><code>arr[0]</code> (bracket notation)</button>
+          <button class="opt" data-opt="2"><code>arr.first()</code></button>
+          <button class="opt" data-opt="3">either dot or bracket works</button>
+        </div>
+        <div class="fb" data-fbbox></div>
+      </div>
+    </section>
+
+    <!-- ===== 3 ===== -->
+    <section class="chapter" id="c3">
+      <div class="chaphead"><span class="num">03</span><h2>The explorer</h2></div>
+      <p class="chapsub">Build a path against the real Luke data and watch it resolve one layer at a time. This is the whole skill, made visible.</p>
+
+      <p>Type a path (or tap a preset) and hit <b>Resolve</b>. Each row shows what you're standing on after that
+      step — an object, an array, or a final value. Try breaking it too: reach for an index that doesn't exist and
+      watch where it falls off the cliff.</p>
+
+      <div class="explorer" id="explorer">
+        <div class="eh">Nested data explorer — resolve a path step by step</div>
+        <div class="ebar">
+          <input type="text" id="expInput" value="luke.vehicles[0].model" spellcheck="false">
+          <button class="go" id="expGo">Resolve →</button>
+        </div>
+        <div class="presets" id="expPresets">
+          <span class="preset" data-p="luke.height">luke.height</span>
+          <span class="preset" data-p="luke.homeworld.climate">luke.homeworld.climate</span>
+          <span class="preset" data-p="luke.vehicles[0].model">luke.vehicles[0].model</span>
+          <span class="preset" data-p="luke.vehicles[1].specs.passengers">luke.vehicles[1].specs.passengers</span>
+          <span class="preset" data-p="luke.vehicles[9].model">luke.vehicles[9].model</span>
+        </div>
+        <div class="steps" id="expSteps"></div>
+      </div>
+
+      <div class="insight gotcha">
+        <div class="htag">✖ The undefined cliff — the #1 nested-data bug</div>
+        <p>Try <code>luke.vehicles[9].model</code> in the explorer. There's no vehicle at index 9, so
+        <code>luke.vehicles[9]</code> is <code>undefined</code> — and the moment you try <code>.model</code> on
+        <code>undefined</code>, JavaScript throws <em>"Cannot read properties of undefined (reading 'model')."</em>
+        This is the error you'll hit most with nested data. It always means: <b>a step further left than you think
+        came back empty.</b> Read the path right-to-left from the failing key to find where it actually broke.</p>
+      </div>
+
+      <div class="insight">
+        <div class="htag">◆ Insight — the question to ask after every step</div>
+        <p>"What am I standing on <em>now</em> — an object or an array?" That single question tells you your next
+        move: object → <code>.key</code>, array → <code>[index]</code>. The explorer's type badges (object / array /
+        value) are training that instinct. Once it's automatic, arbitrarily deep data stops being intimidating —
+        it's just the same two-step decision, repeated.</p>
+      </div>
+    </section>
+
+    <!-- ===== 4 ===== -->
+    <section class="chapter" id="c4">
+      <div class="chaphead"><span class="num">04</span><h2>Querying with array methods</h2></div>
+      <p class="chapsub">Most real queries are: navigate to an array, then apply an array method. This is where the arrays guide pays off.</p>
+
+      <p>Once a path lands you on an array of objects, the tools from the arrays guide take over —
+      <code>map</code>, <code>filter</code>, <code>find</code>, <code>reduce</code>. The twist with nested data:
+      <em>inside</em> the callback, you're navigating a single object again (<code>v.name</code>,
+      <code>v.specs.crew</code>). Run all the lecture's queries here — they execute against the real data:</p>
+
+      <div class="cell" data-cell>
+        <div class="bar"><span class="dots"><i></i><i></i><i></i></span><span class="fname">queries.js</span><span class="spacer"></span><button class="run" data-run>▶ Run</button></div>
+        <pre class="code" contenteditable="true" spellcheck="false">// simple navigation
+console.log(luke.height)                       // 172
+console.log(luke.homeworld.climate)            // 'arid'
+console.log(luke.vehicles[0].model)            // 'T-65 X-wing'
+console.log(luke.vehicles[1].specs.passengers) // 20
+
+// map — pull one field from every object
+console.log(luke.vehicles.map(v => v.name))
+
+// filter — keep only some objects
+console.log(luke.vehicles.filter(v => v.vehicleClass === 'speeder').length, 'speeders')
+
+// find — the first object that matches
+console.log(luke.vehicles.find(v => v.vehicleClass === 'speeder').name)
+
+// reduce — boil the whole array down to one number
+console.log(luke.vehicles.reduce((total, v) => total + v.specs.crew, 0), 'total crew')
+
+// Object.keys — what properties does this object have?
+console.log(Object.keys(luke.homeworld))</pre>
+        <div class="console" data-console></div>
+      </div>
+
+      <p style="color:var(--muted);font-size:14px"><code>luke</code> and <code>dejarik</code> are pre-loaded into
+      every code panel here — same as the lecture's <code>index.js</code> importing the data file. Edit any query
+      and re-run.</p>
+
+      <div class="predict" data-predict>
+        <div class="phead"><span class="icon">?</span><b>Predict the output — deprecated values</b></div>
+        <div class="pbody">
+          <pre class="psrc">// return name + value at 90% of original, for every vehicle
+luke.vehicles.map(v => ({
+  name: v.name,
+  deprecatedValue: v.costInCredits * 0.9
+}))[0]</pre>
+          <button class="reveal-btn" data-reveal>Reveal answer</button>
+          <div class="answer" data-answer>
+            <div class="cline"><span class="tok-null">{</span> name: <span class="tok-str">'X-wing'</span>, deprecatedValue: <span class="tok-num">135000</span> <span class="tok-null">}</span></div>
+            <div class="why">X-wing costs 150000; 150000 × 0.9 = 135000. map builds a NEW object for each vehicle.
+            Note the parentheses around <code>({ … })</code> — without them, an arrow function reads <code>{</code>
+            as the start of a code block, not an object. Wrapping in <code>()</code> forces it to mean "return this
+            object." That's the one syntax trap in this query.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="insight">
+        <div class="htag">◆ Insight — returning an object from an arrow needs <code>({ })</code></div>
+        <p>This catches everyone once. <code>v => { name: v.name }</code> does <em>not</em> return an object — the
+        <code>{ }</code> is read as a function body, so it returns <code>undefined</code>. Wrap the object in
+        parentheses: <code>v => ({ name: v.name })</code>. The <code>()</code> tells JavaScript "this brace starts an
+        object, not a block." Any time a <code>map</code> should produce objects, reach for <code>({ })</code>.</p>
+      </div>
+
+      <div class="predict" data-predict>
+        <div class="phead"><span class="icon">?</span><b>Predict the output — total crew</b></div>
+        <div class="pbody">
+          <pre class="psrc">luke.vehicles.reduce((total, v) => total + v.specs.crew, 0)
+// crews are: 1, 6, 1, 2, 1</pre>
+          <button class="reveal-btn" data-reveal>Reveal answer</button>
+          <div class="answer" data-answer>
+            <div class="cline"><span class="tok-num">11</span></div>
+            <div class="why">reduce starts the accumulator at 0, then adds each vehicle's
+            <code>specs.crew</code> as it walks the array: 0+1+6+1+2+1 = 11. The nested <code>v.specs.crew</code> is
+            navigation happening inside the reduce callback — array method on the outside, path-walking on the
+            inside.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="insight warn">
+        <div class="htag">▲ Two ways to get the first speeder</div>
+        <p>The lecture shows both, and it's a nice lesson: <code>vehicles.find(v => v.vehicleClass === 'speeder')</code>
+        gets it directly, while <code>getSpeeders(luke)[0]</code> reuses your filter then takes index 0. Both are
+        correct. <code>find</code> is marginally faster because it stops at the first match instead of scanning the
+        whole array — but reusing existing code is also a real virtue. Neither is "the" answer.</p>
+      </div>
+    </section>
+
+    <!-- ===== 5 ===== -->
+    <section class="chapter" id="c5">
+      <div class="chaphead"><span class="num">05</span><h2>Arrays in arrays: the grid</h2></div>
+      <p class="chapsub">A Dejarik board is an array of arrays — a grid. Two indexes get you any square: <code>board[row][col]</code>.</p>
+
+      <p>When arrays nest inside arrays, you've got a grid. The outer index picks a <b>row</b> (which inner array);
+      the inner index picks a <b>column</b> (which item in that row). Click any square to see the exact access that
+      reaches it:</p>
+
+      <div class="dejarik" id="dejarik">
+        <div class="dh">Dejarik board — click a square</div>
+        <div class="board" id="deBoard"></div>
+        <div class="dout" id="deOut"><span class="n">// click a square to see its [row][col] access</span></div>
+        <div class="legend" id="deLegend"></div>
+      </div>
+
+      <div class="anatomy">
+        <div class="ahead">Code anatomy — reaching a grid square</div>
+        <div class="anacode"><span class="tok fn" data-exp="dejarik|The whole board — an array whose items are themselves arrays (the rows). It starts with [, so the first step is a bracket, not a dot.">dejarik</span><span class="tok op" data-exp="[row] (outer index → picks a row)|The FIRST bracket picks which inner array (which row). dejarik[0] hands you the entire first row — still an array.">[row]</span><span class="tok op" data-exp="[col] (inner index → picks a column)|The SECOND bracket picks an item WITHIN that row (the column). dejarik[0][2] reaches the 3rd item of the 1st row. Two indexes, one square.">[col]</span></div>
+        <div class="anapanel"><div class="anahint">Hover or tap a highlighted token above <span class="legend">· outer = row, inner = column</span></div><div class="anatitle">—</div><div class="anatext">Every step explains its own job.</div></div>
+      </div>
+
+      <div class="cell" data-cell>
+        <div class="bar"><span class="dots"><i></i><i></i><i></i></span><span class="fname">grid.js</span><span class="spacer"></span><button class="run" data-run>▶ Run</button></div>
+        <pre class="code" contenteditable="true" spellcheck="false">function getJarValue(row, col) {
+  return dejarik[row][col]
+}
+
+console.log(getJarValue(0, 2))   // 'MS' — row 0, column 2
+console.log(getJarValue(0, 4))   // 'GT' — row 0, column 4
+console.log(dejarik[0])          // the whole first row (an array)</pre>
+        <div class="console" data-console></div>
+      </div>
+
+      <div class="insight">
+        <div class="htag">◆ Insight — rows can be different lengths</div>
+        <p>Nothing forces the inner arrays to match. In this board the third row (<code>dejarik[2]</code>) holds
+        just one square, while the others hold six. That's fine — each row is an independent array. It also means
+        <code>dejarik[2][3]</code> would be <code>undefined</code> (that row has no column 3), the same cliff from
+        section 3. Grids in the wild are often ragged like this.</p>
+      </div>
+
+      <div class="check" data-check
+        data-correct="0"
+        data-fb="Correct — the first index picks the row (inner array), the second picks the item within it. board[1][0] = row 1, first column.">
+        <div class="q">Checkpoint: in <code>board[row][col]</code>, what does the <em>first</em> index select?</div>
+        <div class="opts">
+          <button class="opt" data-opt="0">The row (which inner array)</button>
+          <button class="opt" data-opt="1">The column (item within a row)</button>
+          <button class="opt" data-opt="2">The last item</button>
+          <button class="opt" data-opt="3">It doesn't matter, order is ignored</button>
+        </div>
+        <div class="fb" data-fbbox></div>
+      </div>
+    </section>
+
+    <!-- ===== RECAP ===== -->
+    <section class="chapter" id="recap">
+      <div class="chaphead"><span class="num">★</span><h2>Recap</h2></div>
+      <div class="recap">
+        <h3>Navigating nested data</h3>
+        <ul>
+          <li>Nesting = objects &amp; arrays inside each other. Four shapes: obj-in-obj, obj-in-arr, arr-in-obj, arr-in-arr.</li>
+          <li>The <b>first character</b> tells you the shape: <b>{</b> = object (use .key), <b>[</b> = array (use [index]).</li>
+          <li><b>Dot</b> <code>.key</code> for named object keys · <b>brackets</b> <code>[i]</code> for array indexes and dynamic keys.</li>
+          <li>Chain left to right; after each step ask <b>"object or array now?"</b> to pick the next move.</li>
+          <li>The <b>undefined cliff</b>: <code>x.y</code> when x is undefined throws. A step left of the error came back empty.</li>
+          <li>Real queries = <b>navigate to an array, then apply</b> map / filter / find / reduce.</li>
+          <li>Inside a callback you navigate a single object again: <code>v.specs.crew</code>.</li>
+          <li>Returning an object from an arrow needs <b>({ })</b> — bare <code>{ }</code> is read as a code block.</li>
+          <li>Grid = array of arrays: <b>board[row][col]</b> — outer picks the row, inner picks the column.</li>
+          <li><b>Object.keys(obj)</b> lists an object's property names as an array.</li>
+        </ul>
+      </div>
+
+      <footer>
+        <p>Built from your Unit 1 · T5 Data Structures code demo — Dev Academy Aotearoa. The dataset mirrors the
+        lecture's Luke &amp; Dejarik examples; everything runs in your browser, nothing's saved.</p>
+        <p class="mono">reference:
+          <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Working_with_objects" target="_blank" rel="noopener">MDN objects</a> ·
+          <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Property_accessors" target="_blank" rel="noopener">property accessors (dot vs bracket)</a></p>
+      </footer>
+    </section>
+  </main>
+</div>
+
+<script>
+/* ---------- shared dataset (mirrors the lecture) ---------- */
+const luke = {
+  name: "Luke Skywalker", height: 172, mass: 77, birthYear: "19BBY",
+  homeworld: { name: "Tatooine", climate: "arid", terrain: "desert", population: 200000 },
+  vehicles: [
+    { name: "X-wing",           model: "T-65 X-wing",  vehicleClass: "starship", costInCredits: 150000, specs: { crew: 1, passengers: 0 } },
+    { name: "Imperial Shuttle", model: "Lambda-class",  vehicleClass: "starship", costInCredits: 240000, specs: { crew: 6, passengers: 20 } },
+    { name: "Landspeeder X-34", model: "X-34",          vehicleClass: "speeder",  costInCredits: 10550,  specs: { crew: 1, passengers: 1 } },
+    { name: "Snowspeeder",      model: "t-47",          vehicleClass: "speeder",  costInCredits: 12000,  specs: { crew: 2, passengers: 0 } },
+    { name: "Speeder Bike",     model: "74-Z",          vehicleClass: "speeder",  costInCredits: 8000,   specs: { crew: 1, passengers: 0 } }
+  ]
+};
+const dejarik = [
+  ["NG", "KB", "MS", "GH", "GT", "SC"],
+  [null, "MO", null, "SV", "KB", null],
+  ["GT"]
+];
+const PIECE_NAMES = { NG:"Ng'ok", KB:"K'lor'slug", MS:"Mantellian Savrip", GH:"Ghhhk", GT:"Grimtaash", SC:"Scrimp", MO:"Molator", SV:"Savrip" };
+const DATA = 'const luke=' + JSON.stringify(luke) + ';\nconst dejarik=' + JSON.stringify(dejarik) + ';\n';
+
+/* ---------- console runner (with dataset preamble) ---------- */
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function fmt(v){
+  if(v===null) return '<span class="tok-null">null</span>';
+  if(v===undefined) return '<span class="tok-null">undefined</span>';
+  const t=typeof v;
+  if(t==='number') return '<span class="tok-num">'+(Object.is(v,-0)?'-0':String(v))+'</span>';
+  if(t==='boolean') return '<span class="tok-bool">'+v+'</span>';
+  if(t==='string') return '<span class="tok-str">\''+esc(v)+'\'</span>';
+  if(t==='function') return '<span class="tok-fn">[Function]</span>';
+  if(Array.isArray(v)) return '<span class="tok-null">[</span> '+v.map(fmt).join('<span class="tok-null">, </span>')+' <span class="tok-null">]</span>';
+  if(t==='object'){return '<span class="tok-null">{</span> '+Object.keys(v).map(k=>esc(k)+': '+fmt(v[k])).join('<span class="tok-null">, </span>')+' <span class="tok-null">}</span>';}
+  return esc(String(v));
+}
+function fmtArgs(a){return a.map(x=>typeof x==='string'?'<span class="tok-str">'+esc(x)+'</span>':fmt(x)).join(' ');}
+function runCell(cell){
+  const code=cell.querySelector('pre.code').textContent;
+  const box=cell.querySelector('[data-console]');const logs=[];
+  const fc={log:(...a)=>logs.push({t:'log',a}),error:(...a)=>logs.push({t:'log',a}),warn:(...a)=>logs.push({t:'log',a}),info:(...a)=>logs.push({t:'log',a})};
+  try{ new Function('console','"use strict";\n'+DATA+code)(fc); }
+  catch(e){ logs.push({t:'err',m:(e&&e.message)?e.message:String(e)}); }
+  box.classList.add('show');
+  box.innerHTML = logs.length
+    ? logs.map(l=>l.t==='err'?'<div class="cline"><span class="tok-err">✖ '+esc(l.m)+'</span></div>':'<div class="cline"><span class="prompt">› </span>'+fmtArgs(l.a)+'</div>').join('')
+    : '<div class="cline empty">// no output — nothing was logged</div>';
+}
+document.querySelectorAll('[data-cell]').forEach(cell=>{
+  cell.querySelector('[data-run]').addEventListener('click',()=>runCell(cell));
+  cell.querySelector('pre.code').addEventListener('keydown',e=>{if((e.metaKey||e.ctrlKey)&&e.key==='Enter'){e.preventDefault();runCell(cell);}});
+});
+
+/* ---------- anatomy ---------- */
+document.querySelectorAll('.anatomy').forEach(an=>{
+  const title=an.querySelector('.anatitle'), text=an.querySelector('.anatext'), hint=an.querySelector('.anahint');
+  const toks=an.querySelectorAll('.tok');
+  function show(tok){
+    const raw=tok.getAttribute('data-exp')||''; const i=raw.indexOf('|');
+    title.textContent=i>=0?raw.slice(0,i):tok.textContent.trim();
+    text.textContent=i>=0?raw.slice(i+1):raw;
+    hint.textContent='what this step does';
+    toks.forEach(x=>x.classList.remove('active')); tok.classList.add('active');
+  }
+  toks.forEach(tok=>{tok.setAttribute('tabindex','0');
+    tok.addEventListener('mouseenter',()=>show(tok));
+    tok.addEventListener('click',()=>show(tok));
+    tok.addEventListener('focus',()=>show(tok));});
+});
+
+/* ---------- NESTED EXPLORER ---------- */
+(function(){
+  const input=document.getElementById('expInput');
+  const stepsEl=document.getElementById('expSteps');
+  function describe(v){
+    if(v===null) return {cls:'value', html:'<span class="vnull">null</span>'};
+    if(v===undefined) return {cls:'value', html:'<span class="vnull">undefined</span>'};
+    if(Array.isArray(v)) return {cls:'array', html:'<span class="arr">[ array · '+v.length+' item'+(v.length===1?'':'s')+' ]</span>'};
+    const t=typeof v;
+    if(t==='object'){const k=Object.keys(v);return {cls:'object', html:'{ object · keys: '+k.slice(0,4).join(', ')+(k.length>4?', …':'')+' }'};}
+    if(t==='number') return {cls:'value', html:'<span class="vnum">'+v+'</span>'};
+    if(t==='string') return {cls:'value', html:'<span class="vstr">\''+v+'\'</span>'};
+    return {cls:'value', html:String(v)};
+  }
+  function tokenize(path){
+    const re=/^[a-zA-Z_$][\w$]*|\.[a-zA-Z_$][\w$]*|\[\d+\]/g;
+    return path.replace(/\s+/g,'').match(re)||[];
+  }
+  function resolve(){
+    const path=input.value.trim();
+    stepsEl.innerHTML='';
+    const tokens=tokenize(path);
+    if(!tokens.length){ stepsEl.innerHTML='<div class="estep err"><span class="ev">Type a path like luke.vehicles[0].model</span></div>'; return; }
+    let cum='';
+    for(let i=0;i<tokens.length;i++){
+      cum+=tokens[i];
+      let val, errored=false, errMsg='';
+      try{ val=new Function('luke','dejarik','return '+cum)(luke,dejarik); }
+      catch(e){ errored=true; errMsg=e.message; }
+      const last=i===tokens.length-1;
+      if(errored){
+        stepsEl.insertAdjacentHTML('beforeend',
+          '<div class="estep err" style="animation-delay:'+(i*70)+'ms"><span class="ep">'+esc(cum)+'</span><span class="arr">✖</span><span class="ev">'+esc(errMsg)+'</span></div>');
+        break;
+      }
+      const d=describe(val);
+      stepsEl.insertAdjacentHTML('beforeend',
+        '<div class="estep'+(last?' last':'')+'" style="animation-delay:'+(i*70)+'ms"><span class="ep">'+esc(cum)+'</span><span class="arr">→</span><span class="ev">'+d.html+'</span><span class="ty '+d.cls+'">'+d.cls+'</span></div>');
+    }
+  }
+  document.getElementById('expGo').addEventListener('click',resolve);
+  input.addEventListener('keydown',e=>{if(e.key==='Enter')resolve();});
+  document.querySelectorAll('#expPresets .preset').forEach(p=>{
+    p.addEventListener('click',()=>{input.value=p.dataset.p;resolve();});
+  });
+  resolve();
+})();
+
+/* ---------- DEJARIK GRID ---------- */
+(function(){
+  const board=document.getElementById('deBoard');
+  const out=document.getElementById('deOut');
+  const legend=document.getElementById('deLegend');
+  dejarik.forEach((row,r)=>{
+    const rowEl=document.createElement('div'); rowEl.className='drow';
+    rowEl.innerHTML='<span class="rlabel">['+r+']</span>';
+    row.forEach((cell,c)=>{
+      const el=document.createElement('div');
+      el.className='dcell'+(cell===null?' null':'');
+      el.innerHTML=(cell===null?'·':cell)+'<span class="ci">'+r+','+c+'</span>';
+      el.addEventListener('click',()=>{
+        document.querySelectorAll('.dcell.sel').forEach(x=>x.classList.remove('sel'));
+        el.classList.add('sel');
+        const name = cell===null ? 'an empty space (null)' : (PIECE_NAMES[cell] ? PIECE_NAMES[cell] : cell);
+        out.innerHTML='<span class="p">dejarik['+r+']['+c+']</span> <span class="n">→</span> '+
+          (cell===null?'<span class="n">null</span>':'<span class="v">\''+cell+'\'</span>')+
+          ' <span class="n">// '+name+'</span>';
+      });
+      rowEl.appendChild(el);
+    });
+    board.appendChild(rowEl);
+  });
+  legend.innerHTML='Each square holds a piece code or <code>null</code> for empty. Row [2] has just one square — rows can be different lengths.';
+})();
+
+/* ---------- predict reveals ---------- */
+document.querySelectorAll('[data-predict]').forEach(p=>{
+  p.querySelector('[data-reveal]').addEventListener('click',function(){
+    p.querySelector('[data-answer]').classList.add('show');
+    this.textContent='Answer shown ↓';this.disabled=true;this.style.opacity=.55;
+  });
+});
+
+/* ---------- checkpoints ---------- */
+document.querySelectorAll('[data-check]').forEach(chk=>{
+  const correct=parseInt(chk.dataset.correct,10);
+  const fbbox=chk.querySelector('[data-fbbox]');
+  chk.querySelectorAll('.opt').forEach(opt=>{
+    opt.addEventListener('click',()=>{
+      const pick=parseInt(opt.dataset.opt,10);
+      if(pick===correct){opt.classList.add('correct');fbbox.textContent=chk.dataset.fb;fbbox.classList.add('show');chk.querySelectorAll('.opt').forEach(o=>o.style.pointerEvents='none');}
+      else{opt.classList.add('wrong');opt.style.pointerEvents='none';}
+    });
+  });
+});
+
+/* ---------- scrollspy ---------- */
+const sections=[...document.querySelectorAll('section.chapter')];
+const links=[...document.querySelectorAll('nav.side a[data-sec]')];
+const mlinks=[...document.querySelectorAll('.mobtop .mlink')];
+function spy(){
+  const y=window.scrollY+120;let cur=sections[0].id;
+  for(const s of sections){if(s.offsetTop<=y)cur=s.id;}
+  links.forEach(l=>l.classList.toggle('active',l.getAttribute('href')==='#'+cur));
+  mlinks.forEach(l=>l.classList.toggle('active',l.getAttribute('href')==='#'+cur));
+}
+window.addEventListener('scroll',spy,{passive:true});spy();
+</script>
+</body>
+</html>
