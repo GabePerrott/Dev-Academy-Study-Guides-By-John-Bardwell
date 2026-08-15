@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Filesystem &amp; Express Router — interactive guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;450;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F1F1F4;--card:#FBFBFD;--ink:#1B1E26;--muted:#5A5F6B;--line:#E1E1E8;
+    --violet:#6C4CE0;--violet-soft:#EDE8FC;--violet-line:#D8CEF7;
+    --emerald:#12905F;--amber:#B67A08;--rose:#D6455D;--blue:#2C6FE0;
+    --term-bg:#15171E;--term-panel:#1D2029;--term-fg:#E6E8EC;--term-dim:#8A90A0;
+    --radius:14px;
+    --mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+    --disp:'Space Grotesk',system-ui,sans-serif;--body:'Inter',system-ui,sans-serif;
+  }
+  *{box-sizing:border-box}html{scroll-behavior:smooth}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);font-size:16.5px;line-height:1.62;-webkit-font-smoothing:antialiased}
+  a{color:var(--violet);text-decoration:none}a:hover{text-decoration:underline}
+  code{font-family:var(--mono);font-size:.88em;background:#E7E7EE;padding:.08em .38em;border-radius:5px;color:#2C2140}
+  .wrap{display:grid;grid-template-columns:270px minmax(0,1fr);max-width:1200px;margin:0 auto}
+  nav.side{position:sticky;top:0;align-self:start;height:100vh;overflow-y:auto;padding:30px 22px 40px;border-right:1px solid var(--line)}
+  main{padding:0 clamp(20px,5vw,64px) 120px;min-width:0}
+  .brand{font-family:var(--mono);font-weight:700;font-size:14px;letter-spacing:.04em;color:var(--violet);margin-bottom:4px}
+  .brand small{color:var(--muted);font-weight:400;display:block;letter-spacing:0;margin-top:3px;font-family:var(--body);font-size:12.5px}
+  .navsec{margin-top:26px}
+  .navsec > span{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:9px;padding-left:12px}
+  nav.side a.link{display:flex;gap:10px;align-items:baseline;padding:7px 12px;border-radius:9px;color:var(--ink);font-size:14.5px;line-height:1.35}
+  nav.side a.link:hover{background:#E9E9F0;text-decoration:none}
+  nav.side a.link.active{background:var(--violet-soft);color:#3B2A73;font-weight:500}
+  nav.side a.link b{font-family:var(--mono);font-size:11.5px;color:var(--violet);min-width:20px}
+  .backlink{margin-top:24px;font-size:13px;color:var(--muted)}
+  .backlink a{font-family:var(--mono);font-size:12.5px;display:block;margin-top:6px}
+  header.hero{padding:64px 0 30px}
+  .eyebrow{font-family:var(--mono);font-size:12.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--violet);margin-bottom:18px}
+  h1{font-family:var(--disp);font-weight:700;font-size:clamp(34px,5.4vw,54px);line-height:1.04;letter-spacing:-.02em;margin:0 0 20px}
+  h1 .brace{color:var(--violet)}
+  .lede{font-size:19px;color:#3A3E48;max-width:62ch;margin:0}.lede + .lede{margin-top:14px}
+  .runline{font-family:var(--mono);font-size:13.5px;color:var(--muted);margin-top:26px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .runline .kbd{background:var(--term-bg);color:#93D6A0;padding:5px 11px;border-radius:7px;font-size:12.5px}
+  section.chapter{padding-top:56px;scroll-margin-top:20px}
+  .chaphead{display:flex;align-items:baseline;gap:16px;border-bottom:2px solid var(--ink);padding-bottom:12px;margin-bottom:8px}
+  .chaphead .num{font-family:var(--mono);font-weight:700;font-size:15px;color:var(--violet)}
+  h2{font-family:var(--disp);font-weight:600;font-size:clamp(25px,3.4vw,34px);letter-spacing:-.015em;margin:0}
+  .chapsub{color:var(--muted);font-size:15px;margin:14px 0 0}
+  h3{font-family:var(--disp);font-weight:600;font-size:21px;letter-spacing:-.01em;margin:40px 0 10px}
+  p{margin:14px 0}main p,main li{color:#24272F}
+  .cell{margin:22px 0;border-radius:var(--radius);overflow:hidden;border:1px solid #2A2E3A;box-shadow:0 10px 30px -18px rgba(20,20,40,.4)}
+  .cell .bar{background:var(--term-panel);display:flex;align-items:center;gap:8px;padding:9px 14px;border-bottom:1px solid #2A2E3A}
+  .cell .bar .dots{display:flex;gap:6px}.cell .bar .dots i{width:11px;height:11px;border-radius:50%;display:block}
+  .dots i:nth-child(1){background:#E06C75}.dots i:nth-child(2){background:#E5C07B}.dots i:nth-child(3){background:#98C379}
+  .cell .bar .fname{font-family:var(--mono);font-size:12px;color:var(--term-dim);margin-left:4px}
+  .cell pre.code{margin:0;background:var(--term-bg);color:var(--term-fg);font-family:var(--mono);font-size:13px;line-height:1.7;padding:16px 18px;white-space:pre;overflow-x:auto;tab-size:2}
+  .cell pre.code .cm{color:#6B7180}.cell pre.code .kw{color:#C9A6F6}.cell pre.code .fn{color:#8CC0F5}
+  .cell pre.code .st{color:#93D6A0}.cell pre.code .nm{color:#E7B45A}
+  .anatomy{margin:22px 0;border:1px solid #2A2E3A;border-radius:var(--radius);overflow:hidden;box-shadow:0 10px 30px -18px rgba(20,20,40,.4)}
+  .anatomy .ahead{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--term-dim);padding:10px 16px;border-bottom:1px solid #2A2E3A;background:var(--term-panel);display:flex;align-items:center;gap:8px}
+  .anatomy .ahead::before{content:'⌖';color:#C39BF5;font-size:14px}
+  .anacode{padding:18px;background:var(--term-bg);font-family:var(--mono);font-size:14px;line-height:2.1;color:var(--term-fg);overflow-x:auto;white-space:pre-wrap;word-break:break-word}
+  .tok{cursor:pointer;border-radius:5px;padding:2px 3px;transition:.12s;outline:1.5px solid transparent}
+  .tok:hover{outline-color:rgba(255,255,255,.28)}
+  .tok.kw{background:rgba(195,155,245,.16);color:#C9A6F6}
+  .tok.fn{background:rgba(124,183,240,.15);color:#8CC0F5}
+  .tok.pm{background:rgba(231,180,90,.15);color:#E7B45A}
+  .tok.rt{background:rgba(147,214,160,.15);color:#93D6A0}
+  .tok.op{background:rgba(240,128,143,.14);color:#F0909F}
+  .tok.active{outline-color:var(--violet)!important;background:rgba(108,76,224,.32)!important;color:#fff}
+  .anapanel{padding:15px 18px;min-height:78px;background:var(--card)}
+  .anahint{font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:.05em}
+  .anahint .legend{color:var(--muted);opacity:.8}
+  .anatitle{font-family:var(--mono);font-weight:700;font-size:14px;color:var(--violet);margin:6px 0 3px}
+  .anatext{font-size:13.5px;color:#2A2D36;line-height:1.55}
+  .insight{margin:24px 0;background:var(--card);border:1px solid var(--line);border-left:3px solid var(--violet);border-radius:12px;padding:16px 20px}
+  .insight .htag{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--violet);font-weight:700;display:flex;align-items:center;gap:8px;margin-bottom:6px}
+  .insight.warn{border-left-color:var(--amber)}.insight.warn .htag{color:var(--amber)}
+  .insight.gotcha{border-left-color:var(--rose)}.insight.gotcha .htag{color:var(--rose)}
+  .insight p{margin:6px 0}.insight p:first-of-type{margin-top:0}
+  /* mem vs storage split */
+  .split{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:24px 0}
+  @media(max-width:600px){.split{grid-template-columns:1fr}}
+  .split .col{border:1px solid var(--line);border-radius:12px;padding:16px 18px;background:var(--card)}
+  .split .col h4{font-family:var(--disp);font-weight:600;font-size:16px;margin:0 0 4px}
+  .split .col .sub{font-family:var(--mono);font-size:11px;color:var(--muted);margin-bottom:10px}
+  .split .col.mem{border-top:3px solid var(--amber)}
+  .split .col.sto{border-top:3px solid var(--emerald)}
+  .split .col ul{margin:0;padding-left:16px;font-size:13.5px;line-height:1.7}
+  .split .col li b{font-family:var(--mono);font-size:12px}
+  /* filesystem lab */
+  .fs{margin:26px 0;border:1px solid #2A2E3A;border-radius:14px;overflow:hidden;background:#1A1C23;box-shadow:0 14px 40px -20px rgba(20,20,40,.5)}
+  .fs .fstop{background:#15171E;display:flex;align-items:center;gap:8px;padding:8px 14px;border-bottom:1px solid #2A2E3A}
+  .fs .fstop .dots{display:flex;gap:6px}.fs .fstop .dots i{width:11px;height:11px;border-radius:50%;display:block}
+  .fs .fstop .dots i:nth-child(1){background:#E06C75}.fs .fstop .dots i:nth-child(2){background:#E5C07B}.fs .fstop .dots i:nth-child(3){background:#98C379}
+  .fs .fstop .ttl{font-family:var(--mono);font-size:12px;color:var(--term-dim);margin-left:4px}
+  .fs .fstop .tag{margin-left:auto;font-family:var(--mono);font-size:10px;color:#fff;background:var(--violet);padding:2px 8px;border-radius:10px}
+  .fs .stage{padding:16px 18px;border-bottom:1px solid #2A2E3A}
+  .fs .slbl{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--term-dim);margin-bottom:9px;display:flex;align-items:center;gap:8px}
+  .fs .filebox{font-family:var(--mono);font-size:12px;line-height:1.65;color:#C4C8D2;white-space:pre;overflow-x:auto;background:#12141A;border:1px solid #2A2E3A;border-radius:9px;padding:12px 14px}
+  .fs .filebox .k{color:#C9A6F6}.fs .filebox .s{color:#93D6A0}.fs .filebox .n{color:#E7B45A}.fs .filebox .new{background:rgba(147,214,160,.16);border-radius:3px}
+  .fs .filebox.str{color:#93D6A0}
+  .fs .lookup{display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:14px 18px;border-bottom:1px solid #2A2E3A}
+  .fs .lookup input{font-family:var(--mono);font-size:13px;width:70px;background:#22252F;border:1px solid #2A2E3A;color:#E6E8EC;border-radius:7px;padding:8px 10px}
+  .fs .lookup input.name{width:150px}
+  .fs .btn{font-family:var(--mono);font-size:12px;font-weight:700;border:none;border-radius:8px;padding:8px 14px;cursor:pointer;background:var(--violet);color:#fff}
+  .fs .btn:hover{background:#5A3CD0}
+  .fs .btn.ghost{background:#22252F;color:#C4C8D2;border:1px solid #2A2E3A}
+  .fs .result{font-family:var(--mono);font-size:12.5px;color:#C4C8D2;padding:0 18px 14px}
+  .fs .result .ok{color:#7DDB9A}.fs .result .no{color:#F0909F}.fs .result .k{color:#C9A6F6}.fs .result .s{color:#93D6A0}.fs .result .n{color:#E7B45A}
+  .fs .step{font-family:var(--mono);font-size:11px;color:#6B7180;padding:0 18px 14px}
+  .predict{margin:24px 0;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px}
+  .predict .q{font-family:var(--disp);font-weight:600;font-size:16px;margin-bottom:14px}
+  .predict .opts{display:flex;flex-direction:column;gap:9px}
+  .predict .opt{font-family:var(--mono);font-size:13.5px;text-align:left;cursor:pointer;background:#fff;border:1px solid var(--line);border-radius:9px;padding:11px 14px;transition:.15s}
+  .predict .opt:hover{border-color:var(--violet-line);background:#FAF8FF}
+  .predict .opt.correct{border-color:var(--emerald);background:#EAF7F0;color:#0C6B45}
+  .predict .opt.wrong{border-color:var(--rose);background:#FBECEE;color:#9E2B3B}
+  .predict .fb-msg{margin-top:12px;font-size:13.5px;color:var(--muted);display:none}
+  .predict .fb-msg.show{display:block}
+  .recap{background:var(--term-bg);border-radius:16px;padding:26px 28px;margin:26px 0;color:var(--term-fg)}
+  .recap h3{color:#fff;margin-top:0}
+  .recap ul{list-style:none;padding:0;margin:0;display:grid;gap:10px}
+  .recap li{font-family:var(--mono);font-size:13px;line-height:1.55;padding-left:22px;position:relative;color:#D3D7E0}
+  .recap li::before{content:'›';position:absolute;left:0;color:var(--violet);font-weight:700}
+  .recap li b{color:#E7B45A;font-weight:500}
+  footer{border-top:1px solid var(--line);margin-top:70px;padding-top:24px;color:var(--muted);font-size:13.5px}
+  footer .mono{font-family:var(--mono);font-size:12px}
+  .mobtop{display:none}
+  @media(max-width:860px){
+    .wrap{grid-template-columns:1fr}nav.side{display:none}
+    .mobtop{display:flex;position:sticky;top:0;z-index:20;background:rgba(241,241,244,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);padding:12px 18px;gap:10px;align-items:center;overflow-x:auto}
+    .mobtop .brand{margin:0;white-space:nowrap}
+    .mobtop a{font-family:var(--mono);font-size:12px;white-space:nowrap;color:var(--muted);padding:5px 10px;border-radius:7px}
+    .mobtop a.active{background:var(--violet-soft);color:#3B2A73}
+    main{padding-left:20px;padding-right:20px}
+  }
+  @media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important;scroll-behavior:auto}}
+</style>
+</head>
+<body>
+<div class="mobtop">
+  <span class="brand">Filesystem</span>
+  <a href="#c1" class="mlink active">Mem vs storage</a>
+  <a href="#c2" class="mlink">fs module</a>
+  <a href="#c3" class="mlink">JSON</a>
+  <a href="#c4" class="mlink">Lab</a>
+  <a href="#c5" class="mlink">In a route</a>
+  <a href="#c6" class="mlink">Router</a>
+  <a href="#recap" class="mlink">Recap</a>
+</div>
+<div class="wrap">
+  <nav class="side">
+    <div class="brand">Filesystem &amp; Router<small>Unit 4 · fs + express.Router · guide</small></div>
+    <div class="navsec">
+      <span>Sections</span>
+      <a href="#c1" class="link" data-sec><b>01</b> Memory vs storage</a>
+      <a href="#c2" class="link" data-sec><b>02</b> The fs module</a>
+      <a href="#c3" class="link" data-sec><b>03</b> JSON round-trip</a>
+      <a href="#c4" class="link" data-sec><b>04</b> Filesystem lab</a>
+      <a href="#c5" class="link" data-sec><b>05</b> Files in a route</a>
+      <a href="#c6" class="link" data-sec><b>06</b> Express Router</a>
+      <a href="#recap" class="link" data-sec><b>★</b> Recap</a>
+    </div>
+    <div class="navsec">
+      <span>The one idea</span>
+      <p style="font-size:13px;color:var(--muted);line-height:1.5;margin:0 12px">
+        Storage survives a restart, memory doesn't. <b>fs</b> reads &amp; writes files;
+        <b>JSON.parse/stringify</b> convert between the file's text and a usable object.</p>
+    </div>
+    <div class="backlink">
+      Related guides:
+      <a href="./index.html">⌂ All guides</a>
+      <a href="./express-server.html">→ Express Server</a>
+      <a href="./js-async.html">→ Async &amp; Promises</a>
+    </div>
+  </nav>
+  <main>
+    <header class="hero">
+      <div class="eyebrow">Unit 4 · Filesystem &amp; Express Router</div>
+      <h1>Data that survives <span class="brace">a restart</span></h1>
+      <p class="lede">Everything in a running program lives in memory — and vanishes the moment it stops. To keep
+      data, you write it to a <b>file</b> on disk. Node's filesystem module is how your server reads and writes
+      those files.</p>
+      <p class="lede">Then, so your growing server doesn't turn into one enormous file, <b>Express Router</b> lets you
+      split routes into tidy modules. Both are in this guide, straight from the lecture.</p>
+      <div class="runline"><span class="kbd">read file → JSON.parse → use it → JSON.stringify → write file</span></div>
+    </header>
+
+    <!-- 1 -->
+    <section class="chapter" id="c1">
+      <div class="chaphead"><span class="num">01</span><h2>Memory vs storage</h2></div>
+      <p class="chapsub">Two places data can live. The difference that matters most: one is temporary, one persists.</p>
+      <div class="split">
+        <div class="col mem">
+          <h4>Memory (RAM)</h4>
+          <div class="sub">variables, state — while the program runs</div>
+          <ul>
+            <li><b>Fast</b> to read and change</li>
+            <li>Relatively <b>small</b> &amp; expensive</li>
+            <li><b>Temporary</b> — gone when the app closes or loses power</li>
+          </ul>
+        </div>
+        <div class="col sto">
+          <h4>Storage (disk)</h4>
+          <div class="sub">files &amp; folders — on the hard drive</div>
+          <ul>
+            <li><b>Slower</b> to read and change</li>
+            <li><b>Large</b> &amp; cheap, scales well</li>
+            <li><b>Persistent</b> — survives restarts</li>
+          </ul>
+        </div>
+      </div>
+      <p>Up to now your data lived in memory — component state, variables. That's perfect while the app runs, but
+      close it and everything's gone. When you need data to <em>stick around</em>, it has to go to storage: a file
+      on disk.</p>
+      <div class="insight warn">
+        <div class="htag">▲ Files aren't the long-term answer for web apps</div>
+        <p>Reading and writing files is a great way to <em>understand</em> persistent, asynchronous storage — but
+        it doesn't scale, has no enforced structure, and is slow. It's a stepping stone. Real apps use
+        <b>databases</b>, which come later in the course. For now, files are how we practise the ideas.</p>
+      </div>
+    </section>
+
+    <!-- 2 -->
+    <section class="chapter" id="c2">
+      <div class="chaphead"><span class="num">02</span><h2>The fs module</h2></div>
+      <p class="chapsub">Node's built-in filesystem library. Two functions do almost everything: readFile and writeFile.</p>
+      <div class="anatomy">
+        <div class="ahead">Code anatomy — reading a file</div>
+        <div class="anacode"><span class="tok kw" data-exp="import * as fs from 'node:fs/promises'|Bring in the filesystem library — the promises version, so the functions return promises you can await. 'import * as fs' is a namespace import: everything is grouped under fs, so fs.readFile reads clearly. You could also destructure { readFile } instead.">import * as fs from 'node:fs/promises'</span>
+
+<span class="tok kw" data-exp="const contents = await|readFile is asynchronous — talking to the disk takes time. await pauses until the file has been read and gives you the contents. Must be inside an async function.">const contents = await</span> <span class="tok fn" data-exp="fs.readFile|The function that reads a file's contents. It needs the file path, and optionally an encoding.">fs.readFile</span>(<span class="tok pm" data-exp="filePath|Where the file is. Best built with Path.resolve('./data.json') so it works no matter where the script runs from — more robust than a bare relative string.">filePath</span>, <span class="tok op" data-exp="'utf-8'|The encoding. Without it you get raw bytes; with 'utf-8' you get human-readable text — the string you can actually work with (and later JSON.parse).">'utf-8'</span>)</div>
+        <div class="anapanel"><div class="anahint">Hover or tap a token <span class="legend">· import fs/promises · await readFile · pass a path + 'utf-8'</span></div><div class="anatitle">—</div><div class="anatext">Each part explains its job.</div></div>
+      </div>
+      <p>Writing is the mirror image. <code>writeFile</code> returns nothing, and it either creates the file or
+      <b>overwrites</b> it if it already exists:</p>
+      <div class="cell">
+        <div class="bar"><span class="dots"><i></i><i></i><i></i></span><span class="fname">write.ts</span></div>
+        <pre class="code"><span class="kw">await</span> fs.<span class="fn">writeFile</span>(filePath, data)  <span class="cm">// creates or OVERWRITES the file</span></pre>
+      </div>
+      <div class="insight">
+        <div class="htag">◆ These run asynchronously — order isn't top-to-bottom</div>
+        <p>Because disk access is slow and async, a <code>console.log</code> written <em>after</em> a
+        <code>readFile</code> often prints <em>first</em> — the read is still in flight. If that surprises you,
+        it's the exact lesson from <a href="./js-async.html">Async &amp; Promises</a>. Both <code>then/catch</code>
+        and <code>try/catch</code> work; <code>try/catch</code> with <code>await</code> gives you cleaner control
+        over ordering.</p>
+      </div>
+    </section>
+
+    <!-- 3 -->
+    <section class="chapter" id="c3">
+      <div class="chaphead"><span class="num">03</span><h2>JSON round-trip</h2></div>
+      <p class="chapsub">A file is text. Your code wants an object. Two functions convert between them — one each way.</p>
+      <p>When you read a <code>.json</code> file you get a <b>string</b>. To work with it — access keys, update
+      values — you turn it into a JavaScript object. When you're done, you turn it back into a string to write.
+      That's the round-trip:</p>
+      <div class="anatomy">
+        <div class="ahead">Code anatomy — parse in, stringify out</div>
+        <div class="anacode"><span class="tok fn" data-exp="JSON.parse|Reading direction: takes the JSON-formatted STRING from the file and gives back a real JavaScript object/array — so you can read data.name, loop, find by id, etc.">JSON.parse</span>(contents)        <span class="tok rt" data-exp="string → object|The result. Now it's usable JS: an array of objects you can map, find, and change.">// → usable object</span>
+
+<span class="tok fn" data-exp="JSON.stringify|Writing direction: takes your JavaScript object and turns it back into a JSON string ready to write to the file.">JSON.stringify</span>(data, <span class="tok pm" data-exp="null|The 'replacer' argument. null means: keep all values as-is, don't filter anything out.">null</span>, <span class="tok op" data-exp="2|The 'space' argument — indent the output with 2 spaces so the saved file is pretty and human-readable, not one long line.">2</span>)</div>
+        <div class="anapanel"><div class="anahint">Hover or tap a token <span class="legend">· parse: string → object (reading) · stringify: object → string (writing)</span></div><div class="anatitle">—</div><div class="anatext">Each part explains its job.</div></div>
+      </div>
+      <div class="insight gotcha">
+        <div class="htag">✖ Forget to parse and you're working with a string</div>
+        <p>Skip <code>JSON.parse</code> and <code>data</code> is just text — <code>data.find(...)</code> won't work,
+        <code>data[0]</code> gives you a character, not an object. Same at the other end: write a raw object without
+        <code>JSON.stringify</code> and you'll save <code>[object Object]</code>. Parse in, stringify out — every
+        time.</p>
+      </div>
+    </section>
+
+    <!-- 4 -->
+    <section class="chapter" id="c4">
+      <div class="chaphead"><span class="num">04</span><h2>Filesystem lab</h2></div>
+      <p class="chapsub">A pretend data.json of stick insects. Read it, look one up by id, add a new one, and watch it get written back.</p>
+      <p>Here's <code>data.json</code> as raw text. Press <b>read + parse</b> to turn it into a usable array, then try
+      looking up by id and adding a new stick insect — watch the parse / find / stringify steps happen:</p>
+
+      <div class="fs" id="fs">
+        <div class="fstop"><span class="dots"><i></i><i></i><i></i></span><span class="ttl">data.json — on disk</span><span class="tag">fs</span></div>
+
+        <div class="stage">
+          <div class="slbl">the file (raw text on disk)</div>
+          <div class="filebox str" id="fsFile"></div>
+        </div>
+
+        <div class="stage">
+          <div class="slbl">after <span style="color:#8CC0F5">JSON.parse</span> — a usable array</div>
+          <div class="filebox" id="fsParsed"><span class="step">// press "read + parse"</span></div>
+          <div style="margin-top:12px"><button class="btn" id="fsRead">read + parse</button></div>
+        </div>
+
+        <div class="lookup">
+          <span style="font-family:var(--mono);font-size:12px;color:#8A90A0">GET /sticks/</span>
+          <input id="fsId" placeholder="id" value="2">
+          <button class="btn ghost" id="fsFind">find by id</button>
+        </div>
+        <div class="result" id="fsFindOut"></div>
+
+        <div class="lookup">
+          <span style="font-family:var(--mono);font-size:12px;color:#8A90A0">POST /sticks &nbsp;name:</span>
+          <input class="name" id="fsName" placeholder="e.g. Pokey" value="Pokey">
+          <button class="btn" id="fsAdd">add + stringify + write</button>
+        </div>
+        <div class="result" id="fsAddOut"></div>
+      </div>
+
+      <div class="predict" data-check data-correct="2"
+        data-fb="Right — req.params values are always strings, but the ids in the file are numbers. '2' === 2 is false, so the find fails silently unless you convert with Number(id). This is the exact bug from the lecture.">
+        <div class="q">A route reads <code>req.params.id</code> (which is <code>'2'</code>) and does <code>data.find(s =&gt; s.id === id)</code> against numeric ids. What happens?</div>
+        <div class="opts">
+          <button class="opt" data-opt="0">It works fine</button>
+          <button class="opt" data-opt="1">It throws an error</button>
+          <button class="opt" data-opt="2">It finds nothing — <code>'2' === 2</code> is false; convert with <code>Number(id)</code></button>
+          <button class="opt" data-opt="3">It returns every stick insect</button>
+        </div>
+        <div class="fb-msg" data-fbbox></div>
+      </div>
+    </section>
+
+    <!-- 5 -->
+    <section class="chapter" id="c5">
+      <div class="chaphead"><span class="num">05</span><h2>Files in a route</h2></div>
+      <p class="chapsub">Put it together: a GET route that reads and returns data, and a POST route that adds to it and writes back.</p>
+      <p>A GET route reads the file, parses it, and sends the data as JSON:</p>
+      <div class="cell">
+        <div class="bar"><span class="dots"><i></i><i></i><i></i></span><span class="fname">get-sticks.ts</span></div>
+        <pre class="code">server.<span class="fn">get</span>(<span class="st">'/'</span>, <span class="kw">async</span> (req, res) => {
+  <span class="kw">try</span> {
+    <span class="kw">const</span> json = <span class="kw">await</span> fs.<span class="fn">readFile</span>(filePath, <span class="st">'utf-8'</span>)
+    <span class="kw">const</span> data = <span class="fn">JSON</span>.<span class="fn">parse</span>(json)
+    res.<span class="fn">json</span>(data)
+  } <span class="kw">catch</span> (err) {
+    res.<span class="fn">sendStatus</span>(<span class="nm">500</span>)   <span class="cm">// internal server error</span>
+  }
+})</pre>
+      </div>
+      <p>A GET-by-id route reads the param, <b>converts it to a number</b>, and finds the match. A POST route reads
+      the file, appends the new item from <code>req.body</code>, stringifies, and writes it back:</p>
+      <div class="cell">
+        <div class="bar"><span class="dots"><i></i><i></i><i></i></span><span class="fname">add-stick.ts</span></div>
+        <pre class="code">server.<span class="fn">post</span>(<span class="st">'/'</span>, <span class="kw">async</span> (req, res) => {
+  <span class="kw">try</span> {
+    <span class="kw">const</span> newStick = req.body
+    <span class="kw">const</span> json = <span class="kw">await</span> fs.<span class="fn">readFile</span>(filePath, <span class="st">'utf-8'</span>)
+    <span class="kw">const</span> data = <span class="fn">JSON</span>.<span class="fn">parse</span>(json)
+    <span class="kw">const</span> newData = [...data, newStick]        <span class="cm">// keep the old, add the new</span>
+    <span class="kw">const</span> newJson = <span class="fn">JSON</span>.<span class="fn">stringify</span>(newData, <span class="kw">null</span>, <span class="nm">2</span>)
+    <span class="kw">await</span> fs.<span class="fn">writeFile</span>(filePath, newJson)
+    res.<span class="fn">sendStatus</span>(<span class="nm">201</span>)
+  } <span class="kw">catch</span> (err) {
+    res.<span class="fn">sendStatus</span>(<span class="nm">500</span>)
+  }
+})</pre>
+      </div>
+      <div class="insight warn">
+        <div class="htag">▲ Read → modify → write the WHOLE thing</div>
+        <p>To add one item you don't just write the new item — that would wipe the file. You read the current array,
+        spread it into a new array with the addition (<code>[...data, newStick]</code>), then write the whole thing
+        back. And wrap it all in <code>try/catch</code> with <code>res.sendStatus(500)</code> so a failed read or
+        write doesn't crash the route.</p>
+      </div>
+    </section>
+
+    <!-- 6 -->
+    <section class="chapter" id="c6">
+      <div class="chaphead"><span class="num">06</span><h2>Express Router</h2></div>
+      <p class="chapsub">As routes pile up, move each group into its own file. express.Router() is how.</p>
+      <p>Doing everything in <code>server.ts</code> gets messy fast. <b>Express Router</b> lets you group related
+      routes — all your stick-insect routes — in their own file, then mount them under a prefix. Inside the router,
+      you write <code>router.get</code> instead of <code>server.get</code>:</p>
+      <div class="anatomy">
+        <div class="ahead">Code anatomy — a router module</div>
+        <div class="anacode"><span class="tok kw" data-exp="const router = express.Router()|Create a router — a mini, mountable collection of routes. It behaves like a small server you can attach to the main one.">const router = express.Router()</span>
+
+<span class="tok pm" data-exp="router.get('/', ...)|Define routes on the router, not the server. Note the path is just '/' — the /sticks prefix is added when you mount it, so you don't repeat it here.">router.get('/', ...)</span>
+<span class="tok pm" data-exp="router.get('/:id', ...)|Another route — becomes /sticks/:id once mounted. Same colon-param syntax as before.">router.get('/:id', ...)</span>
+
+<span class="tok op" data-exp="export default router|Export the router so server.ts can import and mount it. This is the modular boundary — the whole file's job is to define and hand over these routes.">export default router</span></div>
+        <div class="anapanel"><div class="anahint">Hover or tap a token <span class="legend">· create a router · define routes on it · export it</span></div><div class="anatitle">—</div><div class="anatext">Each part explains its job.</div></div>
+      </div>
+      <p>Then in <code>server.ts</code> you mount it under a prefix — and the file stays clean, just wiring prefixes
+      to route modules:</p>
+      <div class="cell">
+        <div class="bar"><span class="dots"><i></i><i></i><i></i></span><span class="fname">server.ts</span></div>
+        <pre class="code"><span class="kw">import</span> stickRoutes <span class="kw">from</span> <span class="st">'./routes/sticks.ts'</span>
+server.<span class="fn">use</span>(<span class="st">'/api/v1/sticks'</span>, stickRoutes)   <span class="cm">// prefix applied ONCE, here</span>
+<span class="cm">// router's '/'   → /api/v1/sticks</span>
+<span class="cm">// router's '/:id' → /api/v1/sticks/:id</span></pre>
+      </div>
+      <div class="insight">
+        <div class="htag">◆ The prefix is set once, at mount</div>
+        <p>The key idea (also in the <a href="./express-server.html">Express Server</a> guide): inside the router
+        file you write <code>'/'</code> and <code>'/:id'</code>, <em>not</em> <code>'/sticks'</code>. The
+        <code>/api/v1/sticks</code> prefix is applied a single time by <code>server.use(...)</code>. Repeat it inside
+        the router and your real path doubles up. Add cats, otters, dogs the same way — one clean line each in
+        <code>server.ts</code>.</p>
+      </div>
+    </section>
+
+    <!-- recap -->
+    <section class="chapter" id="recap">
+      <div class="chaphead"><span class="num">★</span><h2>Recap</h2></div>
+      <div class="recap">
+        <h3>Filesystem</h3>
+        <ul>
+          <li><b>Memory</b> is fast but temporary; <b>storage</b> (disk) is slower but persists across restarts.</li>
+          <li><code>fs/promises</code>: <b>readFile(path, 'utf-8')</b> and <b>writeFile(path, data)</b> — both async, so <b>await</b> them.</li>
+          <li><code>writeFile</code> creates or <b>overwrites</b>; it returns nothing.</li>
+          <li>Files are a stepping stone — <b>databases</b> come later for real persistence.</li>
+        </ul>
+      </div>
+      <div class="recap">
+        <h3>JSON &amp; routes</h3>
+        <ul>
+          <li><b>JSON.parse</b> string → object (reading); <b>JSON.stringify(data, null, 2)</b> object → pretty string (writing).</li>
+          <li>To add an item: read, <b>[...data, newItem]</b>, stringify, write the whole thing back.</li>
+          <li><code>req.params</code> ids are <b>strings</b> — convert with <b>Number(id)</b> before matching numeric ids.</li>
+          <li>Wrap file work in <b>try/catch</b> with <code>res.sendStatus(500)</code>.</li>
+        </ul>
+      </div>
+      <div class="recap">
+        <h3>Express Router</h3>
+        <ul>
+          <li><code>express.Router()</code> groups routes into a module; use <b>router.get/post</b>, then <b>export default router</b>.</li>
+          <li>Mount with <code>server.use('/prefix', router)</code> — the <b>prefix is applied once</b>, so don't repeat it inside.</li>
+        </ul>
+      </div>
+      <footer>
+        <p>Unit 4 · Dev Academy Aotearoa, built from the T3 lecture. The lab models the parse/find/stringify
+        round-trip in the browser. Pairs with <a href="./express-server.html">Express Server</a> · next up: databases.</p>
+        <p class="mono"><a href="./index.html">⌂ All guides</a></p>
+      </footer>
+    </section>
+  </main>
+</div>
+<script>
+document.querySelectorAll('.anatomy').forEach(an=>{
+  const title=an.querySelector('.anatitle'),text=an.querySelector('.anatext'),hint=an.querySelector('.anahint');
+  const toks=an.querySelectorAll('.tok');
+  function show(tok){const raw=tok.getAttribute('data-exp')||'';const i=raw.indexOf('|');
+    title.textContent=i>=0?raw.slice(0,i):tok.textContent.trim();
+    text.textContent=i>=0?raw.slice(i+1):raw;hint.textContent='what this part does';
+    toks.forEach(x=>x.classList.remove('active'));tok.classList.add('active');}
+  toks.forEach(tok=>{tok.setAttribute('tabindex','0');
+    tok.addEventListener('mouseenter',()=>show(tok));tok.addEventListener('click',()=>show(tok));tok.addEventListener('focus',()=>show(tok));});
+});
+/* ===== Filesystem lab — parse / find-by-id / add-stringify is the teachable core ===== */
+(function(){
+  const initial=[
+    {id:1, name:'Twiggy', owner:'Sam'},
+    {id:2, name:'Sticky', owner:'Alex'},
+    {id:3, name:'Barky',  owner:'Jo'}
+  ];
+  // core logic (exposed for testing)
+  function findById(data, idStr){ return data.find(s => s.id === Number(idStr)); }
+  function addStick(data, name){
+    const nextId = data.reduce((m,s)=>Math.max(m,s.id), 0) + 1;
+    return [...data, {id: nextId, name: name, owner: 'you'}];
+  }
+  function stringify(data){ return JSON.stringify(data, null, 2); }
+  window.__fslab={findById, addStick, stringify};
+
+  let data=null; // parsed only after "read + parse"
+  let fileArr=initial.slice();
+
+  const fileEl=document.getElementById('fsFile');
+  const parsedEl=document.getElementById('fsParsed');
+  const readBtn=document.getElementById('fsRead');
+  const idInput=document.getElementById('fsId');
+  const findBtn=document.getElementById('fsFind');
+  const findOut=document.getElementById('fsFindOut');
+  const nameInput=document.getElementById('fsName');
+  const addBtn=document.getElementById('fsAdd');
+  const addOut=document.getElementById('fsAddOut');
+
+  function colorJson(str, newIdx){
+    // basic syntax colour + optional highlight of a new object block
+    return str
+      .replace(/"(\w+)":/g,'<span class="k">"$1"</span>:')
+      .replace(/: "([^"]*)"/g,': <span class="s">"$1"</span>')
+      .replace(/: (\d+)/g,': <span class="n">$1</span>');
+  }
+  function renderFile(highlightId){
+    let str=stringify(fileArr);
+    let html=colorJson(str);
+    fileEl.innerHTML=html;
+  }
+  renderFile();
+
+  readBtn.addEventListener('click',()=>{
+    data=JSON.parse(stringify(fileArr)); // simulate read+parse
+    parsedEl.innerHTML='<span class="step">// now data is a real array of '+data.length+' objects — data.find(), data.map() all work</span>\n'+colorJson(stringify(data));
+  });
+
+  findBtn.addEventListener('click',()=>{
+    if(!data){ findOut.innerHTML='<span class="no">✕ read + parse the file first (data is still just text)</span>'; return; }
+    const idStr=idInput.value.trim();
+    const found=findById(data, idStr);
+    if(found){
+      findOut.innerHTML='<span class="ok">✓ Number(\''+idStr+'\') → '+Number(idStr)+', found:</span> { <span class="k">id</span>: <span class="n">'+found.id+'</span>, <span class="k">name</span>: <span class="s">"'+found.name+'"</span>, <span class="k">owner</span>: <span class="s">"'+found.owner+'"</span> }';
+    } else {
+      findOut.innerHTML='<span class="no">✕ no stick insect with id '+Number(idStr)+'</span>';
+    }
+  });
+
+  addBtn.addEventListener('click',()=>{
+    if(!data){ addOut.innerHTML='<span class="no">✕ read + parse the file first</span>'; return; }
+    const name=nameInput.value.trim() || 'Unnamed';
+    const newData=addStick(data, name);
+    const newJson=stringify(newData);
+    // "write" back
+    fileArr=newData; data=JSON.parse(newJson);
+    renderFile();
+    const added=newData[newData.length-1];
+    addOut.innerHTML='<span class="ok">✓ [...data, newStick] → stringify → writeFile.</span> Added { <span class="k">id</span>: <span class="n">'+added.id+'</span>, <span class="k">name</span>: <span class="s">"'+added.name+'"</span> } — the file above now has '+newData.length+' entries.';
+  });
+})();
+document.querySelectorAll('[data-check]').forEach(chk=>{
+  const correct=parseInt(chk.dataset.correct,10);const fbbox=chk.querySelector('[data-fbbox]');
+  chk.querySelectorAll('.opt').forEach(opt=>{opt.addEventListener('click',()=>{
+    const pick=parseInt(opt.dataset.opt,10);
+    if(pick===correct){opt.classList.add('correct');fbbox.textContent=chk.dataset.fb;fbbox.classList.add('show');chk.querySelectorAll('.opt').forEach(o=>o.style.pointerEvents='none');}
+    else{opt.classList.add('wrong');opt.style.pointerEvents='none';}
+  });});
+});
+const sections=[...document.querySelectorAll('section.chapter')];
+const links=[...document.querySelectorAll('nav.side a[data-sec]')];
+const mlinks=[...document.querySelectorAll('.mobtop .mlink')];
+function spy(){const y=window.scrollY+120;let cur=sections[0].id;
+  for(const s of sections){if(s.offsetTop<=y)cur=s.id;}
+  links.forEach(l=>l.classList.toggle('active',l.getAttribute('href')==='#'+cur));
+  mlinks.forEach(l=>l.classList.toggle('active',l.getAttribute('href')==='#'+cur));}
+window.addEventListener('scroll',spy,{passive:true});spy();
+</script>
+</body>
+</html>

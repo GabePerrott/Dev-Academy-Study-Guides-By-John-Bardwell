@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Express Server &amp; JSON APIs — interactive guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;450;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F1F1F4;--card:#FBFBFD;--ink:#1B1E26;--muted:#5A5F6B;--line:#E1E1E8;
+    --violet:#6C4CE0;--violet-soft:#EDE8FC;--violet-line:#D8CEF7;
+    --emerald:#12905F;--amber:#B67A08;--rose:#D6455D;--blue:#2C6FE0;
+    --term-bg:#15171E;--term-panel:#1D2029;--term-fg:#E6E8EC;--term-dim:#8A90A0;
+    --get:#12905F;--post:#B67A08;--put:#2C6FE0;--del:#D6455D;
+    --radius:14px;
+    --mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+    --disp:'Space Grotesk',system-ui,sans-serif;--body:'Inter',system-ui,sans-serif;
+  }
+  *{box-sizing:border-box}html{scroll-behavior:smooth}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);font-size:16.5px;line-height:1.62;-webkit-font-smoothing:antialiased}
+  a{color:var(--violet);text-decoration:none}a:hover{text-decoration:underline}
+  code{font-family:var(--mono);font-size:.88em;background:#E7E7EE;padding:.08em .38em;border-radius:5px;color:#2C2140}
+  .wrap{display:grid;grid-template-columns:270px minmax(0,1fr);max-width:1200px;margin:0 auto}
+  nav.side{position:sticky;top:0;align-self:start;height:100vh;overflow-y:auto;padding:30px 22px 40px;border-right:1px solid var(--line)}
+  main{padding:0 clamp(20px,5vw,64px) 120px;min-width:0}
+  .brand{font-family:var(--mono);font-weight:700;font-size:14px;letter-spacing:.04em;color:var(--violet);margin-bottom:4px}
+  .brand small{color:var(--muted);font-weight:400;display:block;letter-spacing:0;margin-top:3px;font-family:var(--body);font-size:12.5px}
+  .navsec{margin-top:26px}
+  .navsec > span{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:9px;padding-left:12px}
+  nav.side a.link{display:flex;gap:10px;align-items:baseline;padding:7px 12px;border-radius:9px;color:var(--ink);font-size:14.5px;line-height:1.35}
+  nav.side a.link:hover{background:#E9E9F0;text-decoration:none}
+  nav.side a.link.active{background:var(--violet-soft);color:#3B2A73;font-weight:500}
+  nav.side a.link b{font-family:var(--mono);font-size:11.5px;color:var(--violet);min-width:20px}
+  .backlink{margin-top:24px;font-size:13px;color:var(--muted)}
+  .backlink a{font-family:var(--mono);font-size:12.5px;display:block;margin-top:6px}
+  header.hero{padding:64px 0 30px}
+  .eyebrow{font-family:var(--mono);font-size:12.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--violet);margin-bottom:18px}
+  h1{font-family:var(--disp);font-weight:700;font-size:clamp(34px,5.4vw,54px);line-height:1.04;letter-spacing:-.02em;margin:0 0 20px}
+  h1 .brace{color:var(--violet)}
+  .lede{font-size:19px;color:#3A3E48;max-width:62ch;margin:0}.lede + .lede{margin-top:14px}
+  .runline{font-family:var(--mono);font-size:13.5px;color:var(--muted);margin-top:26px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .runline .kbd{background:var(--term-bg);color:#93D6A0;padding:5px 11px;border-radius:7px;font-size:12.5px}
+  section.chapter{padding-top:56px;scroll-margin-top:20px}
+  .chaphead{display:flex;align-items:baseline;gap:16px;border-bottom:2px solid var(--ink);padding-bottom:12px;margin-bottom:8px}
+  .chaphead .num{font-family:var(--mono);font-weight:700;font-size:15px;color:var(--violet)}
+  h2{font-family:var(--disp);font-weight:600;font-size:clamp(25px,3.4vw,34px);letter-spacing:-.015em;margin:0}
+  .chapsub{color:var(--muted);font-size:15px;margin:14px 0 0}
+  h3{font-family:var(--disp);font-weight:600;font-size:21px;letter-spacing:-.01em;margin:40px 0 10px}
+  p{margin:14px 0}main p,main li{color:#24272F}
+  .cell{margin:22px 0;border-radius:var(--radius);overflow:hidden;border:1px solid #2A2E3A;box-shadow:0 10px 30px -18px rgba(20,20,40,.4)}
+  .cell .bar{background:var(--term-panel);display:flex;align-items:center;gap:8px;padding:9px 14px;border-bottom:1px solid #2A2E3A}
+  .cell .bar .dots{display:flex;gap:6px}.cell .bar .dots i{width:11px;height:11px;border-radius:50%;display:block}
+  .dots i:nth-child(1){background:#E06C75}.dots i:nth-child(2){background:#E5C07B}.dots i:nth-child(3){background:#98C379}
+  .cell .bar .fname{font-family:var(--mono);font-size:12px;color:var(--term-dim);margin-left:4px}
+  .cell pre.code{margin:0;background:var(--term-bg);color:var(--term-fg);font-family:var(--mono);font-size:13px;line-height:1.7;padding:16px 18px;white-space:pre;overflow-x:auto;tab-size:2}
+  .cell pre.code .cm{color:#6B7180}.cell pre.code .kw{color:#C9A6F6}.cell pre.code .fn{color:#8CC0F5}
+  .cell pre.code .st{color:#93D6A0}.cell pre.code .nm{color:#E7B45A}
+  .anatomy{margin:22px 0;border:1px solid #2A2E3A;border-radius:var(--radius);overflow:hidden;box-shadow:0 10px 30px -18px rgba(20,20,40,.4)}
+  .anatomy .ahead{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--term-dim);padding:10px 16px;border-bottom:1px solid #2A2E3A;background:var(--term-panel);display:flex;align-items:center;gap:8px}
+  .anatomy .ahead::before{content:'⌖';color:#C39BF5;font-size:14px}
+  .anacode{padding:18px;background:var(--term-bg);font-family:var(--mono);font-size:14px;line-height:2.1;color:var(--term-fg);overflow-x:auto;white-space:pre-wrap;word-break:break-word}
+  .tok{cursor:pointer;border-radius:5px;padding:2px 3px;transition:.12s;outline:1.5px solid transparent}
+  .tok:hover{outline-color:rgba(255,255,255,.28)}
+  .tok.kw{background:rgba(195,155,245,.16);color:#C9A6F6}
+  .tok.fn{background:rgba(124,183,240,.15);color:#8CC0F5}
+  .tok.pm{background:rgba(231,180,90,.15);color:#E7B45A}
+  .tok.rt{background:rgba(147,214,160,.15);color:#93D6A0}
+  .tok.op{background:rgba(240,128,143,.14);color:#F0909F}
+  .tok.active{outline-color:var(--violet)!important;background:rgba(108,76,224,.32)!important;color:#fff}
+  .anapanel{padding:15px 18px;min-height:78px;background:var(--card)}
+  .anahint{font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:.05em}
+  .anahint .legend{color:var(--muted);opacity:.8}
+  .anatitle{font-family:var(--mono);font-weight:700;font-size:14px;color:var(--violet);margin:6px 0 3px}
+  .anatext{font-size:13.5px;color:#2A2D36;line-height:1.55}
+  .insight{margin:24px 0;background:var(--card);border:1px solid var(--line);border-left:3px solid var(--violet);border-radius:12px;padding:16px 20px}
+  .insight .htag{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--violet);font-weight:700;display:flex;align-items:center;gap:8px;margin-bottom:6px}
+  .insight.warn{border-left-color:var(--amber)}.insight.warn .htag{color:var(--amber)}
+  .insight.gotcha{border-left-color:var(--rose)}.insight.gotcha .htag{color:var(--rose)}
+  .insight p{margin:6px 0}.insight p:first-of-type{margin-top:0}
+  /* method table */
+  .methods{margin:24px 0;border:1px solid var(--line);border-radius:14px;overflow:hidden}
+  .methods table{width:100%;border-collapse:collapse;font-size:14px}
+  .methods th{background:#F5F5F9;font-family:var(--mono);font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);text-align:left;padding:11px 14px;border-bottom:1px solid var(--line)}
+  .methods td{padding:11px 14px;border-bottom:1px solid var(--line);vertical-align:middle}
+  .methods tr:last-child td{border-bottom:none}
+  .methods .verb{font-family:var(--mono);font-weight:700;font-size:12px;padding:3px 9px;border-radius:6px;display:inline-block}
+  .methods .verb.get{background:#EAF7F0;color:var(--get)}
+  .methods .verb.post{background:#FBF3E4;color:var(--post)}
+  .methods .verb.put{background:#EAF1FD;color:var(--put)}
+  .methods .verb.del{background:#FBECEE;color:var(--del)}
+  /* ===== EXPRESS SIMULATOR ===== */
+  .ex{margin:26px 0;border:1px solid #2A2E3A;border-radius:14px;overflow:hidden;background:#1A1C23;box-shadow:0 14px 40px -20px rgba(20,20,40,.5)}
+  .ex .extop{background:#15171E;display:flex;align-items:center;gap:8px;padding:8px 14px;border-bottom:1px solid #2A2E3A}
+  .ex .extop .dots{display:flex;gap:6px}.ex .extop .dots i{width:11px;height:11px;border-radius:50%;display:block}
+  .ex .extop .dots i:nth-child(1){background:#E06C75}.ex .extop .dots i:nth-child(2){background:#E5C07B}.ex .extop .dots i:nth-child(3){background:#98C379}
+  .ex .extop .ttl{font-family:var(--mono);font-size:12px;color:var(--term-dim);margin-left:4px}
+  .ex .extop .tag{margin-left:auto;font-family:var(--mono);font-size:10px;color:#fff;background:var(--violet);padding:2px 8px;border-radius:10px}
+  .ex .routes{padding:14px 16px;border-bottom:1px solid #2A2E3A;background:#12141A}
+  .ex .rlbl{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--term-dim);margin-bottom:10px}
+  .ex .rdef{font-family:var(--mono);font-size:12.5px;color:#C4C8D2;line-height:1.9;white-space:pre}
+  .ex .rdef .fn{color:#8CC0F5}.ex .rdef .st{color:#93D6A0}.ex .rdef .cm{color:#6B7180}
+  .ex .reqs{display:flex;flex-wrap:wrap;gap:8px;padding:14px 16px;border-bottom:1px solid #2A2E3A}
+  .ex .reqbtn{font-family:var(--mono);font-size:12px;border:1px solid #2A2E3A;background:#22252F;color:#E6E8EC;border-radius:8px;padding:8px 12px;cursor:pointer;transition:.14s}
+  .ex .reqbtn:hover{border-color:var(--violet-line);background:#2A2E3A}
+  .ex .reqbtn .m{font-weight:700}
+  .ex .reqbtn.sel{border-color:var(--violet);background:rgba(108,76,224,.22)}
+  .ex .m-GET{color:#7DDB9A}.ex .m-POST{color:#E7B45A}
+  .ex .panel{display:grid;grid-template-columns:1fr 1fr;gap:0}
+  @media(max-width:640px){.ex .panel{grid-template-columns:1fr}}
+  .ex .side-in,.ex .side-out{padding:16px 18px}
+  .ex .side-in{border-right:1px solid #2A2E3A;background:#12141A}
+  .ex .side-out{background:var(--term-bg)}
+  .ex .slbl{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--term-dim);margin-bottom:10px}
+  .ex .reqobj{font-family:var(--mono);font-size:12px;line-height:1.7;color:#C4C8D2;white-space:pre-wrap;word-break:break-word;min-height:90px}
+  .ex .reqobj .k{color:#C9A6F6}.ex .reqobj .s{color:#93D6A0}.ex .reqobj .n{color:#E7B45A}.ex .reqobj .muted{color:#6B7180;font-style:italic}
+  .ex .resp{min-height:90px}
+  .ex .rstat{font-family:var(--mono);font-size:11.5px;font-weight:700;padding:2px 9px;border-radius:10px;display:inline-block;margin-bottom:10px}
+  .ex .rstat.s2{background:#123021;color:#7DDB9A}
+  .ex .rbody{font-family:var(--mono);font-size:12px;line-height:1.65;color:#E6E8EC;white-space:pre-wrap;word-break:break-word}
+  .ex .rbody .k{color:#C9A6F6}.ex .rbody .s{color:#93D6A0}.ex .rbody .n{color:#E7B45A}.ex .rbody .waiting{color:#6B7180;font-style:italic}
+  .ex .exnote{padding:11px 16px;font-size:13px;color:var(--muted);line-height:1.5;background:#FAFAFC;border-top:1px solid var(--line)}
+  .ex .exnote b{color:var(--violet)}
+  .predict{margin:24px 0;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px}
+  .predict .q{font-family:var(--disp);font-weight:600;font-size:16px;margin-bottom:14px}
+  .predict .opts{display:flex;flex-direction:column;gap:9px}
+  .predict .opt{font-family:var(--mono);font-size:13.5px;text-align:left;cursor:pointer;background:#fff;border:1px solid var(--line);border-radius:9px;padding:11px 14px;transition:.15s}
+  .predict .opt:hover{border-color:var(--violet-line);background:#FAF8FF}
+  .predict .opt.correct{border-color:var(--emerald);background:#EAF7F0;color:#0C6B45}
+  .predict .opt.wrong{border-color:var(--rose);background:#FBECEE;color:#9E2B3B}
+  .predict .fb-msg{margin-top:12px;font-size:13.5px;color:var(--muted);display:none}
+  .predict .fb-msg.show{display:block}
+  .recap{background:var(--term-bg);border-radius:16px;padding:26px 28px;margin:26px 0;color:var(--term-fg)}
+  .recap h3{color:#fff;margin-top:0}
+  .recap ul{list-style:none;padding:0;margin:0;display:grid;gap:10px}
+  .recap li{font-family:var(--mono);font-size:13px;line-height:1.55;padding-left:22px;position:relative;color:#D3D7E0}
+  .recap li::before{content:'›';position:absolute;left:0;color:var(--violet);font-weight:700}
+  .recap li b{color:#E7B45A;font-weight:500}
+  footer{border-top:1px solid var(--line);margin-top:70px;padding-top:24px;color:var(--muted);font-size:13.5px}
+  footer .mono{font-family:var(--mono);font-size:12px}
+  .mobtop{display:none}
+  @media(max-width:860px){
+    .wrap{grid-template-columns:1fr}nav.side{display:none}
+    .mobtop{display:flex;position:sticky;top:0;z-index:20;background:rgba(241,241,244,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);padding:12px 18px;gap:10px;align-items:center;overflow-x:auto}
+    .mobtop .brand{margin:0;white-space:nowrap}
+    .mobtop a{font-family:var(--mono);font-size:12px;white-space:nowrap;color:var(--muted);padding:5px 10px;border-radius:7px}
+    .mobtop a.active{background:var(--violet-soft);color:#3B2A73}
+    main{padding-left:20px;padding-right:20px}
+  }
+  @media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important;scroll-behavior:auto}}
+</style>
+</head>
+<body>
+<div class="mobtop">
+  <span class="brand">Express</span>
+  <a href="#c1" class="mlink active">Client/server</a>
+  <a href="#c2" class="mlink">First server</a>
+  <a href="#c3" class="mlink">The request</a>
+  <a href="#c4" class="mlink">JSON</a>
+  <a href="#c5" class="mlink">Simulator</a>
+  <a href="#c6" class="mlink">Organising</a>
+  <a href="#c7" class="mlink">Testing</a>
+  <a href="#recap" class="mlink">Recap</a>
+</div>
+<div class="wrap">
+  <nav class="side">
+    <div class="brand">Express Server<small>Unit 4 · JSON APIs · guide</small></div>
+    <div class="navsec">
+      <span>Sections</span>
+      <a href="#c1" class="link" data-sec><b>01</b> Client &amp; server</a>
+      <a href="#c2" class="link" data-sec><b>02</b> Your first server</a>
+      <a href="#c3" class="link" data-sec><b>03</b> Reading the request</a>
+      <a href="#c4" class="link" data-sec><b>04</b> JSON APIs</a>
+      <a href="#c5" class="link" data-sec><b>05</b> Run a server</a>
+      <a href="#c6" class="link" data-sec><b>06</b> Static files &amp; Router</a>
+      <a href="#c7" class="link" data-sec><b>07</b> Testing with Supertest</a>
+      <a href="#recap" class="link" data-sec><b>★</b> Recap</a>
+    </div>
+    <div class="navsec">
+      <span>The one idea</span>
+      <p style="font-size:13px;color:var(--muted);line-height:1.5;margin:0 12px">
+        A server <b>listens for requests and sends responses</b>. Express is the friendly layer that lets you say:
+        when a request hits <em>this</em> path, run <em>this</em> function.</p>
+    </div>
+    <div class="backlink">
+      Related guides:
+      <a href="./index.html">⌂ All guides</a>
+      <a href="./consuming-apis.html">→ Consuming APIs (client side)</a>
+      <a href="./js-async.html">→ Async &amp; Promises</a>
+    </div>
+  </nav>
+  <main>
+    <header class="hero">
+      <div class="eyebrow">Unit 4 · Express Server &amp; JSON APIs</div>
+      <h1>Now you're the one <span class="brace">answering the requests</span></h1>
+      <p class="lede">In Unit 3 you <em>called</em> APIs — you were the client, asking a server for data. This unit
+      flips the table: you <b>build the server</b>. When a request arrives, your code decides what to send back.</p>
+      <p class="lede">Express is the tool that makes that easy. This guide walks the core arc — routes, the request
+      object, JSON responses, and the testing loop that proves it all works.</p>
+      <div class="runline"><span class="kbd">request comes in → your route runs → response goes out</span></div>
+    </header>
+
+    <!-- 1 -->
+    <section class="chapter" id="c1">
+      <div class="chaphead"><span class="num">01</span><h2>Client &amp; server</h2></div>
+      <p class="chapsub">A server is just a program that waits for requests and sends responses. It lives at an address and listens on a port.</p>
+      <p>A <b>server</b> is an application that runs somewhere, <em>listens</em> for incoming requests, and
+      <em>serves</em> responses. A web server serves web pages and data. It sits at a network address and listens on
+      a specific <b>port</b> — the numbered "door" where your app accepts connections (you'll see
+      <code>localhost:3000</code> constantly: address <code>localhost</code>, port <code>3000</code>).</p>
+      <div class="insight">
+        <div class="htag">◆ Analogy — a restaurant kitchen</div>
+        <p>As the client in Unit 3, you were the customer placing orders. Now you're running the <b>kitchen</b>.
+        Orders (requests) come in through a specific window (the port); each one names a dish (the route, like
+        <code>/birds</code>); your job is to prepare the right thing and send it back out (the response). Express is
+        the ticket rail that routes each order to the right station.</p>
+      </div>
+    </section>
+
+    <!-- 2 -->
+    <section class="chapter" id="c2">
+      <div class="chaphead"><span class="num">02</span><h2>Your first server</h2></div>
+      <p class="chapsub">A handful of lines stands up a working web server. Then one important split for testing later.</p>
+      <div class="anatomy">
+        <div class="ahead">Code anatomy — a minimal Express server</div>
+        <div class="anacode"><span class="tok kw" data-exp="import express|Bring in the Express library. It's an npm package that wraps Node's raw HTTP handling in a much friendlier API.">import express from 'express'</span>
+<span class="tok fn" data-exp="const server = express()|Create the server application object. Everything — routes, middleware, listening — hangs off this. Often called 'app' in other tutorials; Dev Academy calls it 'server'.">const server = express()</span>
+
+<span class="tok pm" data-exp="server.get|Define a route: 'when a GET request hits this path, run this function'. There's also server.post, server.put, server.delete for the other methods.">server.get</span>(<span class="tok op" data-exp="'/'|The path to match — here the root. A request to http://localhost:3000/ triggers this handler. Any undefined path gets an automatic 404.">'/'</span>, (<span class="tok rt" data-exp="req, res|The two objects every handler receives. req describes the incoming request (params, query, body). res is how you send a reply — res.send, res.json, res.status.">req, res</span>) => {
+  <span class="tok fn" data-exp="res.send|Send a response back to the client and end the request. Pass a string/HTML here; use res.json for data.">res.send</span>('&lt;h1&gt;Hello world&lt;/h1&gt;')
+})</div>
+        <div class="anapanel"><div class="anahint">Hover or tap a token <span class="legend">· create the server · define routes · send responses</span></div><div class="anatitle">—</div><div class="anatext">Each part explains its job.</div></div>
+      </div>
+      <p>The handbook splits this across <b>two files</b>, and the reason matters for testing later:</p>
+      <div class="cell">
+        <div class="bar"><span class="dots"><i></i><i></i><i></i></span><span class="fname">server.ts &nbsp;+&nbsp; index.ts</span></div>
+        <pre class="code"><span class="cm">// server.ts — defines routes, exports the server (does NOT listen)</span>
+<span class="kw">import</span> express <span class="kw">from</span> <span class="st">'express'</span>
+<span class="kw">const</span> server = <span class="fn">express</span>()
+server.<span class="fn">get</span>(<span class="st">'/'</span>, (req, res) => res.<span class="fn">send</span>(<span class="st">'Hello world'</span>))
+<span class="kw">export default</span> server
+
+<span class="cm">// index.ts — imports the server and starts it listening</span>
+<span class="kw">import</span> server <span class="kw">from</span> <span class="st">'./server.ts'</span>
+server.<span class="fn">listen</span>(<span class="nm">3000</span>, () => <span class="fn">console</span>.log(<span class="st">'listening on 3000'</span>))</pre>
+      </div>
+      <div class="insight warn">
+        <div class="htag">▲ Why split server.ts from index.ts?</div>
+        <p>Because <code>server.listen()</code> starts a live server the moment the file runs — and you don't want a
+        real server booting up during your tests. By keeping <code>listen()</code> in <code>index.ts</code> and
+        <b>exporting</b> the plain <code>server</code> from <code>server.ts</code>, your tests can import the server
+        and probe its routes <em>without ever starting it</em>. This split is the whole reason testing works cleanly
+        (section 7).</p>
+      </div>
+    </section>
+
+    <!-- 3 -->
+    <section class="chapter" id="c3">
+      <div class="chaphead"><span class="num">03</span><h2>Reading the request</h2></div>
+      <p class="chapsub">Two ways data arrives in the URL: route params and query params. They land in different places on req.</p>
+      <p>The client sends data with the request. The two URL-based ways each have their own spot on the
+      <code>req</code> object:</p>
+      <div class="anatomy">
+        <div class="ahead">Code anatomy — route params vs query</div>
+        <div class="anacode"><span class="tok pm" data-exp="/:org/:repo|Route PARAMETERS. The colon marks a slot. A request to /dev-academy/learning-express fills org and repo. Use params for identifying WHICH resource — like GitHub's /org/repo.">server.get('/:org/:repo', ...)</span>
+  →  <span class="tok rt" data-exp="req.params|Where route params land: { org: 'dev-academy', repo: 'learning-express' }. Always strings. This is the REST-style, explicit way to name a resource.">req.params.org</span>
+
+<span class="tok fn" data-exp="?person=Robin|QUERY parameters. The part of the URL after a ?. Name/value pairs, meant for filtering or options — NOT for identifying a resource.">/webapps?person=Robin</span>
+  →  <span class="tok op" data-exp="req.query|Where query params land: { person: 'Robin' }. Use query for filters and options (search terms, page numbers), not for saving data.">req.query.person</span></div>
+        <div class="anapanel"><div class="anahint">Hover or tap a token <span class="legend">· params identify a resource · query filters or configures</span></div><div class="anatitle">—</div><div class="anatext">Each part explains its job.</div></div>
+      </div>
+      <div class="insight">
+        <div class="htag">◆ Which one to use</div>
+        <p>Rule of thumb from the handbook: <b>route params</b> (<code>/:id</code>) for <em>which</em> thing — the
+        identity of a resource. <b>Query</b> (<code>?sort=name</code>) for <em>how</em> — filtering, sorting,
+        options. REST web APIs lean heavily on route params, so <code>/birds/42</code> is preferred over
+        <code>/birds?id=42</code>.</p>
+      </div>
+    </section>
+
+    <!-- 4 -->
+    <section class="chapter" id="c4">
+      <div class="chaphead"><span class="num">04</span><h2>JSON APIs</h2></div>
+      <p class="chapsub">A JSON API accepts and responds with JSON. Two small additions to what you already know.</p>
+      <p>Exposing a web API works exactly like other routes — the difference is you <b>respond with JSON</b> using
+      <code>res.json()</code>, which serialises a plain JavaScript object for you:</p>
+      <div class="cell">
+        <div class="bar"><span class="dots"><i></i><i></i><i></i></span><span class="fname">json-route.ts</span></div>
+        <pre class="code">server.<span class="fn">get</span>(<span class="st">'/:id'</span>, (req, res) => {
+  <span class="kw">const</span> widget = { id: req.params.id, name: <span class="st">'Best widget'</span> }
+  res.<span class="fn">json</span>(widget)   <span class="cm">// serialises the object to JSON automatically</span>
+})</pre>
+      </div>
+      <p>To <em>receive</em> JSON in a POST or PUT body, you switch on one piece of <b>middleware</b> — a function
+      that processes every request before your route sees it:</p>
+      <div class="cell">
+        <div class="bar"><span class="dots"><i></i><i></i><i></i></span><span class="fname">receiving-json.ts</span></div>
+        <pre class="code"><span class="kw">const</span> server = <span class="fn">express</span>()
+server.<span class="fn">use</span>(express.<span class="fn">json</span>())   <span class="cm">// middleware: parse JSON bodies onto req.body</span>
+
+server.<span class="fn">post</span>(<span class="st">'/widget'</span>, (req, res) => {
+  <span class="kw">const</span> newWidget = req.<span class="fn">body</span>   <span class="cm">// now available thanks to express.json()</span>
+  <span class="cm">// ...save it, then respond</span>
+})</pre>
+      </div>
+      <div class="insight warn">
+        <div class="htag">▲ No <code>express.json()</code> → <code>req.body</code> is undefined</div>
+        <p>The single most common "why is my POST body empty?" bug. Without <code>server.use(express.json())</code>
+        (or <code>express.urlencoded()</code> for HTML form posts), Express never parses the body and
+        <code>req.body</code> comes back <code>undefined</code>. The route looks right; the middleware is missing.</p>
+      </div>
+    </section>
+
+    <!-- 5 -->
+    <section class="chapter" id="c5">
+      <div class="chaphead"><span class="num">05</span><h2>Run a server</h2></div>
+      <p class="chapsub">A working Express server, simulated. Fire requests at it and watch how it reads req and what it sends back.</p>
+      <p>These four routes are defined on the mini-server below. Click a request to send it — watch which route
+      matches, what the server pulls off <code>req.params</code> / <code>req.query</code> / <code>req.body</code>,
+      and the response it builds:</p>
+
+      <div class="ex" id="ex">
+        <div class="extop"><span class="dots"><i></i><i></i><i></i></span><span class="ttl">server.ts — running on :3000</span><span class="tag">Express</span></div>
+        <div class="routes">
+          <div class="rlbl">routes defined on this server</div>
+          <div class="rdef">server.<span class="fn">get</span>(<span class="st">'/'</span>, ...)                <span class="cm">// hello</span>
+server.<span class="fn">get</span>(<span class="st">'/webapps'</span>, ...)         <span class="cm">// reads req.query.person</span>
+server.<span class="fn">get</span>(<span class="st">'/birds/:id'</span>, ...)       <span class="cm">// reads req.params.id</span>
+server.<span class="fn">post</span>(<span class="st">'/birds'</span>, ...)          <span class="cm">// reads req.body</span></div>
+        </div>
+        <div class="reqs" id="exReqs">
+          <button class="reqbtn" data-i="0"><span class="m m-GET">GET</span> /</button>
+          <button class="reqbtn" data-i="1"><span class="m m-GET">GET</span> /webapps?person=Robin</button>
+          <button class="reqbtn" data-i="2"><span class="m m-GET">GET</span> /birds/42</button>
+          <button class="reqbtn" data-i="3"><span class="m m-POST">POST</span> /birds &nbsp;{name:'Tūī'}</button>
+        </div>
+        <div class="panel">
+          <div class="side-in">
+            <div class="slbl">what the server reads off req</div>
+            <div class="reqobj" id="exReq"><span class="muted">// pick a request above</span></div>
+          </div>
+          <div class="side-out">
+            <div class="slbl">the response it sends</div>
+            <div class="resp"><div id="exStat"></div><div class="rbody" id="exResp"><span class="waiting">// waiting…</span></div></div>
+          </div>
+        </div>
+        <div class="exnote" id="exNote">Notice the matching: <b>/birds/42</b> matches the <b>/birds/:id</b> route, and the server pulls <code>42</code> off <code>req.params.id</code>. That colon-slot matching is Express's core job.</div>
+      </div>
+
+      <div class="predict" data-check data-correct="2"
+        data-fb="Right. /birds/:id has one param slot, so a request to /birds/42 fills req.params.id with '42' — a string. Query would need a ?, and body only comes with POST/PUT.">
+        <div class="q">A GET request to <code>/birds/42</code> — where does <code>42</code> show up?</div>
+        <div class="opts">
+          <button class="opt" data-opt="0"><code>req.query.id</code></button>
+          <button class="opt" data-opt="1"><code>req.body.id</code></button>
+          <button class="opt" data-opt="2"><code>req.params.id</code> (as the string <code>'42'</code>)</button>
+          <button class="opt" data-opt="3">It's lost — GET can't carry data</button>
+        </div>
+        <div class="fb-msg" data-fbbox></div>
+      </div>
+    </section>
+
+    <!-- 6 -->
+    <section class="chapter" id="c6">
+      <div class="chaphead"><span class="num">06</span><h2>Static files &amp; Router</h2></div>
+      <p class="chapsub">Two tools that keep a growing server tidy — serving files automatically, and splitting routes into modules.</p>
+      <h3>Serving static files</h3>
+      <p>HTML, CSS, images, client-side JS — files that go out unchanged. Rather than a route per file, point Express
+      at a folder and it serves everything inside automatically:</p>
+      <div class="cell">
+        <div class="bar"><span class="dots"><i></i><i></i><i></i></span><span class="fname">static.ts</span></div>
+        <pre class="code"><span class="kw">import</span> * <span class="kw">as</span> Path <span class="kw">from</span> <span class="st">'node:path'</span>
+<span class="kw">const</span> publicPath = Path.<span class="fn">resolve</span>(<span class="st">'./public'</span>)
+server.<span class="fn">use</span>(express.<span class="fn">static</span>(publicPath))
+<span class="cm">// public/styles/main.css  →  http://localhost:3000/styles/main.css</span>
+<span class="cm">// note: 'public' is NOT part of the URL</span></pre>
+      </div>
+      <h3>Express Router — modular routes</h3>
+      <p>As routes pile up, <code>server.ts</code> gets crowded. <code>express.Router()</code> lets you move a group
+      of related routes into their own file and mount them under a prefix:</p>
+      <div class="cell">
+        <div class="bar"><span class="dots"><i></i><i></i><i></i></span><span class="fname">server.ts &nbsp;+&nbsp; bird-routes.ts</span></div>
+        <pre class="code"><span class="cm">// server.ts — mount the router under /birds</span>
+server.<span class="fn">use</span>(<span class="st">'/birds'</span>, birdRoutes)
+
+<span class="cm">// bird-routes.ts — note: no 'birds' in here, the prefix is applied above</span>
+<span class="kw">const</span> router = express.<span class="fn">Router</span>()
+router.<span class="fn">get</span>(<span class="st">'/'</span>, ...)      <span class="cm">// actually handles GET /birds</span>
+router.<span class="fn">get</span>(<span class="st">'/:id'</span>, ...)   <span class="cm">// actually handles GET /birds/:id</span>
+<span class="kw">export default</span> router</pre>
+      </div>
+      <div class="insight">
+        <div class="htag">◆ The prefix is applied once, at mount</div>
+        <p>The thing that trips people: inside <code>bird-routes.ts</code> you write <code>'/'</code> and
+        <code>'/:id'</code>, <em>not</em> <code>'/birds'</code>. The <code>/birds</code> prefix was set once by
+        <code>server.use('/birds', birdRoutes)</code>. Writing <code>/birds</code> again inside the router would make
+        the real path <code>/birds/birds</code>.</p>
+      </div>
+    </section>
+
+    <!-- 7 -->
+    <section class="chapter" id="c7">
+      <div class="chaphead"><span class="num">07</span><h2>Testing with Supertest</h2></div>
+      <p class="chapsub">The assessment-critical part. Supertest sends fake requests to your exported server and checks the response — no browser, no live server.</p>
+      <p>Remember the split from section 2? Because <code>server.ts</code> <b>exports</b> the server without calling
+      <code>listen()</code>, your test can import it and fire requests straight at it with <b>Supertest</b>. The
+      shape is Arrange / Act / Assert:</p>
+      <div class="anatomy">
+        <div class="ahead">Code anatomy — a route test</div>
+        <div class="anacode"><span class="tok kw" data-exp="import request from 'supertest'|Supertest is the tool that sends fake HTTP requests to your server object. By convention it's imported as 'request'.">import request from 'supertest'</span>
+<span class="tok fn" data-exp="import server|Import the exported server from server.ts. Because it doesn't call listen(), importing it starts nothing — you're just handing Supertest the routes to probe.">import server from '../server.ts'</span>
+
+test('/example returns WOMBAT', <span class="tok kw" data-exp="async|The test is async because sending a request returns a promise — you have to await the response before you can check it.">async</span> () => {
+  <span class="tok op" data-exp="await request(server)|Send the request THROUGH the server object and wait for the response. request(server).get('/example') performs a GET. There's also .post(), .put(), .delete().">const res = await request(server).get('/example')</span>
+  <span class="tok rt" data-exp="res.text / res.status / res.body|What you assert on. res.text = HTML/string body. res.status = the HTTP code (200, 404...). res.body = the parsed JSON object for API routes.">expect(res.text).toBe('WOMBAT')</span>
+})</div>
+        <div class="anapanel"><div class="anahint">Hover or tap a token <span class="legend">· import server · await a request through it · assert on the response</span></div><div class="anatitle">—</div><div class="anatext">Each part explains its job.</div></div>
+      </div>
+      <p>The three things you check, depending on the route:</p>
+      <div class="methods">
+        <table>
+          <thead><tr><th>Assert on</th><th>Is</th><th style="text-align:left">Use for</th></tr></thead>
+          <tbody>
+            <tr><td><code>res.status</code></td><td>the HTTP code</td><td>200 OK, 201 Created, 404 Not Found</td></tr>
+            <tr><td><code>res.text</code></td><td>the raw body text</td><td>HTML routes, plain strings</td></tr>
+            <tr><td><code>res.body</code></td><td>the parsed JSON</td><td>API routes returning objects/arrays</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>Testing a POST route is the same, plus sending data — <code>.type('form')</code> or JSON, then
+      <code>.send(data)</code>:</p>
+      <div class="cell">
+        <div class="bar"><span class="dots"><i></i><i></i><i></i></span><span class="fname">post.test.ts</span></div>
+        <pre class="code"><span class="kw">const</span> res = <span class="kw">await</span> <span class="fn">request</span>(server)
+  .<span class="fn">post</span>(<span class="st">'/'</span>)
+  .<span class="fn">type</span>(<span class="st">'form'</span>)
+  .<span class="fn">send</span>({ name: <span class="st">'flargle'</span> })
+<span class="fn">expect</span>(res.text).<span class="fn">toContain</span>(<span class="st">'flargle'</span>)</pre>
+      </div>
+      <div class="insight gotcha">
+        <div class="htag">✖ Always <code>await</code> before you assert</div>
+        <p>The request returns a promise. Assert too early — before the <code>await</code> resolves — and you're
+        checking an empty/pending response, giving confusing failures. This is the same async lesson from
+        <a href="./js-async.html">Async &amp; Promises</a>, now on the server side. These route tests span more than
+        one unit of code (server + routing), so they're really <b>integration tests</b>, not unit tests.</p>
+      </div>
+    </section>
+
+    <!-- recap -->
+    <section class="chapter" id="recap">
+      <div class="chaphead"><span class="num">★</span><h2>Recap</h2></div>
+      <div class="recap">
+        <h3>The server</h3>
+        <ul>
+          <li>A server <b>listens for requests, sends responses</b>, at an address + <b>port</b> (<code>localhost:3000</code>).</li>
+          <li><code>server.get('/path', (req, res) =&gt; ...)</code> defines a route; <code>res.send</code> / <code>res.json</code> reply.</li>
+          <li>Split <b>server.ts</b> (routes, exported) from <b>index.ts</b> (<code>listen()</code>) so tests can run without a live server.</li>
+        </ul>
+      </div>
+      <div class="recap">
+        <h3>Reading data &amp; JSON</h3>
+        <ul>
+          <li><b>Route params</b> <code>/:id</code> → <code>req.params</code> (which resource). <b>Query</b> <code>?x=</code> → <code>req.query</code> (filters).</li>
+          <li>POST/PUT body → <code>req.body</code>, but only with <code>server.use(express.json())</code> middleware.</li>
+          <li><code>res.json(obj)</code> serialises an object to JSON for you.</li>
+        </ul>
+      </div>
+      <div class="recap">
+        <h3>Organising &amp; testing</h3>
+        <ul>
+          <li><b>express.static(folder)</b> serves files automatically; <b>express.Router()</b> splits routes into modules.</li>
+          <li>Use methods correctly: <b>GET</b> reads (no side effects), <b>POST</b> saves.</li>
+          <li><b>Supertest</b>: <code>await request(server).get('/x')</code>, then assert <code>res.status</code> / <code>res.text</code> / <code>res.body</code>.</li>
+          <li>Always <b>await</b> the request before asserting — these are integration tests.</li>
+        </ul>
+      </div>
+      <footer>
+        <p>Unit 4 guide · Dev Academy Aotearoa, built from the student handbook. The server simulator models route
+        matching in the browser; a real Express server runs on Node. Next up: databases (Unit 5).</p>
+        <p class="mono"><a href="./index.html">⌂ All guides</a> ·
+          <a href="./consuming-apis.html">← Consuming APIs</a> ·
+          <a href="./js-async.html">← Async</a></p>
+      </footer>
+    </section>
+  </main>
+</div>
+<script>
+document.querySelectorAll('.anatomy').forEach(an=>{
+  const title=an.querySelector('.anatitle'),text=an.querySelector('.anatext'),hint=an.querySelector('.anahint');
+  const toks=an.querySelectorAll('.tok');
+  function show(tok){const raw=tok.getAttribute('data-exp')||'';const i=raw.indexOf('|');
+    title.textContent=i>=0?raw.slice(0,i):tok.textContent.trim();
+    text.textContent=i>=0?raw.slice(i+1):raw;hint.textContent='what this part does';
+    toks.forEach(x=>x.classList.remove('active'));tok.classList.add('active');}
+  toks.forEach(tok=>{tok.setAttribute('tabindex','0');
+    tok.addEventListener('mouseenter',()=>show(tok));tok.addEventListener('click',()=>show(tok));tok.addEventListener('focus',()=>show(tok));});
+});
+/* ===== Express simulator — route matching + extraction is the teachable core ===== */
+(function(){
+  // registered routes on the mini-server
+  const routes=[
+    {method:'GET', pattern:'/'},
+    {method:'GET', pattern:'/webapps'},
+    {method:'GET', pattern:'/birds/:id'},
+    {method:'POST',pattern:'/birds'}
+  ];
+  // match a method+path against routes; return {route, params} or null
+  function matchRoute(routes, method, path){
+    const cleanPath=path.split('?')[0];
+    const pParts=cleanPath.split('/').filter(Boolean);
+    for(const r of routes){
+      if(r.method!==method) continue;
+      const rParts=r.pattern.split('/').filter(Boolean);
+      if(rParts.length!==pParts.length) continue;
+      const params={}; let ok=true;
+      for(let i=0;i<rParts.length;i++){
+        if(rParts[i].startsWith(':')) params[rParts[i].slice(1)]=pParts[i];
+        else if(rParts[i]!==pParts[i]){ ok=false; break; }
+      }
+      if(ok) return {route:r, params};
+    }
+    return null;
+  }
+  // parse a query string into an object
+  function parseQuery(path){
+    const q={}; const qs=path.split('?')[1]; if(!qs) return q;
+    qs.split('&').forEach(pair=>{ const [k,v]=pair.split('='); if(k) q[k]=decodeURIComponent(v||''); });
+    return q;
+  }
+  window.__express={matchRoute, parseQuery, routes}; // exposed for testing
+
+  // the four demo requests
+  const requests=[
+    {method:'GET', path:'/', body:null},
+    {method:'GET', path:'/webapps?person=Robin', body:null},
+    {method:'GET', path:'/birds/42', body:null},
+    {method:'POST',path:'/birds', body:{name:'Tūī'}}
+  ];
+  // how each matched route responds
+  function respond(reqIndex, match, query, body){
+    const p=match?match.params:{};
+    switch(reqIndex){
+      case 0: return {status:'200 OK', s:'s2', body:"'<h1>Hello world</h1>'"};
+      case 1: return {status:'200 OK', s:'s2', body:"'"+ (query.person||'') +" is building web apps'"};
+      case 2: return {status:'200 OK', s:'s2', json:{id:p.id, name:'Tūī'}};
+      case 3: return {status:'201 Created', s:'s2', json:{id:99, name:body.name}};
+    }
+  }
+  function fmtObj(o){
+    if(o===null||o===undefined) return '<span class="muted">(empty)</span>';
+    const keys=Object.keys(o);
+    if(keys.length===0) return '<span class="muted">{}</span>';
+    return '{ '+keys.map(k=>'<span class="k">'+k+'</span>: '+(typeof o[k]==='number'?'<span class="n">'+o[k]+'</span>':'<span class="s">\''+o[k]+'\'</span>')).join(', ')+' }';
+  }
+  const reqBtns=[...document.querySelectorAll('#exReqs .reqbtn')];
+  const exReq=document.getElementById('exReq');
+  const exStat=document.getElementById('exStat');
+  const exResp=document.getElementById('exResp');
+  reqBtns.forEach(btn=>btn.addEventListener('click',()=>{
+    reqBtns.forEach(b=>b.classList.remove('sel')); btn.classList.add('sel');
+    const i=+btn.dataset.i; const r=requests[i];
+    const match=matchRoute(routes, r.method, r.path);
+    const query=parseQuery(r.path);
+    const params=match?match.params:{};
+    const body=r.body;
+    // show what the server reads
+    let lines=[];
+    lines.push('<span class="k">req.params</span> = '+fmtObj(params));
+    lines.push('<span class="k">req.query</span>  = '+fmtObj(query));
+    lines.push('<span class="k">req.body</span>   = '+(body?fmtObj(body):'<span class="muted">undefined</span>'));
+    exReq.innerHTML=lines.join('\n');
+    // build response
+    const out=respond(i, match, query, body);
+    exStat.innerHTML='<span class="rstat '+out.s+'">'+out.status+'</span>';
+    if(out.json){
+      const js=Object.keys(out.json).map(k=>'  <span class="k">"'+k+'"</span>: '+(typeof out.json[k]==='number'?'<span class="n">'+out.json[k]+'</span>':'<span class="s">"'+out.json[k]+'"</span>')).join(',\n');
+      exResp.innerHTML='res.json({\n'+js+'\n})';
+    } else {
+      exResp.innerHTML='res.send('+out.body+')';
+    }
+  }));
+})();
+document.querySelectorAll('[data-check]').forEach(chk=>{
+  const correct=parseInt(chk.dataset.correct,10);const fbbox=chk.querySelector('[data-fbbox]');
+  chk.querySelectorAll('.opt').forEach(opt=>{opt.addEventListener('click',()=>{
+    const pick=parseInt(opt.dataset.opt,10);
+    if(pick===correct){opt.classList.add('correct');fbbox.textContent=chk.dataset.fb;fbbox.classList.add('show');chk.querySelectorAll('.opt').forEach(o=>o.style.pointerEvents='none');}
+    else{opt.classList.add('wrong');opt.style.pointerEvents='none';}
+  });});
+});
+const sections=[...document.querySelectorAll('section.chapter')];
+const links=[...document.querySelectorAll('nav.side a[data-sec]')];
+const mlinks=[...document.querySelectorAll('.mobtop .mlink')];
+function spy(){const y=window.scrollY+120;let cur=sections[0].id;
+  for(const s of sections){if(s.offsetTop<=y)cur=s.id;}
+  links.forEach(l=>l.classList.toggle('active',l.getAttribute('href')==='#'+cur));
+  mlinks.forEach(l=>l.classList.toggle('active',l.getAttribute('href')==='#'+cur));}
+window.addEventListener('scroll',spy,{passive:true});spy();
+</script>
+</body>
+</html>
